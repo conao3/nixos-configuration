@@ -86,7 +86,6 @@
       chromium
       firefox
       tree
-      git
       tig
       ghq
       _1password-gui
@@ -95,6 +94,8 @@
   };
 
   environment.systemPackages = with pkgs; [
+    git
+    curl
     vim
     emacs
   ];
