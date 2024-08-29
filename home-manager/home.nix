@@ -6,6 +6,7 @@
       devenv
       emacs
       ghq
+      nix-prefetch-github
       tig
       tree
     ];
