@@ -2,11 +2,12 @@
 {
   home = {
     packages = with pkgs; [
-      emacs
-      tree
-      tig
-      ghq
       _1password-gui
+      devenv
+      emacs
+      ghq
+      tig
+      tree
     ];
   };
 
@@ -31,6 +32,15 @@
       enable = true;
       userName = "conao3";
       userEmail = "conao3@gmail.com";
+      ignores = [
+        ".envrc"
+        "devenv.nix"
+        "devenv.yaml"
+        ".devenv*"
+        "devenv.local.nix"
+        ".direnv"
+        ".pre-commit-config.yaml"
+      ];
     };
   };
 
