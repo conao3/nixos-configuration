@@ -2,9 +2,8 @@
 {
   home = {
     packages = with pkgs; [
+      emacs
       vim
-      zsh
-      git
       tmux
     ];
   };

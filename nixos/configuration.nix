@@ -94,10 +94,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    git
-    curl
-    vim
-    emacs
+    git                         # required by home-manager
   ];
 
   programs = {
