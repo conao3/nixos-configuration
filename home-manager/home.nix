@@ -5,6 +5,12 @@
       emacs
       vim
       tmux
+      chromium
+      firefox
+      tree
+      tig
+      ghq
+      _1password-gui
     ];
   };
 

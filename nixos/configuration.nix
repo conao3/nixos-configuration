@@ -82,15 +82,6 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" ];
-    packages = with pkgs; [
-      chromium
-      firefox
-      tree
-      tig
-      ghq
-      _1password-gui
-      # awscli2
-    ];
   };
 
   environment.systemPackages = with pkgs; [
