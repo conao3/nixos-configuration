@@ -5,10 +5,12 @@
       cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix {};
     in with pkgs; [
       _1password-gui
+      clj-kondo
       cljstyle
       devenv
       emacs
       ghq
+      mkcert
       nix-prefetch-github
       tig
       tree
