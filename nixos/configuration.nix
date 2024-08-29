@@ -81,7 +81,7 @@
   users.users.conao = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel", "docker" ];
+    extraGroups = [ "wheel" "docker" ];
   };
 
   environment.systemPackages = with pkgs; [
