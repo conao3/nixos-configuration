@@ -3,27 +3,34 @@
   home = {
     packages = with pkgs; [
       emacs
-      vim
-      tmux
-      chromium
-      firefox
       tree
       tig
       ghq
       _1password-gui
-      atuin
     ];
   };
 
   programs = {
     home-manager.enable = true;
+    atuin.enable = true;
+    awscli.enable = true;
+    bat.enable = true;
+    chromium.enable = true;
+    firefox.enable = true;
+    gpg.enable = true;
+    htop.enable = true;
+    java.enable = true;
+    jq.enable = true;
+    ripgrep.enable = true;
+    tmux.enable = true;
+    vim.enable = true;
+    vscode.enable = true;
+    zsh.enable = true;
+
     git = {
       enable = true;
       userName = "conao3";
       userEmail = "conao3@gmail.com";
-    };
-    zsh = {
-      enable = true;
     };
   };
 
