@@ -11,6 +11,7 @@
       tig
       ghq
       _1password-gui
+      atuin
     ];
   };
 
