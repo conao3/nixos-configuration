@@ -19,7 +19,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
-            home-manager.users.conao = import ./home.nix;
+            home-manager.users.conao = import ./home-manager/home.nix;
           }
         ];
       };
