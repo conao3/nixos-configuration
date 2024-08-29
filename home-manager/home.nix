@@ -1,8 +1,11 @@
 { config, pkgs, ... }:
 {
   home = {
-    packages = with pkgs; [
+    packages = let
+      cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix {};
+    in with pkgs; [
       _1password-gui
+      cljstyle
       devenv
       emacs
       ghq
