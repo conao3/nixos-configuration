@@ -10,11 +10,13 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs =
+    { nixpkgs, home-manager, ... }:
     let
       system = "aarch64-darwin";
       pkgs = nixpkgs.legacyPackages.${system};
-    in {
+    in
+    {
       homeConfigurations."conao" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
@@ -25,5 +27,7 @@
         # Optionally use extraSpecialArgs
         # to pass through arguments to home.nix
       };
+
+      formatter.aarch64-darwin = pkgs.nixfmt-rfc-style;
     };
 }

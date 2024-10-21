@@ -27,20 +27,23 @@
 
     language.base = "en_US.UTF-8";
 
-    packages = let
-      cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix {};
-    in with pkgs; [
-      # _1password-gui
-      clj-kondo
-      cljstyle
-      devenv
-      emacs
-      ghq
-      mkcert
-      nix-prefetch-github
-      tig
-      tree
-    ];
+    packages =
+      let
+        cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix { };
+      in
+      with pkgs;
+      [
+        # _1password-gui
+        clj-kondo
+        cljstyle
+        devenv
+        emacs
+        ghq
+        mkcert
+        nix-prefetch-github
+        tig
+        tree
+      ];
   };
 
   programs = {
@@ -62,29 +65,25 @@
 
     bash = {
       enable = true;
-      profileExtra =
-        ''
-. "$HOME/.cargo/env"
-eval "$(anyenv init -)"
-[[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
-'';
+      profileExtra = ''
+        . "$HOME/.cargo/env"
+        eval "$(anyenv init -)"
+        [[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
+      '';
     };
 
     zsh = {
       enable = true;
-      profileExtra =
-        ''
-eval "$(/opt/homebrew/bin/brew shellenv)"
-eval "$(anyenv init -)"
-'';
-      initExtra =
-        ''
-[[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
-'';
-      envExtra =
-        ''
-. "$HOME/.cargo/env"
-'';
+      profileExtra = ''
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        eval "$(anyenv init -)"
+      '';
+      initExtra = ''
+        [[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
+      '';
+      envExtra = ''
+        . "$HOME/.cargo/env"
+      '';
     };
 
     git = {
