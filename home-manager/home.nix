@@ -37,7 +37,19 @@
     tmux.enable = true;
     vim.enable = true;
     vscode.enable = true;
-    zsh.enable = true;
+
+    zsh = {
+      enable = true;
+      initExtra =
+        ''
+export SDKMAN_DIR="/opt/homebrew/opt/sdkman-cli/libexec"
+[[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
+'';
+      envExtra =
+        ''
+. "$HOME/.cargo/env"
+'';
+    };
 
     git = {
       enable = true;
