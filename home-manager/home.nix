@@ -40,6 +40,21 @@
 
     zsh = {
       enable = true;
+      profileExtra =
+        ''
+eval "$(/opt/homebrew/bin/brew shellenv)"
+export PATH="$HOME/.anyenv/bin:$PATH"
+eval "$(anyenv init -)"
+
+export PATH="/Applications/Emacs.app/Contents/MacOS/bin:$PATH"
+export PATH="/Applications/Emacs.app/Contents/MacOS:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.elan/bin:$PATH"
+export PATH="$PATH:$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
+export LANG=en_US.UTF-8
+
+. ~/.nix-profile/etc/profile.d/hm-session-vars.sh
+'';
       initExtra =
         ''
 export SDKMAN_DIR="/opt/homebrew/opt/sdkman-cli/libexec"
