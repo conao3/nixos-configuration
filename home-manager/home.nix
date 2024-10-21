@@ -7,7 +7,6 @@
     homeDirectory = "/Users/conao";
 
     sessionVariables = {
-      LANG = "en_US.UTF-8";
       SDKMAN_DIR = "/opt/homebrew/opt/sdkman-cli/libexec";
     };
 
@@ -19,6 +18,8 @@
       "$HOME/.elan/bin"
       "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
     ];
+
+    language.base = "en_US.UTF-8";
 
     packages = let
       cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix {};
