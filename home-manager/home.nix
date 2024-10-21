@@ -39,19 +39,30 @@
 
   programs = {
     home-manager.enable = true;
+    # chromium.enable = true;
+    # firefox.enable = true;
     atuin.enable = true;
     awscli.enable = true;
     bat.enable = true;
-    # chromium.enable = true;
-    # firefox.enable = true;
     gpg.enable = true;
     htop.enable = true;
     java.enable = true;
     jq.enable = true;
+    neovim.enable = true;
     ripgrep.enable = true;
     tmux.enable = true;
     vim.enable = true;
     vscode.enable = true;
+
+    bash = {
+      enable = true;
+      profileExtra =
+        ''
+. "$HOME/.cargo/env"
+eval "$(anyenv init -)"
+[[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
+'';
+    };
 
     zsh = {
       enable = true;
