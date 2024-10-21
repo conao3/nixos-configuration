@@ -1,10 +1,15 @@
 { config, pkgs, ... }:
+
 {
   home = {
+    stateVersion = "24.05";
+    username = "conao";
+    homeDirectory = "/Users/conao";
+
     packages = let
       cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix {};
     in with pkgs; [
-      _1password-gui
+      # _1password-gui
       clj-kondo
       cljstyle
       devenv
@@ -22,8 +27,8 @@
     atuin.enable = true;
     awscli.enable = true;
     bat.enable = true;
-    chromium.enable = true;
-    firefox.enable = true;
+    # chromium.enable = true;
+    # firefox.enable = true;
     gpg.enable = true;
     htop.enable = true;
     java.enable = true;
@@ -36,19 +41,67 @@
 
     git = {
       enable = true;
+      lfs.enable = true;
+
       userName = "conao3";
       userEmail = "conao3@gmail.com";
+
       ignores = [
-        ".envrc"
-        "devenv.nix"
-        "devenv.yaml"
-        ".devenv*"
-        "devenv.local.nix"
-        ".direnv"
-        ".pre-commit-config.yaml"
+        # macOS
+        ".DS_Store"
+        "._*"
+
+        # Emacs
+        "*~"
+        ".#*"
+        "\#*"
+        "*_flymake.*"
+        "flycheck_*"
+
+        # Vim
+        "*.swp"
+
+        # Editors
+        ".vscode"
+        ".idea"
+
+        # Tags
+        "GPATH"
+        "GR?TAGS"
+
+        # Misc
+        ".env"
+        "*.conao3"
+        "*.orig"
       ];
+
+      extraConfig = {
+        core = {
+          quotepath = false;
+          fsmonitor = true;
+        };
+        init = {
+          defaultBranch = "master";
+        };
+        fetch = {
+          prune = true;
+        };
+        rebase = {
+          autoStash = true;
+          autoSquash = true;
+        };
+        color = {
+          ui = "auto";
+          status = "auto";
+          diff = "auto";
+          branch = "auto";
+          interactive = "auto";
+          grep = "auto";
+        };
+        rerere = {
+          enabled = true;
+        };
+      };
     };
   };
-
-  home.stateVersion = "24.05";
 }
