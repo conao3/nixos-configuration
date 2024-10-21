@@ -1,4 +1,5 @@
 { lib, buildGraalvmNativeImage, fetchurl }:
+
 buildGraalvmNativeImage rec {
   pname = "cljstyle";
   version = "0.16.626";
@@ -16,13 +17,4 @@ buildGraalvmNativeImage rec {
     "--report-unsupported-elements-at-runtime"
     "--no-fallback"
   ];
-
-  meta = with lib; {
-    mainProgram = "cljstyle";
-    description = "Tool for formatting Clojure code";
-    homepage = "https://github.com/greglook/cljstyle";
-    sourceProvenance = with sourceTypes; [ binaryBytecode ];
-    license = licenses.epl10;
-    changelog = "https://github.com/greglook/cljstyle/blob/${version}/CHANGELOG.md";
-  };
 }
