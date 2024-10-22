@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, cljgen, ... }:
 
 {
   nixpkgs = {
@@ -43,6 +43,8 @@
         nix-prefetch-github
         tig
         tree
+      ] ++ [
+        cljgen
       ];
   };
 
