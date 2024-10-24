@@ -7,6 +7,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     cljgen = {
       url = "github:conao3/clojure-cljgen";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,7 +24,7 @@
       pkgs = inputs.nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations."conao" = inputs.home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.conao = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         extraSpecialArgs = {
@@ -33,6 +37,12 @@
 
         # Optionally use extraSpecialArgs
         # to pass through arguments to home.nix
+      };
+
+      darwinConfigurations.toyokumo = inputs.nix-darwin.lib.darwinSystem {
+        inherit system;
+
+        modules = [ ./nix-darwin ];
       };
 
       formatter.aarch64-darwin = pkgs.nixfmt-rfc-style;
