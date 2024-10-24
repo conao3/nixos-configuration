@@ -39,6 +39,7 @@
     enable = true;
     onActivation = {
       autoUpdate = true;
+      cleanup = "uninstall";
     };
     casks = [
       "1password"
@@ -54,7 +55,6 @@
       "google-japanese-ime"
       "jetbrains-toolbox"
       "karabiner-elements"
-      "ngrok"
       "slack"
       "thunderbird"
       "utm"

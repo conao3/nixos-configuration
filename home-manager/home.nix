@@ -41,15 +41,38 @@
       in
       with pkgs;
       [
-        # _1password-gui
+        autoconf
+        aws-sam-cli
+        babashka
+        binutils
         clj-kondo
         cljstyle
+        clojure
+        clojure-lsp
+        coreutils
+        deno
         devenv
+        diffutils
         emacs
+        ffmpeg
         ghq
+        imagemagick
+        jansson
+        leiningen
+        libgccjit
+        minio
         mkcert
+        moreutils
+        ncurses
+        ngrok
         nix-prefetch-github
+        nkf
+        python3
+        rlwrap
+        sqlite
+        tailscale
         tig
+        tokei
         tree
       ]
       ++ [
@@ -61,13 +84,20 @@
     home-manager.enable = true;
     # chromium.enable = true;
     # firefox.enable = true;
+    # foot.enable = true;
+    alacritty.enable = true;
     atuin.enable = true;
     awscli.enable = true;
     bat.enable = true;
+    eza.enable = true;
+    fzf.enable = true;
+    gh.enable = true;
+    go.enable = true;
     gpg.enable = true;
     htop.enable = true;
     java.enable = true;
     jq.enable = true;
+    lsd.enable = true;
     neovim.enable = true;
     ripgrep.enable = true;
     tmux.enable = true;
