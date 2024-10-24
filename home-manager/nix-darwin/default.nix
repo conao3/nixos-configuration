@@ -8,6 +8,7 @@
       max-jobs = 8;
     };
   };
+
   services.nix-daemon.enable = true;
 
   system = {
@@ -24,5 +25,35 @@
         orientation = "left";
       };
     };
+  };
+
+  homebrew = {
+    enable = true;
+    onActivation = {
+      autoUpdate = true;
+    };
+    casks = [
+      "1password"
+      "altair-graphql-client"
+      "asana"
+      "corretto@11"
+      "coteditor"
+      "dbeaver-community"
+      "docker"
+      "figma"
+      "firefox"
+      "font-hackgen"
+      "gimp"
+      "google-japanese-ime"
+      "jetbrains-toolbox"
+      "karabiner-elements"
+      "ngrok"
+      "slack"
+      "thunderbird"
+      "utm"
+      "visual-studio-code"
+      "vmware-fusion"
+      "xmind"
+    ];
   };
 }
