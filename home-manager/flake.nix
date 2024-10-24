@@ -43,7 +43,6 @@
       darwinConfigurations.toyokumo = inputs.nix-darwin.lib.darwinSystem {
         inherit system;
 
-        specialArgs = { inherit username; };
         modules = [ ./nix-darwin ];
       };
 

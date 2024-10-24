@@ -31,6 +31,10 @@
     };
   };
 
+  security = {
+    pam.enableSudoTouchIdAuth = true;
+  };
+
   homebrew = {
     enable = true;
     onActivation = {
