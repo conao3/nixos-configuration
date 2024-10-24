@@ -22,7 +22,10 @@
       dock = {
         autohide = true;
         show-recents = false;
-        orientation = "left";
+      };
+      trackpad = {
+        Clicking = true;
+        Dragging = true;
       };
     };
   };
