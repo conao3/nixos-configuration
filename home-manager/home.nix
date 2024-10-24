@@ -2,6 +2,7 @@
   config,
   pkgs,
   system,
+  username,
   inputs,
   ...
 }:
@@ -14,9 +15,10 @@
   };
 
   home = {
+    inherit username;
+
     stateVersion = "24.05";
-    username = "conao";
-    homeDirectory = "/Users/conao";
+    homeDirectory = "/Users/${username}";
 
     sessionVariables = {
       SDKMAN_DIR = "/opt/homebrew/opt/sdkman-cli/libexec";

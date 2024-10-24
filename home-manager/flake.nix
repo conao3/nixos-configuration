@@ -21,14 +21,15 @@
     { ... }@inputs:
     let
       system = "aarch64-darwin";
+      username = "conao";
       pkgs = inputs.nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations.conao = inputs.home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         extraSpecialArgs = {
-          inherit system inputs;
+          inherit system username inputs;
         };
 
         # Specify your home configuration modules here, for example,
@@ -42,6 +43,7 @@
       darwinConfigurations.toyokumo = inputs.nix-darwin.lib.darwinSystem {
         inherit system;
 
+        specialArgs = { inherit username; };
         modules = [ ./nix-darwin ];
       };
 
