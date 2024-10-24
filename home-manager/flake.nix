@@ -2,7 +2,6 @@
   description = "Home Manager configuration of conao";
 
   inputs = {
-    # Specify the source of Home Manager and Nixpkgs.
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -15,17 +14,17 @@
   };
 
   outputs =
-    { nixpkgs, home-manager, cljgen, ... }:
+    { ... } @ inputs:
     let
       system = "aarch64-darwin";
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = inputs.nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations."conao" = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."conao" = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         extraSpecialArgs = {
-          inherit system cljgen;
+          inherit system inputs;
         };
 
         # Specify your home configuration modules here, for example,
