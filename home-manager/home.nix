@@ -1,4 +1,4 @@
-{ config, pkgs, cljgen, ... }:
+{ config, pkgs, system, cljgen, ... }:
 
 {
   nixpkgs = {
@@ -44,7 +44,7 @@
         tig
         tree
       ] ++ [
-        cljgen
+        cljgen.packages.${system}.default
       ];
   };
 

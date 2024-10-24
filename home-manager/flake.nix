@@ -24,6 +24,10 @@
       homeConfigurations."conao" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
+        extraSpecialArgs = {
+          inherit system cljgen;
+        };
+
         # Specify your home configuration modules here, for example,
         # the path to your home.nix.
         modules = [ ./home.nix ];
