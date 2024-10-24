@@ -11,6 +11,10 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    emacs-overlay = {
+      url = "github:nix-community/emacs-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     cljgen = {
       url = "github:conao3/clojure-cljgen";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -26,7 +30,13 @@
     in
     {
       homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [
+            inputs.emacs-overlay.overlay
+          ];
+        };
 
         extraSpecialArgs = {
           inherit system username inputs;

@@ -8,12 +8,6 @@
 }:
 
 {
-  nixpkgs = {
-    config = {
-      allowUnfree = true;
-    };
-  };
-
   home = {
     inherit username;
 
@@ -46,16 +40,15 @@
         babashka
         binutils
         clj-kondo
-        cljstyle
         clojure
         clojure-lsp
         coreutils
         deno
         devenv
         diffutils
-        emacs
         ffmpeg
         ghq
+        git-secrets
         imagemagick
         jansson
         leiningen
@@ -74,6 +67,9 @@
         tig
         tokei
         tree
+
+        cljstyle
+        emacs-git
       ]
       ++ [
         inputs.cljgen.packages.${system}.default
