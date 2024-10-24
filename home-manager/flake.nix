@@ -14,7 +14,7 @@
   };
 
   outputs =
-    { ... } @ inputs:
+    { ... }@inputs:
     let
       system = "aarch64-darwin";
       pkgs = inputs.nixpkgs.legacyPackages.${system};

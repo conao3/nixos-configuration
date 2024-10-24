@@ -1,4 +1,10 @@
-{ config, pkgs, system, inputs, ... }:
+{
+  config,
+  pkgs,
+  system,
+  inputs,
+  ...
+}:
 
 {
   nixpkgs = {
@@ -43,7 +49,8 @@
         nix-prefetch-github
         tig
         tree
-      ] ++ [
+      ]
+      ++ [
         inputs.cljgen.packages.${system}.default
       ];
   };
