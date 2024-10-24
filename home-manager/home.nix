@@ -35,7 +35,6 @@
       in
       with pkgs;
       [
-        autoconf
         aws-sam-cli
         babashka
         binutils
@@ -50,15 +49,12 @@
         ghq
         git-secrets
         imagemagick
-        jansson
         leiningen
         libgccjit
         minio
         mkcert
         moreutils
-        ncurses
         ngrok
-        nix-prefetch-github
         nkf
         python3
         rlwrap
