@@ -19,8 +19,6 @@
     };
 
     sessionPath = [
-      "/Applications/Emacs.app/Contents/MacOS/bin"
-      "/Applications/Emacs.app/Contents/MacOS"
       "$HOME/.local/bin"
       "$HOME/.anyenv/bin"
       "$HOME/.elan/bin"
