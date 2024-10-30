@@ -23,8 +23,8 @@
       url = "github:conao3/clojure-cljgen";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-clojure-flake = {
-      url = "github:conao3-playground/nix-clojure-flake";
+    nix-flake-clojure = {
+      url = "github:conao3-playground/nix-flake-clojure";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

@@ -43,7 +43,7 @@
         "devshell": "devshell_2",
         "nix-fetcher-data": "nix-fetcher-data_2",
         "nixpkgs": [
-          "nix-clojure-flake",
+          "nix-flake-clojure",
           "nixpkgs"
         ]
       },
@@ -108,7 +108,7 @@
     "devshell_2": {
       "inputs": {
         "nixpkgs": [
-          "nix-clojure-flake",
+          "nix-flake-clojure",
           "clj-nix",
           "nixpkgs"
         ]
@@ -316,28 +316,6 @@
         "type": "github"
       }
     },
-    "nix-clojure-flake": {
-      "inputs": {
-        "clj-nix": "clj-nix_2",
-        "flake-utils": "flake-utils_4",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1730276257,
-        "narHash": "sha256-wBCEFLkoc54SQyIfXk9rFFtTtW8no18taajNr3loztw=",
-        "owner": "conao3-playground",
-        "repo": "nix-clojure-flake",
-        "rev": "d963f9d73f2b1e6a3e84570ddcbb7bea4a9d793b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "conao3-playground",
-        "repo": "nix-clojure-flake",
-        "type": "github"
-      }
-    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -385,7 +363,7 @@
       "inputs": {
         "flake-parts": "flake-parts_2",
         "nixpkgs": [
-          "nix-clojure-flake",
+          "nix-flake-clojure",
           "clj-nix",
           "nixpkgs"
         ]
@@ -401,6 +379,28 @@
       "original": {
         "owner": "jlesquembre",
         "repo": "nix-fetcher-data",
+        "type": "github"
+      }
+    },
+    "nix-flake-clojure": {
+      "inputs": {
+        "clj-nix": "clj-nix_2",
+        "flake-utils": "flake-utils_4",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1730278927,
+        "narHash": "sha256-oSU8a9fTd9TY4ho+pb2pyOl4iWqAJCTHt9aqGjImyXE=",
+        "owner": "conao3-playground",
+        "repo": "nix-flake-clojure",
+        "rev": "8625f2578d8492076de7e2ce3f7ba6459379e087",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3-playground",
+        "repo": "nix-flake-clojure",
         "type": "github"
       }
     },
@@ -466,8 +466,8 @@
         "emacs-overlay": "emacs-overlay",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
-        "nix-clojure-flake": "nix-clojure-flake",
         "nix-darwin": "nix-darwin",
+        "nix-flake-clojure": "nix-flake-clojure",
         "nixpkgs": "nixpkgs"
       }
     },
