@@ -27,6 +27,13 @@
 
     language.base = "en_US.UTF-8";
 
+    file = {
+      ".config" = {
+        source = ./.config;
+        recursive = true;
+      };
+    };
+
     packages =
       let
         cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix { };
