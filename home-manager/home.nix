@@ -44,6 +44,7 @@
         devenv
         diffutils
         ffmpeg
+        ghostscript
         ghq
         git-secrets
         imagemagick
