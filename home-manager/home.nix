@@ -75,6 +75,7 @@
       ]
       ++ [
         inputs.cljgen.packages.${system}.default
+        inputs.nix-clojure-flake.packages.${system}.default
       ];
   };
 
