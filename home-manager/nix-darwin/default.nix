@@ -39,7 +39,7 @@
     enable = true;
     onActivation = {
       autoUpdate = true;
-      cleanup = "uninstall";
+      # cleanup = "uninstall";  # clojure/mkcert issue
     };
     casks = [
       "1password"
