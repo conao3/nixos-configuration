@@ -62,6 +62,7 @@
         moreutils
         ngrok
         nkf
+        ollama
         python3
         rlwrap
         sqlite
