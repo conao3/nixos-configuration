@@ -105,6 +105,7 @@
     vscode.enable = true;
 
     bash = import ./programs/bash.nix;
+    direnv = import ./programs/direnv.nix;
     git = import ./programs/git.nix;
     neovim = import ./programs/neovim.nix;
     zsh = import ./programs/zsh.nix;
