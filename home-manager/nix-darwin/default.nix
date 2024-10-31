@@ -55,6 +55,7 @@
       "google-japanese-ime"
       "jetbrains-toolbox"
       "karabiner-elements"
+      "multipass"
       "slack"
       "thunderbird"
       "utm"
