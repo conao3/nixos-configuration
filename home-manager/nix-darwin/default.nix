@@ -44,6 +44,7 @@
     casks = [
       "1password"
       "altair-graphql-client"
+      "aquaskk"
       "asana"
       "corretto@11"
       "coteditor"
