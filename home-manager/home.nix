@@ -97,11 +97,40 @@
     java.enable = true;
     jq.enable = true;
     lsd.enable = true;
-    neovim.enable = true;
     ripgrep.enable = true;
     tmux.enable = true;
     vim.enable = true;
     vscode.enable = true;
+
+    neovim = {
+      enable = true;
+
+      # https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/editors/vim/plugins/vim-plugin-names
+      plugins = with pkgs.vimPlugins; [
+        nvim-lspconfig
+        {
+          plugin = fzf-vim;
+          config = ''
+            " let $FZF_DEFAULT_COMMAND = "fd --type f --hidden -E '.git'"
+            nnoremap <leader>t  :FZF<cr>
+            nnoremap <leader>sp :Rg<cr>
+            nnoremap <leader>,  :Buffers<cr>
+            nnoremap <leader>bb :Buffers<cr>
+            nnoremap <leader>bd :bd<cr>
+            nnoremap <leader>ss :BLines<cr>
+            nnoremap <leader>bB :Windows<cr>
+            nnoremap <leader>ff :Files<cr>
+            nnoremap <leader>ht :Colors<cr>
+            nnoremap <leader>hh :Helptags<cr>
+            nnoremap <leader>gg :Changes<cr>
+            nnoremap <leader>gl :Commits<cr>
+            nnoremap <leader>oT :terminal<cr>
+
+            nnoremap <leader>hrr :source ~/.config/nvim/init.lua<cr>
+          '';
+        }
+      ];
+    };
 
     bash = {
       enable = true;
