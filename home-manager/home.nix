@@ -7,6 +7,7 @@
   ...
 }:
 
+# https://home-manager-options.extranix.com/?query=&release=release-24.05
 {
   home = {
     inherit username;
