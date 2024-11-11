@@ -1,0 +1,56 @@
+#+author: conao3
+
+* Table of Contents
+- [[#description][Description]]
+- [[#install][Install]]
+- [[#usage][Usage]]
+- [[#customize][Customize]]
+- [[#information][Information]]
+  - [[#community][Community]]
+  - [[#contribution][Contribution]]
+  - [[#migration][Migration]]
+  - [[#license][License]]
+  - [[#author][Author]]
+
+* Description
+{{description}}.
+
+* Install
+Sample install code using [[https://github.com/conao3/leaf.el][leaf.el]].
+
+#+begin_src emacs-lisp
+(leaf {{repo-name}} :ensure t)
+#+end_src
+
+* Usage
+
+* Customize
+
+* Information
+** Contribution
+We welcome PR!
+
+*** Require tools for testing
+- keg
+#+begin_src shell
+cd ~/
+gh repo clone conao3/keg .keg
+export PATH="$HOME/.keg/bin:$PATH"
+#+end_src
+
+*** Running test
+#+begin_src shell
+make test
+#+end_src
+
+** Migration
+
+** License
+#+begin_example
+General Public License Version 3 (GPLv3)
+Copyright (c) Naoya Yamashita - https://conao3.com
+https://github.com/conao3/eglot-lsp-settings.el/blob/master/LICENSE
+#+end_example
+
+** Author
+- Naoya Yamashita ([[https://github.com/conao3][conao3]])

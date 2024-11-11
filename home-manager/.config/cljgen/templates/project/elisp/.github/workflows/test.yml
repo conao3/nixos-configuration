@@ -1,0 +1,23 @@
+name: Main workflow
+
+on:
+  push: {branches: [master]}
+  pull_request: {branches: [master]}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '29.4'
+      - uses: conao3/setup-keg@master
+
+      - name: Run tests
+        if: matrix.allow_failure != true
+        run: 'make test'
+
+      - name: Run tests (allow failure)
+        if: matrix.allow_failure == true
+        run: 'make test || true'
