@@ -57,6 +57,7 @@
       "jetbrains-toolbox"
       "karabiner-elements"
       "multipass"
+      "session-manager-plugin"
       "slack"
       "thunderbird"
       "utm"
