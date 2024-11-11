@@ -1,7 +1,7 @@
 (source gnu melpa)
 
 (package
- (eglot-lsp-settings
+ ({{repo-name}}
   (recipe . ({{repo-name}} :fetcher github :repo "conao3/elisp-{{repo-name}}"))))
 
 (dev-dependency cort)
