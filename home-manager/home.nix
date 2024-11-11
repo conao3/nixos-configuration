@@ -41,7 +41,7 @@
       in
       with pkgs;
       [
-        aws-sam-cli
+        # aws-sam-cli
         babashka
         binutils
         clj-kondo
