@@ -9,6 +9,7 @@
   "\#*"
   "*_flymake.*"
   "flycheck_*"
+  ".dir-locals-2.el"
 
   # Vim
   "*.swp"
