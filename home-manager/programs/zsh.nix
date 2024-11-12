@@ -5,7 +5,7 @@
     eval "$(anyenv init -)"
   '';
   initExtra = ''
-    [[ -s "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh" ]] && source "/opt/homebrew/opt/sdkman-cli/libexec/bin/sdkman-init.sh"
+    [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
   '';
   envExtra = ''
     . "$HOME/.cargo/env"

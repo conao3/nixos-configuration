@@ -15,10 +15,6 @@
     stateVersion = "24.05";
     homeDirectory = "/Users/${username}";
 
-    sessionVariables = {
-      SDKMAN_DIR = "/opt/homebrew/opt/sdkman-cli/libexec";
-    };
-
     sessionPath = [
       "$HOME/.local/bin"
       "$HOME/.anyenv/bin"
