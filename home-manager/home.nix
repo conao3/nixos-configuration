@@ -13,7 +13,7 @@
     inherit username;
 
     stateVersion = "24.05";
-    homeDirectory = "/Users/${username}";
+    homeDirectory = "/home/${username}";
 
     sessionPath = [
       "$HOME/.local/bin"
@@ -67,9 +67,10 @@
         tig
         tokei
         tree
+	firefox
 
         cljstyle
-        emacs-git
+        # emacs-git
       ]
       ++ [
         inputs.cljgen.packages.${system}.default

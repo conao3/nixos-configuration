@@ -7,22 +7,50 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-  };
-
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }: {
-    nixosConfigurations = {
-      perses = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ./nixos/configuration.nix
-          home-manager.nixosModules.home-manager {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.users.conao = import ./home-manager/home.nix;
-          }
-        ];
-      };
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    emacs-overlay = {
+      url = "github:nix-community/emacs-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    mac-app-util = {
+      url = "github:hraban/mac-app-util";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    cljgen = {
+      url = "github:conao3/clojure-cljgen";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-flake-clojure = {
+      url = "github:conao3-playground/nix-flake-clojure";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
+
+  outputs =
+    { ... }@inputs:
+    let
+      system = "x86_64-linux";
+      username = "conao";
+      pkgs = inputs.nixpkgs.legacyPackages.${system};
+    in
+    {
+      nixosConfigurations = {
+        helios = inputs.nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = [
+            ./nixos/configuration.nix
+            inputs.home-manager.nixosModules.home-manager {
+      	      home-manager.extraSpecialArgs = { inherit system username inputs; };
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "backup";
+              home-manager.users.conao = import ./home-manager/home.nix;
+            }
+          ];
+        };
+      };
+    };
 }
