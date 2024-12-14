@@ -9,6 +9,11 @@
 
 # https://home-manager-options.extranix.com/?query=&release=release-24.05
 {
+  xsession = {
+    enable = true;
+    initExtra = "xset r rate 200 50";
+  };
+
   home = {
     inherit username;
 
@@ -67,7 +72,11 @@
         tig
         tokei
         tree
-	firefox
+        firefox
+        gnome-system-monitor
+        gparted
+        vlc
+	unzip
 
         cljstyle
         # emacs-git
@@ -106,5 +115,9 @@
     git = import ./programs/git.nix;
     neovim = import ./programs/neovim.nix;
     zsh = import ./programs/zsh.nix;
+    emacs = {
+      enable = true;
+      package = pkgs.emacs-git;
+    };
   };
 }

@@ -34,7 +34,11 @@
     let
       system = "x86_64-linux";
       username = "conao";
-      pkgs = inputs.nixpkgs.legacyPackages.${system};
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        overlays = [ inputs.emacs-overlay.overlay ];
+      };
     in
     {
       nixosConfigurations = {
@@ -43,8 +47,8 @@
           modules = [
             ./nixos/configuration.nix
             inputs.home-manager.nixosModules.home-manager {
-      	      home-manager.extraSpecialArgs = { inherit system username inputs; };
-              home-manager.useGlobalPkgs = true;
+              home-manager.extraSpecialArgs = { inherit pkgs system username inputs; };
+              # home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "backup";
               home-manager.users.conao = import ./home-manager/home.nix;

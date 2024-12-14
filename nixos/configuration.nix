@@ -58,13 +58,31 @@
     };
   };
 
+  boot.extraModprobeConfig = ''
+    options hid_apple fnmode=0
+  '';
+
   services = {
     displayManager.defaultSession = "xfce";
     # displayManager.defaultSession = "none+i3";
     spice-vdagentd.enable = true;
     blueman.enable = true;
+    displayManager = {
+      autoLogin = {
+        enable = true;
+        user = "conao";
+      };
+    };
     xserver = {
       enable = true;
+      xkb = {
+        options = "ctrl:nocaps";
+      };
+      displayManager = {
+        sessionCommands = ''
+          ${pkgs.xorg.xset}/bin/xset r rate 200 50
+        '';
+      };
       desktopManager = {
         xterm.enable = false;
         xfce = {
@@ -103,9 +121,12 @@
 
   users.users.conao = {
     isNormalUser = true;
+    initialHashedPassword = "$y$j9T$uV54QRfWPePTdlGa6.3Bg0$mUm0g4FAdNT6OLzHkjllngfKWfd0ux0aBfENE6gCfK/";
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "docker" ];
   };
+
+  security.sudo.wheelNeedsPassword = false;
 
   environment.systemPackages = with pkgs; [
     git                         # required by home-manager
@@ -135,5 +156,11 @@
 
   virtualisation = {
     docker.enable = true;
+    vmVariant = {
+      virtualisation = {
+        memorySize = 10240;
+        cores = 4;
+      };
+    };
   };
 }
