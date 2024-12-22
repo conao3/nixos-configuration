@@ -76,7 +76,7 @@
     xserver = {
       enable = true;
       xkb = {
-        options = "ctrl:nocaps";
+        options = "ctrl:nocaps,altwin:swap_alt_win";
       };
       displayManager = {
         sessionCommands = ''
