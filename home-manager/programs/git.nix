@@ -15,6 +15,9 @@
     init = {
       defaultBranch = "master";
     };
+    help = {
+      autoCorrect = "immediate";
+    };
     fetch = {
       prune = true;
     };

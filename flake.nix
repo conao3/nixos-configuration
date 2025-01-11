@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -46,7 +47,8 @@
           inherit system;
           modules = [
             ./nixos/configuration.nix
-            inputs.home-manager.nixosModules.home-manager {
+            inputs.home-manager.nixosModules.home-manager
+            {
               home-manager.extraSpecialArgs = { inherit pkgs system username inputs; };
               # home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
@@ -56,5 +58,6 @@
           ];
         };
       };
+      formatter.x86_64-linux = pkgs.nixpkgs-fmt;
     };
 }

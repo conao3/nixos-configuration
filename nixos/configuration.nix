@@ -14,8 +14,8 @@
       options = "--delete-order-than 7d";
     };
     settings = {
-      experimental-features = ["nix-command" "flakes"];
-      trusted-users = ["root" "@wheel"];
+      experimental-features = [ "nix-command" "flakes" ];
+      trusted-users = [ "root" "@wheel" ];
     };
   };
 
@@ -129,7 +129,7 @@
   security.sudo.wheelNeedsPassword = false;
 
   environment.systemPackages = with pkgs; [
-    git                         # required by home-manager
+    git # required by home-manager
   ];
 
   programs = {

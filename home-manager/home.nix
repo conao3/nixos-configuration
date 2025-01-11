@@ -1,10 +1,9 @@
-{
-  config,
-  pkgs,
-  system,
-  username,
-  inputs,
-  ...
+{ config
+, pkgs
+, system
+, username
+, inputs
+, ...
 }:
 
 # https://home-manager-options.extranix.com/?query=&release=release-24.05
@@ -165,9 +164,12 @@
       in
       with pkgs;
       [
+        # https://search.nixos.org/packages
         # aws-sam-cli
         babashka
         binutils
+        cargo
+        chromium
         clj-kondo
         clojure
         clojure-lsp
@@ -175,11 +177,18 @@
         deno
         devenv
         diffutils
+        dig
         ffmpeg
+        firefox
         ghostscript
         ghq
         git-secrets
+        gnome-system-monitor
+        gnumake
+        gparted
         imagemagick
+        inetutils
+        jetbrains.idea-ultimate
         leiningen
         libgccjit
         minio
@@ -187,6 +196,7 @@
         moreutils
         ngrok
         nkf
+        nodejs
         ollama
         python3
         rlwrap
@@ -195,12 +205,8 @@
         tig
         tokei
         tree
-        firefox
-        gnome-system-monitor
-        gparted
-        vlc
         unzip
-        gnumake
+        vlc
         zip
 
         cljstyle
@@ -218,7 +224,6 @@
     # firefox.enable = true;
     # foot.enable = true;
     alacritty.enable = true;
-    atuin.enable = true;
     awscli.enable = true;
     bat.enable = true;
     eza.enable = true;
@@ -235,14 +240,12 @@
     vim.enable = true;
     vscode.enable = true;
 
+    atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;
     direnv = import ./programs/direnv.nix;
+    emacs = import ./programs/emacs.nix (pkgs);
     git = import ./programs/git.nix;
     neovim = import ./programs/neovim.nix;
     zsh = import ./programs/zsh.nix;
-    emacs = {
-      enable = true;
-      package = pkgs.emacs-git;
-    };
   };
 }
