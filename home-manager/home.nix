@@ -208,6 +208,8 @@
         unzip
         vlc
         zip
+        xsel
+        rar
 
         cljstyle
         # emacs-git

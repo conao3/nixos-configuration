@@ -59,7 +59,7 @@
   };
 
   boot.extraModprobeConfig = ''
-    options hid_apple fnmode=0
+    options hid_apple fnmode=2
   '';
 
   services = {
@@ -67,6 +67,7 @@
     # displayManager.defaultSession = "none+i3";
     spice-vdagentd.enable = true;
     blueman.enable = true;
+    gnome.gnome-keyring.enable = true;
     displayManager = {
       autoLogin = {
         enable = true;
