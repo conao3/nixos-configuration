@@ -77,7 +77,7 @@
     noto-fonts-monochrome-emoji
     hackgen-font
     hackgen-nf-font
-    nerdfonts
+    # nerdfonts
     emacs-all-the-icons-fonts
     font-awesome
     font-awesome_5
