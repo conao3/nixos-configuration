@@ -25,6 +25,9 @@
       autoStash = true;
       autoSquash = true;
     };
+    merge = {
+      conflictstyle = "diff3";
+    };
     color = {
       ui = "auto";
       status = "auto";

@@ -146,6 +146,7 @@
       "$HOME/.local/bin"
       "$HOME/.anyenv/bin"
       "$HOME/.elan/bin"
+      "$HOME/.volta/bin"
       "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
     ];
 
@@ -158,6 +159,7 @@
       };
     };
 
+    # https://search.nixos.org/packages?channel=24.11
     packages =
       let
         cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix { };
@@ -198,7 +200,10 @@
         nkf
         nodejs
         ollama
-        python3
+        # pdm  # missing virtualenv when `pdm init`
+        pipx
+        poetry
+        python313
         rlwrap
         sqlite
         tailscale
@@ -210,6 +215,9 @@
         zip
         xsel
         rar
+        volta
+        unixtools.watch
+        sbcl
 
         cljstyle
         # emacs-git
@@ -221,6 +229,7 @@
   };
 
   programs = {
+    # https://nix-community.github.io/home-manager/options.xhtml
     home-manager.enable = true;
     # chromium.enable = true;
     # firefox.enable = true;
