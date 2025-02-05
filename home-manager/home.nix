@@ -169,6 +169,7 @@
       [
         # https://search.nixos.org/packages
         # aws-sam-cli
+        # pdm  # missing virtualenv when `pdm init`
         babashka
         binutils
         cargo
@@ -202,8 +203,8 @@
         nkf
         nodejs
         ollama
-        # pdm  # missing virtualenv when `pdm init`
         pipx
+        pnpm
         poetry
         python313
         rar
@@ -217,12 +218,9 @@
         unixtools.watch
         unzip
         vlc
-        zip
-        xsel
-        rar
         volta
-        unixtools.watch
-        sbcl
+        xsel
+        zip
 
         cljstyle
         # emacs-git
