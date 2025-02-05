@@ -180,6 +180,7 @@
         devenv
         diffutils
         dig
+        eask-cli
         ffmpeg
         firefox
         ghostscript
@@ -188,6 +189,7 @@
         gnome-system-monitor
         gnumake
         gparted
+        gprolog
         imagemagick
         inetutils
         jetbrains.idea-ultimate
@@ -204,12 +206,16 @@
         pipx
         poetry
         python313
+        rar
         rlwrap
+        sbcl
         sqlite
         tailscale
         tig
         tokei
         tree
+        typescript-language-server
+        unixtools.watch
         unzip
         vlc
         zip
