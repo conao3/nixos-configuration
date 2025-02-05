@@ -2,5 +2,10 @@
 
 {
   enable = true;
-  package = pkgs.emacs-git;
+  package = (pkgs.emacsPackagesFor pkgs.emacs-git).emacsWithPackages (
+    epkgs: with epkgs; [
+      vterm
+      treesit-grammars.with-all-grammars
+    ]
+  );
 }
