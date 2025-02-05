@@ -174,7 +174,6 @@
         chromium
         clj-kondo
         clojure
-        clojure-lsp
         coreutils
         deno
         devenv
@@ -214,7 +213,6 @@
         tig
         tokei
         tree
-        typescript-language-server
         unixtools.watch
         unzip
         vlc
@@ -228,6 +226,12 @@
         cljstyle
         # emacs-git
       ]
+      ++ (with pkgs; [
+        ## language-servers
+        clojure-lsp
+        typescript-language-server
+        nodePackages.graphql-language-service-cli
+      ])
       ++ [
         inputs.cljgen.packages.${system}.default
         inputs.nix-flake-clojure.packages.${system}.default
