@@ -1,9 +1,10 @@
-{ config
-, pkgs
-, system
-, username
-, inputs
-, ...
+{
+  config,
+  pkgs,
+  system,
+  username,
+  inputs,
+  ...
 }:
 
 # https://home-manager-options.extranix.com/?query=&release=release-24.05
