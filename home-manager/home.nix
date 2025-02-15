@@ -198,11 +198,12 @@
         libgccjit
         minio
         mkcert
-        moreutils
+        # moreutils
         ngrok
         nkf
         nodejs
         ollama
+        parallel
         pipx
         pnpm
         poetry
