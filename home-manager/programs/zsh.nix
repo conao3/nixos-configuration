@@ -8,6 +8,6 @@
     [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
   '';
   envExtra = ''
-    . "$HOME/.cargo/env"
+    [[ -s "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
   '';
 }
