@@ -231,7 +231,7 @@
         ## language-servers
         clojure-lsp
         typescript-language-server
-        nodePackages.graphql-language-service-cli
+        # nodePackages.graphql-language-service-cli
       ])
       ++ [
         inputs.cljgen.packages.${system}.default
