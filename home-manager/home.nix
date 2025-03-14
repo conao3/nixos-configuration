@@ -207,6 +207,7 @@
         pipx
         pnpm
         poetry
+        postgresql
         python313
         rar
         rlwrap
