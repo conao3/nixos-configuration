@@ -11,6 +11,7 @@
     core = {
       quotepath = false;
       fsmonitor = true;
+      untrackedcache = true;
     };
     init = {
       defaultBranch = "master";
