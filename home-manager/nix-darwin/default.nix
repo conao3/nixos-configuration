@@ -2,15 +2,12 @@
 
 {
   nix = {
-    useDaemon = true;
     optimise.automatic = true;
     settings = {
       experimental-features = "nix-command flakes";
       max-jobs = 8;
     };
   };
-
-  services.nix-daemon.enable = true;
 
   system = {
     stateVersion = 5;
@@ -32,7 +29,7 @@
   };
 
   security = {
-    pam.enableSudoTouchIdAuth = true;
+    pam.services.sudo_local.touchIdAuth = true;
   };
 
   homebrew = {
@@ -62,6 +59,7 @@
       "thunderbird"
       "utm"
       "visual-studio-code"
+      "vivaldi"
       "vmware-fusion"
       "xmind"
     ];
