@@ -223,6 +223,7 @@
         volta
         xsel
         zip
+        mpv
 
         cljstyle
         # emacs-git
