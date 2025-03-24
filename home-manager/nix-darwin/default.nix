@@ -10,7 +10,7 @@
   };
 
   system = {
-    stateVersion = 5;
+    stateVersion = 6;
     defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;
       finder = {
@@ -36,6 +36,7 @@
     enable = true;
     onActivation = {
       autoUpdate = true;
+      upgrade = true;
       # cleanup = "uninstall";  # clojure/mkcert issue
     };
     casks = [
