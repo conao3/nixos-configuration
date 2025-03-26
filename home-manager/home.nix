@@ -169,9 +169,11 @@
       [
         # https://search.nixos.org/packages
         # aws-sam-cli
+        # moreutils
         # pdm  # missing virtualenv when `pdm init`
         babashka
         binutils
+        burpsuite
         cargo
         chromium
         clj-kondo
@@ -198,7 +200,7 @@
         libgccjit
         minio
         mkcert
-        # moreutils
+        mpv
         ngrok
         nkf
         nodejs
@@ -223,7 +225,6 @@
         volta
         xsel
         zip
-        mpv
 
         cljstyle
         # emacs-git
