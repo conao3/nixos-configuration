@@ -3,13 +3,16 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-darwin = {
       url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     emacs-overlay = {
@@ -31,38 +34,63 @@
     claude-desktop = {
       url = "github:k3d3/claude-desktop-linux-flake";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
     };
   };
 
-  outputs =
-    { ... }@inputs:
-    let
-      system = "x86_64-linux";
-      username = "conao";
-      pkgs = import inputs.nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [ inputs.emacs-overlay.overlay ];
-      };
-    in
-    {
-      nixosConfigurations = {
-        helios = inputs.nixpkgs.lib.nixosSystem {
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" "aarch64-darwin" ];
+
+      flake = let
+        username = "conao";
+
+        linuxSystem = "x86_64-linux";
+        macSystem = "aarch64-darwin";
+
+        mkPkgs = system: import inputs.nixpkgs {
           inherit system;
-          modules = [
-            ./nixos/configuration.nix
-            inputs.home-manager.nixosModules.home-manager
-            {
-              home-manager.extraSpecialArgs = { inherit pkgs system username inputs; };
-              # home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.backupFileExtension = "backup";
-              home-manager.users.conao = import ./home-manager/home.nix;
-            }
-          ];
+          config.allowUnfree = true;
+          overlays = [ inputs.emacs-overlay.overlay ];
+        };
+
+        mkHomeConfiguration = { system, pkgs }: {
+          extraSpecialArgs = { inherit pkgs system username inputs; };
+          useUserPackages = true;
+          backupFileExtension = "backup";
+          users.${username} = import ./home-manager/home.nix;
+        };
+      in {
+        nixosConfigurations = {
+          helios = inputs.nixpkgs.lib.nixosSystem {
+            system = linuxSystem;
+            modules = [
+              ./nixos/configuration.nix
+              inputs.home-manager.nixosModules.home-manager
+              {
+                home-manager = mkHomeConfiguration {
+                  system = linuxSystem;
+                  pkgs = mkPkgs linuxSystem;
+                };
+              }
+            ];
+          };
+        };
+
+        darwinConfigurations = {
+          macos = inputs.nix-darwin.lib.darwinSystem {
+            system = macSystem;
+            modules = [
+              ./home-manager/nix-darwin/default.nix
+              inputs.home-manager.darwinModules.home-manager
+              {
+                home-manager = mkHomeConfiguration {
+                  system = macSystem;
+                  pkgs = mkPkgs macSystem;
+                };
+              }
+            ];
+          };
         };
       };
-      formatter.x86_64-linux = pkgs.nixpkgs-fmt;
     };
 }

@@ -1,6 +1,6 @@
 {
   enable = true;
-  lfs.enable = true;
+  # lfs.enable = true;
 
   userName = "conao3";
   userEmail = "conao3@gmail.com";
@@ -8,11 +8,11 @@
   ignores = import ../ext/git-ignore.nix;
 
   extraConfig = {
-    core = {
-      quotepath = false;
-      fsmonitor = true;
-      untrackedcache = true;
-    };
+    # core = {
+    #   quotepath = false;
+    #   fsmonitor = true;
+    #   untrackedcache = true;
+    # };
     init = {
       defaultBranch = "master";
     };

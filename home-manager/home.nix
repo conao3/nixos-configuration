@@ -10,12 +10,12 @@
 # https://home-manager-options.extranix.com/?query=&release=release-24.05
 {
   xsession = {
-    enable = true;
+    enable = !pkgs.stdenv.isDarwin;
     initExtra = "xset r rate 200 50";
   };
 
   xfconf = {
-    enable = true;
+    enable = !pkgs.stdenv.isDarwin;
     settings = {
       xfce4-keyboard-shortcuts = {
         "/commands/custom/<Alt>F1" = null;
@@ -141,7 +141,7 @@
     inherit username;
 
     stateVersion = "24.05";
-    homeDirectory = "/home/${username}";
+    homeDirectory = if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
 
     sessionPath = [
       "$HOME/.local/bin"
@@ -167,97 +167,103 @@
     packages =
       let
         cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix { };
-      in
-      with pkgs;
-      [
-        # https://search.nixos.org/packages
-        # aws-sam-cli
-        # moreutils
-        # pdm  # missing virtualenv when `pdm init`
-        babashka
-        binutils
-        burpsuite
-        cargo
-        chromium
-        claude-code
-        clj-kondo
-        clojure
-        coreutils
-        dbeaver-bin
-        deno
-        devenv
-        diffutils
-        dig
-        eask-cli
-        ffmpeg
-        firefox
-        ghostscript
-        ghq
-        git-secrets
-        gnome-system-monitor
-        gnumake
-        gparted
-        gprolog
-        imagemagick
-        inetutils
-        jetbrains.idea-ultimate
-        leiningen
-        libgccjit
-        minio
-        mkcert
-        mpv
-        ngrok
-        nkf
-        nodejs
-        ollama
-        parallel
-        pciutils
-        pdm
-        pipx
-        pnpm
-        poetry
-        postgresql
-        python313
-        qpdfview
-        rar
-        rlwrap
-        sbcl
-        sqldef
-        sqlite
-        tailscale
-        tig
-        tokei
-        tree
-        unixtools.watch
-        unzip
-        vlc
-        volta
-        xsel
-        zip
-        zlib
 
-        cljstyle
-        # emacs-git
-      ]
-      ++ (with pkgs; [
-        ## language-servers
-        clojure-lsp
-        typescript-language-server
-        # nodePackages.graphql-language-service-cli
-      ])
-      ++ [
-        inputs.cljgen.packages.${system}.default
-        inputs.nix-flake-clojure.packages.${system}.default
-        inputs.claude-desktop.packages.${system}.claude-desktop
-      ];
+        # https://search.nixos.org/packages
+        commonPackages = with pkgs; [
+          babashka
+          binutils
+          cargo
+          claude-code
+          clj-kondo
+          clojure
+          coreutils
+          deno
+          devenv
+          diffutils
+          dig
+          eask-cli
+          ffmpeg
+          ghostscript
+          ghq
+          git-secrets
+          gnumake
+          gprolog
+          imagemagick
+          inetutils
+          jetbrains.idea-ultimate
+          leiningen
+          libgccjit
+          minio
+          mkcert
+          mpv
+          ngrok
+          nkf
+          nodejs
+          parallel
+          pdm
+          pipx
+          pnpm
+          poetry
+          postgresql
+          python313
+          rar
+          rlwrap
+          sbcl
+          sqldef
+          sqlite
+          tailscale
+          tig
+          tokei
+          tree
+          unzip
+          vlc
+          volta
+          zip
+          zlib
+          cljstyle
+        ];
+
+        linuxPackages = with pkgs; [
+          burpsuite
+          chromium
+          dbeaver-bin
+          firefox
+          gnome-system-monitor
+          gparted
+          ollama
+          pciutils
+          qpdfview
+          unixtools.watch
+          xsel
+        ];
+
+        macPackages = with pkgs; [];
+
+        languageServers = with pkgs; [
+          clojure-lsp
+          typescript-language-server
+          # nodePackages.graphql-language-service-cli
+        ];
+
+        # Input packages that might need special handling
+        inputPackages = [
+          inputs.cljgen.packages.${system}.default
+          inputs.nix-flake-clojure.packages.${system}.default
+        ] ++ (if !pkgs.stdenv.isDarwin then [
+          inputs.claude-desktop.packages.${system}.claude-desktop
+        ] else []);
+
+      in
+      commonPackages
+      ++ (if pkgs.stdenv.isDarwin then macPackages else linuxPackages)
+      ++ languageServers
+      ++ inputPackages;
   };
 
   programs = {
     # https://nix-community.github.io/home-manager/options.xhtml
     home-manager.enable = true;
-    # chromium.enable = true;
-    # firefox.enable = true;
-    # foot.enable = true;
+
     alacritty.enable = true;
     awscli.enable = true;
     bat.enable = true;
