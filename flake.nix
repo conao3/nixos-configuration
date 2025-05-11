@@ -65,6 +65,7 @@
             system = linuxSystem;
             modules = [
               ./nixos/configuration.nix
+              ./hosts/helios
               inputs.home-manager.nixosModules.home-manager
               {
                 home-manager = mkHomeConfiguration {

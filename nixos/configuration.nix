@@ -1,10 +1,6 @@
 { config, lib, pkgs, ... }:
 
 {
-  imports = [
-    ./hardware-configuration.nix
-  ];
-
   system.stateVersion = "24.11";
 
   nix = {
@@ -21,16 +17,21 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
-    grub.configurationLimit = 42;
-  };
-
   networking = {
-    hostName = "conao-nixos-helios";
     firewall.enable = true;
     networkmanager.enable = true;
+  };
+
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+      grub.configurationLimit = 42;
+    };
+
+    extraModprobeConfig = ''
+      options hid_apple fnmode=2
+    '';
   };
 
   time.timeZone = "Asia/Tokyo";
@@ -58,10 +59,6 @@
       };
     };
   };
-
-  boot.extraModprobeConfig = ''
-    options hid_apple fnmode=2
-  '';
 
   services = {
     displayManager.defaultSession = "xfce";
