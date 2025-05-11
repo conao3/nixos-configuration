@@ -1,7 +1,9 @@
 # nixos-configuration
 
-## Rebuild NixOS
+```sh
+# NixOS helios
+sudo nixos-rebuild switch --flake ~/dev/repos/nixos-configuration#helios
 
-```shell
-sudo nixos-rebuild switch --flake ~/dev/repos/nixos-configuration#perses
+# macOS
+sudo nixos-rebuild switch --flake ~/dev/repos/nixos-configuration#macos
 ```
