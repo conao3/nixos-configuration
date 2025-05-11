@@ -110,6 +110,7 @@
               system = macSystem;
               modules = [
                 ./darwin/configuration.nix
+                inputs.mac-app-util.homeManagerModules.default
                 inputs.home-manager.darwinModules.home-manager
                 {
                   home-manager = mkHomeConfiguration {
