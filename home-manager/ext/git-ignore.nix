@@ -17,6 +17,7 @@
   # Editors
   ".vscode"
   ".idea"
+  ".calva"
 
   # Tags
   "GPATH"
