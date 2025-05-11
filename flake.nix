@@ -80,7 +80,7 @@
           macos = inputs.nix-darwin.lib.darwinSystem {
             system = macSystem;
             modules = [
-              ./home-manager/nix-darwin/default.nix
+              ./darwin/configuration.nix
               inputs.home-manager.darwinModules.home-manager
               {
                 home-manager = mkHomeConfiguration {
