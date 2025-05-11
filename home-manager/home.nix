@@ -166,7 +166,7 @@
     # https://search.nixos.org/packages?channel=24.11
     packages =
       let
-        cljstyle = pkgs.callPackage ./nixpkgs/cljstyle.nix { };
+        cljstyle = pkgs.callPackage ./pkgs/cljstyle.nix { };
 
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
