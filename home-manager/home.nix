@@ -182,6 +182,7 @@
         clj-kondo
         clojure
         coreutils
+        dbeaver-bin
         deno
         devenv
         diffutils
@@ -209,14 +210,18 @@
         nodejs
         ollama
         parallel
+        pciutils
+        pdm
         pipx
         pnpm
         poetry
         postgresql
         python313
+        qpdfview
         rar
         rlwrap
         sbcl
+        sqldef
         sqlite
         tailscale
         tig
@@ -228,6 +233,7 @@
         volta
         xsel
         zip
+        zlib
 
         cljstyle
         # emacs-git
@@ -241,6 +247,7 @@
       ++ [
         inputs.cljgen.packages.${system}.default
         inputs.nix-flake-clojure.packages.${system}.default
+        inputs.claude-desktop.packages.${system}.claude-desktop
       ];
   };
 
