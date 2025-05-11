@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   system.stateVersion = "24.11";
@@ -10,8 +15,14 @@
       options = "--delete-order-than 7d";
     };
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
-      trusted-users = [ "root" "@wheel" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+      trusted-users = [
+        "root"
+        "@wheel"
+      ];
     };
   };
 
@@ -122,7 +133,10 @@
     isNormalUser = true;
     initialHashedPassword = "$y$j9T$uV54QRfWPePTdlGa6.3Bg0$mUm0g4FAdNT6OLzHkjllngfKWfd0ux0aBfENE6gCfK/";
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "docker" ];
+    extraGroups = [
+      "wheel"
+      "docker"
+    ];
   };
 
   security.sudo.wheelNeedsPassword = false;
@@ -153,10 +167,19 @@
     ];
     fontconfig = {
       defaultFonts = {
-        serif = ["Noto Serif CJK JP" "Noto Color Emoji"];
-        sansSerif = ["Noto Sans CJK JP" "Noto Color Emoji"];
-        monospace = ["JetBrainsMono Nerd Font" "Noto Color Emoji"];
-        emoji = ["Noto Color Emoji"];
+        serif = [
+          "Noto Serif CJK JP"
+          "Noto Color Emoji"
+        ];
+        sansSerif = [
+          "Noto Sans CJK JP"
+          "Noto Color Emoji"
+        ];
+        monospace = [
+          "JetBrainsMono Nerd Font"
+          "Noto Color Emoji"
+        ];
+        emoji = [ "Noto Color Emoji" ];
       };
     };
   };

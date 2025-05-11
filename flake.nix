@@ -32,63 +32,94 @@
       url = "github:k3d3/claude-desktop-linux-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs:
+  outputs =
+    inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-darwin" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-darwin"
+      ];
 
-      flake = let
-        username = "conao";
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
 
-        linuxSystem = "x86_64-linux";
-        macSystem = "aarch64-darwin";
-
-        mkPkgs = system: import inputs.nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-          overlays = [ inputs.emacs-overlay.overlay ];
+      perSystem =
+        { config, pkgs, ... }:
+        {
+          treefmt.programs.nixfmt.enable = true;
         };
 
-        mkHomeConfiguration = { system, pkgs }: {
-          extraSpecialArgs = { inherit pkgs system username inputs; };
-          useUserPackages = true;
-          backupFileExtension = "backup";
-          users.${username} = import ./home-manager/home.nix;
-        };
-      in {
-        nixosConfigurations = {
-          helios = inputs.nixpkgs.lib.nixosSystem {
-            system = linuxSystem;
-            modules = [
-              ./nixos/configuration.nix
-              ./hosts/helios
-              inputs.home-manager.nixosModules.home-manager
-              {
-                home-manager = mkHomeConfiguration {
-                  system = linuxSystem;
-                  pkgs = mkPkgs linuxSystem;
-                };
-              }
-            ];
+      flake =
+        let
+          username = "conao";
+
+          linuxSystem = "x86_64-linux";
+          macSystem = "aarch64-darwin";
+
+          mkPkgs =
+            system:
+            import inputs.nixpkgs {
+              inherit system;
+              config.allowUnfree = true;
+              overlays = [ inputs.emacs-overlay.overlay ];
+            };
+
+          mkHomeConfiguration =
+            { system, pkgs }:
+            {
+              extraSpecialArgs = {
+                inherit
+                  pkgs
+                  system
+                  username
+                  inputs
+                  ;
+              };
+              useUserPackages = true;
+              backupFileExtension = "backup";
+              users.${username} = import ./home-manager/home.nix;
+            };
+        in
+        {
+          nixosConfigurations = {
+            helios = inputs.nixpkgs.lib.nixosSystem {
+              system = linuxSystem;
+              modules = [
+                ./nixos/configuration.nix
+                ./hosts/helios
+                inputs.home-manager.nixosModules.home-manager
+                {
+                  home-manager = mkHomeConfiguration {
+                    system = linuxSystem;
+                    pkgs = mkPkgs linuxSystem;
+                  };
+                }
+              ];
+            };
+          };
+
+          darwinConfigurations = {
+            macos = inputs.nix-darwin.lib.darwinSystem {
+              system = macSystem;
+              modules = [
+                ./darwin/configuration.nix
+                inputs.home-manager.darwinModules.home-manager
+                {
+                  home-manager = mkHomeConfiguration {
+                    system = macSystem;
+                    pkgs = mkPkgs macSystem;
+                  };
+                }
+              ];
+            };
           };
         };
-
-        darwinConfigurations = {
-          macos = inputs.nix-darwin.lib.darwinSystem {
-            system = macSystem;
-            modules = [
-              ./darwin/configuration.nix
-              inputs.home-manager.darwinModules.home-manager
-              {
-                home-manager = mkHomeConfiguration {
-                  system = macSystem;
-                  pkgs = mkPkgs macSystem;
-                };
-              }
-            ];
-          };
-        };
-      };
     };
 }

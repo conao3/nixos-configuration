@@ -237,7 +237,7 @@
           xsel
         ];
 
-        macPackages = with pkgs; [];
+        macPackages = with pkgs; [ ];
 
         languageServers = with pkgs; [
           clojure-lsp
@@ -246,12 +246,19 @@
         ];
 
         # Input packages that might need special handling
-        inputPackages = [
-          inputs.cljgen.packages.${system}.default
-          inputs.nix-flake-clojure.packages.${system}.default
-        ] ++ (if !pkgs.stdenv.isDarwin then [
-          inputs.claude-desktop.packages.${system}.claude-desktop
-        ] else []);
+        inputPackages =
+          [
+            inputs.cljgen.packages.${system}.default
+            inputs.nix-flake-clojure.packages.${system}.default
+          ]
+          ++ (
+            if !pkgs.stdenv.isDarwin then
+              [
+                inputs.claude-desktop.packages.${system}.claude-desktop
+              ]
+            else
+              [ ]
+          );
 
       in
       commonPackages

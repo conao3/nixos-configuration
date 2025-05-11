@@ -527,7 +527,8 @@
         "mac-app-util": "mac-app-util",
         "nix-darwin": "nix-darwin",
         "nix-flake-clojure": "nix-flake-clojure",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "treefmt-nix": "treefmt-nix"
       }
     },
     "systems": {
@@ -587,6 +588,26 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1746961151,
+        "narHash": "sha256-jCKoQycs5GB04JeGdj5kdpLJuKukJp+8H91EzJuMBlM=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "4819332186ee7058f9973ab5c2f245d6936e9530",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
         "type": "github"
       }
     }
