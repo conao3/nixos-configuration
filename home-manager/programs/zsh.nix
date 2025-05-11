@@ -4,7 +4,7 @@
     eval "$(/opt/homebrew/bin/brew shellenv)"
     eval "$(anyenv init -)"
   '';
-  initExtra = ''
+  initContent = ''
     [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
   '';
   envExtra = ''
