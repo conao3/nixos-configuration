@@ -179,6 +179,7 @@
         burpsuite
         cargo
         chromium
+        claude-code
         clj-kondo
         clojure
         coreutils
