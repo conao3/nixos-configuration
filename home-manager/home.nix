@@ -158,6 +158,9 @@
         source = ./.config;
         recursive = true;
       };
+      ".claude/CLAUDE.md" = {
+        source = ./ext/CLAUDE.md;
+      };
     };
 
     # https://search.nixos.org/packages?channel=24.11

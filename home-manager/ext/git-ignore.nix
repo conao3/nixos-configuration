@@ -26,4 +26,5 @@
   ".env"
   "*.conao3"
   "*.orig"
+  ".claude"
 ]
