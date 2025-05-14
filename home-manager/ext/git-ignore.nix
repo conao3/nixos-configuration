@@ -27,5 +27,7 @@
   ".env"
   "*.conao3"
   "*.orig"
+
   ".claude"
+  ".pnpm-store"   # https://github.com/orgs/pnpm/discussions/6936
 ]
