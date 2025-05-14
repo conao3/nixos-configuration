@@ -44,6 +44,7 @@
       "altair-graphql-client"
       "aquaskk"
       "asana"
+      "claude"
       "corretto@11"
       "coteditor"
       "dbeaver-community"
