@@ -141,7 +141,6 @@
     inherit username;
 
     stateVersion = "24.05";
-    homeDirectory = if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
 
     sessionPath = [
       "$HOME/.local/bin"
@@ -173,7 +172,7 @@
           babashka
           binutils
           cargo
-          claude-code
+          # claude-code
           clj-kondo
           clojure
           coreutils
@@ -190,13 +189,13 @@
           gprolog
           imagemagick
           inetutils
-          jetbrains.idea-ultimate
+          # jetbrains.idea-ultimate
           leiningen
           libgccjit
           minio
           mkcert
           mpv
-          ngrok
+          # ngrok
           nkf
           nodejs
           parallel
@@ -206,7 +205,7 @@
           poetry
           postgresql
           python313
-          rar
+          # rar
           rlwrap
           sbcl
           sqldef
@@ -216,7 +215,7 @@
           tokei
           tree
           unzip
-          vlc
+          # vlc
           volta
           zip
           zlib
@@ -288,7 +287,7 @@
     ripgrep.enable = true;
     tmux.enable = true;
     vim.enable = true;
-    vscode.enable = true;
+    vscode.enable = false;
 
     atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;
