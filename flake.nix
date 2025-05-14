@@ -71,21 +71,7 @@
               overlays = [ inputs.emacs-overlay.overlay ];
             };
 
-          mkHomeConfiguration =
-            { system, pkgs }:
-            {
-              extraSpecialArgs = {
-                inherit
-                  pkgs
-                  system
-                  username
-                  inputs
-                  ;
-              };
-              useUserPackages = true;
-              backupFileExtension = "backup";
-              users.${username} = import ./home-manager/home.nix;
-            };
+          inherit (inputs.home-manager.lib) hm;
         in
         {
           nixosConfigurations = {
@@ -96,9 +82,20 @@
                 ./hosts/helios
                 inputs.home-manager.nixosModules.home-manager
                 {
-                  home-manager = mkHomeConfiguration {
-                    system = linuxSystem;
-                    pkgs = mkPkgs linuxSystem;
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    backupFileExtension = "backup";
+                    extraSpecialArgs = {
+                      inherit username inputs;
+                      system = linuxSystem;
+                    };
+                    users.${username} = import ./home-manager/home.nix;
+                    sharedModules = [
+                      ({ config, lib, ... }: {
+                        home.homeDirectory = lib.mkForce "/home/${username}";
+                      })
+                    ];
                   };
                 }
               ];
@@ -110,12 +107,24 @@
               system = macSystem;
               modules = [
                 ./darwin/configuration.nix
-                inputs.mac-app-util.homeManagerModules.default
+                inputs.mac-app-util.darwinModules.default
                 inputs.home-manager.darwinModules.home-manager
                 {
-                  home-manager = mkHomeConfiguration {
-                    system = macSystem;
-                    pkgs = mkPkgs macSystem;
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    backupFileExtension = "backup";
+                    extraSpecialArgs = {
+                      inherit username inputs;
+                      system = macSystem;
+                    };
+                    users.${username} = import ./home-manager/home.nix;
+                    sharedModules = [
+                      inputs.mac-app-util.homeManagerModules.default
+                      ({ config, lib, ... }: {
+                        home.homeDirectory = lib.mkForce "/Users/${username}";
+                      })
+                    ];
                   };
                 }
               ];
