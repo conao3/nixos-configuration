@@ -1,14 +1,7 @@
 { pkgs, ... }:
 
 {
-  nix = {
-    optimise.automatic = true;
-    settings = {
-      experimental-features = "nix-command flakes";
-      max-jobs = 8;
-    };
-  };
-
+  # System configurations
   system = {
     stateVersion = 6;
     defaults = {
@@ -28,10 +21,12 @@
     };
   };
 
+  # Enable Touch ID for sudo
   security = {
     pam.services.sudo_local.touchIdAuth = true;
   };
 
+  # Homebrew packages and applications
   homebrew = {
     enable = true;
     onActivation = {
@@ -40,34 +35,49 @@
       # cleanup = "uninstall";  # clojure/mkcert issue
     };
     casks = [
+      # Development
+      "corretto@11"
+      "docker"
+      "dbeaver-community"
+      "jetbrains-toolbox"
+      "visual-studio-code"
+
+      # Browsers
+      "firefox"
+      "vivaldi"
+
+      # Productivity
       "1password"
       "altair-graphql-client"
-      "aquaskk"
-      "asana"
-      "claude"
-      "corretto@11"
-      "coteditor"
-      "dbeaver-community"
-      "docker"
-      "figma"
-      "firefox"
-      "gimp"
-      "google-japanese-ime"
-      "jetbrains-toolbox"
-      "karabiner-elements"
-      "multipass"
       "session-manager-plugin"
       "slack"
       "thunderbird"
-      "utm"
-      "visual-studio-code"
-      "vivaldi"
-      "vmware-fusion"
       "xmind"
+      "asana"
+      "multipass"
+
+      # Input methods and customization
+      "aquaskk"
+      "google-japanese-ime"
+      "karabiner-elements"
+
+      # Media/Graphics
+      "coteditor"
+      "figma"
+      "gimp"
+
+      # Virtualization
+      "utm"
+      "vmware-fusion"
+
+      # AI tools
+      "claude"
     ];
   };
 
+  # System fonts
   fonts.packages = with pkgs; [
+    # Noto font family
     noto-fonts
     noto-fonts-lgc-plus
     noto-fonts-cjk-sans
@@ -75,9 +85,13 @@
     noto-fonts-color-emoji
     noto-fonts-emoji-blob-bin
     noto-fonts-monochrome-emoji
+
+    # Developer fonts
     hackgen-font
     hackgen-nf-font
     # nerdfonts
+
+    # Icon fonts
     emacs-all-the-icons-fonts
     font-awesome
     font-awesome_5
