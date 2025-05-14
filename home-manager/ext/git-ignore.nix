@@ -27,7 +27,9 @@
   ".env"
   "*.conao3"
   "*.orig"
+
   ".claude"
   ".direnv"
   ".envrc"
+  ".pnpm-store"
 ]
