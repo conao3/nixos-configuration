@@ -176,8 +176,7 @@
           "Noto Color Emoji"
         ];
         monospace = [
-          "JetBrainsMono Nerd Font"
-          "Noto Color Emoji"
+          "Hackgen Console NF"
         ];
         emoji = [ "Noto Color Emoji" ];
       };
