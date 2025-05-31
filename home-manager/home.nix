@@ -220,6 +220,8 @@
           volta
           zip
           zlib
+          file
+
           cljstyle
         ];
 
