@@ -28,4 +28,6 @@
   "*.conao3"
   "*.orig"
   ".claude"
+  ".direnv"
+  ".envrc"
 ]
