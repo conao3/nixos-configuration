@@ -172,7 +172,7 @@
           babashka
           binutils
           cargo
-          # claude-code
+          claude-code
           clj-kondo
           clojure
           coreutils
@@ -189,13 +189,13 @@
           gprolog
           imagemagick
           inetutils
-          # jetbrains.idea-ultimate
           leiningen
           libgccjit
           minio
           mkcert
           mpv
-          # ngrok
+          ngrok
+          nix-output-monitor
           nkf
           nodejs
           parallel
@@ -205,7 +205,7 @@
           poetry
           postgresql
           python313
-          # rar
+          rar
           rlwrap
           sbcl
           sqldef
@@ -215,11 +215,11 @@
           tokei
           tree
           unzip
-          # vlc
           volta
           zip
           zlib
           file
+          unixtools.watch
 
           cljstyle
         ];
@@ -234,8 +234,9 @@
           ollama
           pciutils
           qpdfview
-          unixtools.watch
           xsel
+          jetbrains.idea-ultimate
+          vlc
         ];
 
         macPackages = with pkgs; [ ];
@@ -246,7 +247,6 @@
           # nodePackages.graphql-language-service-cli
         ];
 
-        # Input packages that might need special handling
         inputPackages =
           [
             inputs.cljgen.packages.${system}.default
@@ -287,7 +287,7 @@
     ripgrep.enable = true;
     tmux.enable = true;
     vim.enable = true;
-    vscode.enable = false;
+    vscode.enable = true;
 
     atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;

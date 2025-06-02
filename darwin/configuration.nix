@@ -9,6 +9,8 @@
     };
   };
 
+  nixpkgs.config.allowUnfree = true;
+
   system = {
     primaryUser = username;
     stateVersion = 6;
