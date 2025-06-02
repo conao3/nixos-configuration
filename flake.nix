@@ -62,16 +62,6 @@
 
           linuxSystem = "x86_64-linux";
           macSystem = "aarch64-darwin";
-
-          mkPkgs =
-            system:
-            import inputs.nixpkgs {
-              inherit system;
-              config.allowUnfree = true;
-              overlays = [ inputs.emacs-overlay.overlay ];
-            };
-
-          inherit (inputs.home-manager.lib) hm;
         in
         {
           nixosConfigurations = {
@@ -92,9 +82,12 @@
                     };
                     users.${username} = import ./home-manager/home.nix;
                     sharedModules = [
-                      ({ config, lib, ... }: {
-                        home.homeDirectory = lib.mkForce "/home/${username}";
-                      })
+                      (
+                        { config, lib, ... }:
+                        {
+                          home.homeDirectory = lib.mkForce "/home/${username}";
+                        }
+                      )
                     ];
                   };
                 }
@@ -122,9 +115,12 @@
                     users.${username} = import ./home-manager/home.nix;
                     sharedModules = [
                       inputs.mac-app-util.homeManagerModules.default
-                      ({ config, lib, ... }: {
-                        home.homeDirectory = lib.mkForce "/Users/${username}";
-                      })
+                      (
+                        { config, lib, ... }:
+                        {
+                          home.homeDirectory = lib.mkForce "/Users/${username}";
+                        }
+                      )
                     ];
                   };
                 }
