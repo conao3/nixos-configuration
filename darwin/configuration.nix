@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, username, ... }:
 
 {
   nix = {
@@ -10,6 +10,7 @@
   };
 
   system = {
+    primaryUser = username;
     stateVersion = 6;
     defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;

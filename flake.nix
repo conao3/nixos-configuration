@@ -105,6 +105,7 @@
           darwinConfigurations = {
             macos = inputs.nix-darwin.lib.darwinSystem {
               system = macSystem;
+              specialArgs = { inherit username; };
               modules = [
                 ./darwin/configuration.nix
                 inputs.mac-app-util.darwinModules.default
