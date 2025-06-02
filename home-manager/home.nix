@@ -182,6 +182,7 @@
           dig
           eask-cli
           ffmpeg
+          file
           ghostscript
           ghq
           git-secrets
@@ -194,6 +195,7 @@
           minio
           mkcert
           mpv
+          neil
           ngrok
           nix-output-monitor
           nkf
@@ -214,12 +216,11 @@
           tig
           tokei
           tree
+          unixtools.watch
           unzip
           volta
           zip
           zlib
-          file
-          unixtools.watch
 
           cljstyle
         ];
