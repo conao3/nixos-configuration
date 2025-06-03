@@ -59,6 +59,7 @@
       "jetbrains-toolbox"
       "karabiner-elements"
       "multipass"
+      "ollama"
       "session-manager-plugin"
       "slack"
       "thunderbird"
