@@ -160,6 +160,9 @@
       ".claude/CLAUDE.md" = {
         source = ./ext/CLAUDE.md;
       };
+      ".claude/settings.json" = {
+        source = ./ext/claude-settings.json;
+      };
     };
 
     # https://search.nixos.org/packages?channel=24.11
