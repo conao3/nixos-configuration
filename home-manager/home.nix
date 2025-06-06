@@ -221,6 +221,7 @@
           tree
           unixtools.watch
           unzip
+          uv
           volta
           zip
           zlib
