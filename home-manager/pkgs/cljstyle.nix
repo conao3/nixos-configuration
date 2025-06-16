@@ -21,4 +21,8 @@ buildGraalvmNativeImage rec {
     "--report-unsupported-elements-at-runtime"
     "--no-fallback"
   ];
+
+  meta = {
+    mainProgram = "cljstyle";
+  };
 }
