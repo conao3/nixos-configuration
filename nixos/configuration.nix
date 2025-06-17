@@ -164,6 +164,7 @@
       noto-fonts-emoji-blob-bin
       hackgen-font
       hackgen-nf-font
+      texlivePackages.haranoaji
     ];
     fontconfig = {
       defaultFonts = {
