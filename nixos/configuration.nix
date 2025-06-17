@@ -71,6 +71,11 @@
     };
   };
 
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
   services = {
     displayManager.defaultSession = "xfce";
     # displayManager.defaultSession = "none+i3";
@@ -151,6 +156,12 @@
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
+    };
+    steam = {
+      enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.openFirewall = true;
+      localNetworkGameTransfers.openFirewall = true;
     };
   };
 
