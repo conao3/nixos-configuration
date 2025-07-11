@@ -183,6 +183,7 @@
           devenv
           diffutils
           dig
+          duckdb
           eask-cli
           ffmpeg
           file
