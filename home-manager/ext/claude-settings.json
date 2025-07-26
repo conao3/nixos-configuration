@@ -165,8 +165,7 @@
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
     "DISABLE_COST_WARNINGS": "0",
     "BASH_DEFAULT_TIMEOUT_MS": "300000",
-    "BASH_MAX_TIMEOUT_MS": "1200000",
-    "MAX_THINKING_TOKENS": "200000"
+    "BASH_MAX_TIMEOUT_MS": "1200000"
   },
   "apiKeyHelper": null,
   "preferredNotifChannel": "terminal_bell"
