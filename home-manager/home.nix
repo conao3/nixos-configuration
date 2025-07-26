@@ -204,6 +204,7 @@
           nix-output-monitor
           nkf
           nodejs
+          obsidian
           parallel
           pdm
           pipx
