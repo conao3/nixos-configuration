@@ -67,6 +67,7 @@
           nixosConfigurations = {
             helios = inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
+              specialArgs = { inherit inputs; };
               modules = [
                 ./nixos/configuration.nix
                 ./hosts/helios
