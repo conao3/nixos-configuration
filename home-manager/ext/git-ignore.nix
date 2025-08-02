@@ -32,4 +32,7 @@
   ".direnv"
   ".envrc"
   ".pnpm-store"
+
+  # Refference supprements
+  "/.ref"
 ]
