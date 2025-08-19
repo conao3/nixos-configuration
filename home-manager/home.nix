@@ -197,7 +197,6 @@
           leiningen
           libgccjit
           minio
-          mkcert
           mpv
           neil
           ngrok
