@@ -1,8 +1,8 @@
 {
   enable = true;
   profileExtra = ''
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    eval "$(anyenv init -)"
+    which brew >/dev/null 2>&1 && eval "$(/opt/homebrew/bin/brew shellenv)"
+    which anyenv >/dev/null 2>&1 && eval "$(anyenv init -)"
   '';
   initContent = ''
     [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"

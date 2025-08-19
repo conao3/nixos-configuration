@@ -146,9 +146,8 @@
       "$HOME/.local/bin"
       "$HOME/.anyenv/bin"
       "$HOME/.elan/bin"
-      "$HOME/.volta/bin"
       "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
-    ];
+    ] ++ (if pkgs.stdenv.isDarwin then ["$HOME/.volta/bin"] else []);
 
     language.base = "en_US.UTF-8";
 
@@ -172,14 +171,11 @@
 
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
-          babashka
           binutils
           cargo
           claude-code
           clj-kondo
-          clojure
           coreutils
-          deno
           devenv
           diffutils
           dig
@@ -190,27 +186,18 @@
           ghostscript
           ghq
           git-secrets
-          gnumake
-          gprolog
           imagemagick
           inetutils
           leiningen
           libgccjit
-          minio
           mpv
           neil
           ngrok
           nix-output-monitor
           nkf
-          nodejs
           obsidian
           parallel
-          pdm
-          pipx
-          pnpm
-          poetry
           postgresql
-          python313
           rar
           rlwrap
           sbcl
@@ -222,8 +209,6 @@
           tree
           unixtools.watch
           unzip
-          uv
-          volta
           zip
           zlib
 
@@ -245,7 +230,20 @@
           vlc
         ];
 
-        macPackages = with pkgs; [ ];
+        macPackages = with pkgs; [
+          babashka
+          clojure
+          deno
+          gnumake
+          nodejs
+          pdm
+          pipx
+          pnpm
+          poetry
+          python
+          uv
+          volta
+        ];
 
         languageServers = with pkgs; [
           clojure-lsp

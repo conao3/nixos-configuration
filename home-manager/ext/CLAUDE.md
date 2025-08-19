@@ -21,6 +21,12 @@
 ## Pythonについて
 - pdmを使います
 
+## シェルスクリプトについて
+- bashを使います。
+- shebangは `#!/usr/bin/env bash` を記述します。
+- 冒頭に `set -euxo pipefail -o posix` を記述してからプログラムを記述します。
+- 基本的にコマンドが失敗したら `set -e` の効果により、その場で終了するようにします。
+
 ## Nixについて
 - flakeを使います
 - flake-partsを使います
