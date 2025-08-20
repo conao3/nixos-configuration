@@ -65,7 +65,7 @@
         in
         {
           nixosConfigurations = {
-            helios = inputs.nixpkgs.lib.nixosSystem {
+            "conao-nixos-helios" = inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
               specialArgs = { inherit inputs; };
               modules = [
