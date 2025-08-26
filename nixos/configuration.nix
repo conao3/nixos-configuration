@@ -97,11 +97,12 @@
     xserver = {
       enable = true;
       xkb = {
-        options = "ctrl:nocaps,altwin:swap_alt_win";
+        # options = "ctrl:nocaps,altwin:swap_alt_win";
       };
       displayManager = {
+        # default: 173 100
         sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 200 50
+          ${pkgs.xorg.xset}/bin/xset r rate 300 50
         '';
       };
       desktopManager = {
