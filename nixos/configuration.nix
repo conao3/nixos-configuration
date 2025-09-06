@@ -102,7 +102,7 @@
       displayManager = {
         # default: 173 100
         sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 300 50
+          ${pkgs.xorg.xset}/bin/xset r rate 250 25
         '';
       };
       desktopManager = {
