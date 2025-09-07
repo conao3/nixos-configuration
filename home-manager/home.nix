@@ -147,7 +147,8 @@
       "$HOME/.anyenv/bin"
       "$HOME/.elan/bin"
       "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
-    ] ++ (if pkgs.stdenv.isDarwin then ["$HOME/.volta/bin"] else []);
+    ]
+    ++ (if pkgs.stdenv.isDarwin then [ "$HOME/.volta/bin" ] else [ ]);
 
     language.base = "en_US.UTF-8";
 
@@ -213,6 +214,7 @@
           zlib
 
           cljstyle
+          go-tools.deck
         ];
 
         linuxPackages = with pkgs; [
@@ -251,19 +253,18 @@
           # nodePackages.graphql-language-service-cli
         ];
 
-        inputPackages =
-          [
-            # inputs.cljgen.packages.${system}.default
-            # inputs.nix-flake-clojure.packages.${system}.default
-          ]
-          ++ (
-            if !pkgs.stdenv.isDarwin then
-              [
-                inputs.claude-desktop.packages.${system}.claude-desktop
-              ]
-            else
-              [ ]
-          );
+        inputPackages = [
+          # inputs.cljgen.packages.${system}.default
+          # inputs.nix-flake-clojure.packages.${system}.default
+        ]
+        ++ (
+          if !pkgs.stdenv.isDarwin then
+            [
+              inputs.claude-desktop.packages.${system}.claude-desktop
+            ]
+          else
+            [ ]
+        );
 
       in
       commonPackages
