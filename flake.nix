@@ -71,6 +71,12 @@
               modules = [
                 ./nixos/configuration.nix
                 ./hosts/helios
+                {
+                  nixpkgs.overlays = [
+                    inputs.emacs-overlay.overlays.default
+                    (import ./overlays/go.nix)
+                  ];
+                }
                 inputs.home-manager.nixosModules.home-manager
                 {
                   home-manager = {
@@ -103,6 +109,12 @@
               modules = [
                 ./darwin/configuration.nix
                 inputs.mac-app-util.darwinModules.default
+                {
+                  nixpkgs.overlays = [
+                    # inputs.emacs-overlay.overlays.default
+                    (import ./overlays/go.nix)
+                  ];
+                }
                 inputs.home-manager.darwinModules.home-manager
                 {
                   home-manager = {
