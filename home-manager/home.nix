@@ -214,7 +214,6 @@
           zlib
 
           cljstyle
-          go-tools.deck
         ];
 
         linuxPackages = with pkgs; [
