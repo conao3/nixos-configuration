@@ -207,7 +207,7 @@
           sbcl
           sqldef
           sqlite
-          tailscale
+          # tailscale
           tig
           tokei
           tree
