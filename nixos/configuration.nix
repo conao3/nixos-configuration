@@ -100,8 +100,9 @@
       };
       displayManager = {
         # default: 173 100
+        # 250 25
         sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 250 25
+          ${pkgs.xorg.xset}/bin/xset r rate 400 25
         '';
       };
       desktopManager = {
