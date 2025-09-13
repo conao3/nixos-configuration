@@ -163,6 +163,9 @@
       ".claude/settings.json" = {
         source = ./ext/claude-settings.json;
       };
+      ".nrepl/nrepl.edn" = {
+        source = ./ext/nrepl.edn;
+      };
     };
 
     # https://search.nixos.org/packages?channel=24.11
