@@ -250,7 +250,6 @@
           pipx
           pnpm
           poetry
-          python
           uv
           volta
         ];
