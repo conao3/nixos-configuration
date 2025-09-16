@@ -144,11 +144,17 @@
 
     sessionPath = [
       "$HOME/.local/bin"
-      "$HOME/.anyenv/bin"
       "$HOME/.elan/bin"
-      "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
     ]
-    ++ (if pkgs.stdenv.isDarwin then [ "$HOME/.volta/bin" ] else [ ]);
+    ++ (
+      if pkgs.stdenv.isDarwin then
+        [
+          "$HOME/.volta/bin"
+          "$HOME/.anyenv/bin"
+        ]
+      else
+        [ ]
+    );
 
     language.base = "en_US.UTF-8";
 
