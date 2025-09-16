@@ -1,7 +1,7 @@
 {
   enable = true;
   profileExtra = ''
-    which brew >/dev/null 2>&1 && eval "$(/opt/homebrew/bin/brew shellenv)"
+    which /opt/homebrew/bin/brew >/dev/null 2>&1 && eval "$(/opt/homebrew/bin/brew shellenv)"
     which anyenv >/dev/null 2>&1 && eval "$(anyenv init -)"
   '';
   initContent = ''
