@@ -35,4 +35,5 @@
 
   # Refference supprements
   "/.ref"
+  "/.gittree"
 ]
