@@ -56,7 +56,6 @@
       "firefox"
       "gimp"
       "google-japanese-ime"
-      "jetbrains-toolbox"
       "karabiner-elements"
       "multipass"
       "obsidian"
