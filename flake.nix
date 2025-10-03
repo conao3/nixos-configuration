@@ -72,10 +72,15 @@
                 ./nixos/configuration.nix
                 ./hosts/helios
                 {
-                  nixpkgs.overlays = [
-                    inputs.emacs-overlay.overlays.default
-                    (import ./overlays/go.nix)
-                  ];
+                  nixpkgs = {
+                    overlays = [
+                      inputs.emacs-overlay.overlays.default
+                      (import ./overlays/go.nix)
+                    ];
+                    config.permittedInsecurePackages = [
+                      "googleearth-pro-7.3.6.10201"
+                    ];
+                  };
                 }
                 inputs.home-manager.nixosModules.home-manager
                 {

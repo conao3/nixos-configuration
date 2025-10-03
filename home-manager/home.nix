@@ -231,6 +231,7 @@
           dbeaver-bin
           firefox
           gnome-system-monitor
+          googleearth-pro
           gparted
           ollama
           pciutils
