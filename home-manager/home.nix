@@ -236,9 +236,9 @@
           ollama
           pciutils
           qpdfview
-          xsel
-          jetbrains.idea-ultimate
+          steam-run
           vlc
+          xsel
         ];
 
         macPackages = with pkgs; [
