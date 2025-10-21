@@ -169,6 +169,17 @@
       ".claude/settings.json" = {
         source = ./ext/claude-settings.json;
       };
+      ".config/Claude/claude_desktop_config.json" = {
+        text = builtins.toJSON {
+          globalShortcut = "Alt+Cmd+Space";
+          mcpServers = {
+            claude-code = {
+              command = "${pkgs.claude-code}/bin/claude";
+              args = ["mcp" "serve"];
+            };
+          };
+        };
+      };
       ".nrepl/nrepl.edn" = {
         source = ./ext/nrepl.edn;
       };
