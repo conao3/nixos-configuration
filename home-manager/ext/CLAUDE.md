@@ -1,12 +1,11 @@
 # claudeについて
 - 返答は日本語で行う
-- ユーザーが「reread」と指示したとき ~/.claude/CLAUDE.md を読み直す
 
 # 作業について
 - プロジェクトでの作業を開始するときに一番最初にすることは、READMEを読むこと
 - 次にMakefileを確認します。Makefileに有用なjobが定義されていることが多いです。
 - 次にpackage.jsonなど言語ごとの設定ファイルを読みます。これらも有用なスクリプトが定義されていることがあります。
-- 必要な一時ファイルを作成するときは .claude-tmp ディレクトリを作成して利用してください。
+- 必要な一時ファイルを作成するときは .claude-dev ディレクトリを作成して利用してください。
   - 一時ファイルだけではなく、必要なレポジトリをcloneしてくることも許可します。
 
 # コーディングスタイルについて
@@ -22,11 +21,15 @@
 - できるだけスレッディングマクロを使用すること
 - テストのために `defn-` を `defn` に変更することは禁止です。この場合、var参照で直接呼び出すことができます。
 
+## ClojureScriptについて
+- figwheelはこれを参考にしてください https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section02
+- shadow-cljsはこれを参考にしてください https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section99
+
 ## TypeScriptについて
 - `as const` を利用して型情報を狭くするようにすること。
 
 ## Pythonについて
-- pdmを使います
+- uvを使います
 
 ## シェルスクリプトについて
 - bashを使います。
