@@ -34,6 +34,7 @@
   ".pnpm-store"
 
   # Refference supprements
-  "/.ref"
+  ".ref"
   "/.gittree"
+  ".claude-dev"
 ]
