@@ -241,6 +241,7 @@
           chromium
           dbeaver-bin
           firefox
+          gimp
           gnome-system-monitor
           googleearth-pro
           gparted
