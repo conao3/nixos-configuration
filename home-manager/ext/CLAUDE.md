@@ -1,8 +1,8 @@
 # claudeについて
-- 返答は日本語で行う
+- 返答は日本語で行う。
 
 # 作業について
-- プロジェクトでの作業を開始するときに一番最初にすることは、READMEを読むこと
+- プロジェクトでの作業を開始するときに一番最初にすることは、READMEを読むこと。
 - 次にMakefileを確認します。Makefileに有用なjobが定義されていることが多いです。
 - 次にpackage.jsonなど言語ごとの設定ファイルを読みます。これらも有用なスクリプトが定義されていることがあります。
 - 必要な一時ファイルを作成するときは .claude-dev ディレクトリを作成して利用してください。
@@ -15,21 +15,22 @@
 
 ## Makefileについて
 - プロジェクトで使用するコマンドはMakefileで定義します。言語独自の設定ファイルでスクリプトを定義することは禁止です。
-- .PHONYターゲットは各ターゲットごとに記述すること
+- .PHONYターゲットは各ターゲットごとに記述すること。
 
 ## Clojureについて
-- できるだけスレッディングマクロを使用すること
+- deps.ednを使います。
+- できるだけスレッディングマクロを使用すること。
 - テストのために `defn-` を `defn` に変更することは禁止です。この場合、var参照で直接呼び出すことができます。
 
 ## ClojureScriptについて
-- figwheelはこれを参考にしてください https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section02
-- shadow-cljsはこれを参考にしてください https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section99
+- figwheelはこれを参考にしてください。 https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section02
+- shadow-cljsはこれを参考にしてください。 https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section99
 
 ## TypeScriptについて
 - `as const` を利用して型情報を狭くするようにすること。
 
 ## Pythonについて
-- uvを使います
+- uvを使います。
 
 ## シェルスクリプトについて
 - bashを使います。
@@ -38,15 +39,15 @@
 - 基本的にコマンドが失敗したら `set -e` の効果により、その場で終了するようにします。
 
 ## Nixについて
-- flakeを使います
-- flake-partsを使います
-- treefmtを使います
-  - 設定は必要最小限にし、基本的に `programs.*.enable = true` を設定するだけとします
-  - config.treefmt.build.wrapperを追加することは禁止です
-- shellHookでメッセージを出力するような設定を追加することは禁止です
-- devShellにgitを追加することは禁止です
-- サポートするArchは "x86_64-linux" "aarch64-darwin" です
-- 使用しない変数を定義することは禁止です
+- flakeを使います。
+- flake-partsを使います。
+- treefmtを使います。
+  - 設定は必要最小限にし、基本的に `programs.*.enable = true` を設定するだけとします。
+  - config.treefmt.build.wrapperを追加することは禁止です。
+- shellHookでメッセージを出力するような設定を追加することは禁止です。
+- devShellにgitを追加することは禁止です。
+- サポートするArchは "x86_64-linux" "aarch64-darwin" です。
+- 使用しない変数を定義することは禁止です。
 - バージョンを指定し、overlayとして上書きします。つまり以下の形となります。
   ```nix
   perSystem = {
@@ -96,6 +97,7 @@
 
 ## .gitignoreについて
 - 必要最小限のエントリのみ追加します。特にOSやユーザーの開発環境に特有のエントリを追加することは禁止です。
+- できるだけ `/` を前置して、必要最低限のignore指定をすること。
 - 以下に関連するエントリを追加することは禁止です。
   - .claude
   - .direnv
