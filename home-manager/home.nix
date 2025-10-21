@@ -243,6 +243,7 @@
           firefox
           gimp
           gnome-system-monitor
+          google-chrome
           googleearth-pro
           gparted
           ollama
