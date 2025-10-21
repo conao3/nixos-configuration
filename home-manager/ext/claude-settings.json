@@ -146,8 +146,7 @@
       "Grep(**)",
       "Glob(**)",
       "LS(**)",
-      "WebFetch(domain:*)",
-      "WebSearch(*)"
+      "WebFetch(domain:*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -168,6 +167,5 @@
     "BASH_DEFAULT_TIMEOUT_MS": "300000",
     "BASH_MAX_TIMEOUT_MS": "1200000"
   },
-  "apiKeyHelper": null,
   "preferredNotifChannel": "terminal_bell"
 }
