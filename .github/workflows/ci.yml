@@ -26,7 +26,7 @@ jobs:
             accept-flake-config = true
 
       - name: Check flake format
-        run: nix fmt -- --check .
+        run: nix fmt -- --fail-on-change .
 
       - name: Build NixOS configuration
         run: nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --show-trace
