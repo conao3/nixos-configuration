@@ -51,9 +51,14 @@
       ];
 
       perSystem =
-        { config, pkgs, ... }:
+        { config, pkgs, system, lib, ... }:
         {
           treefmt.programs.nixfmt.enable = true;
+
+          # Add system-specific checks
+          checks = lib.optionalAttrs (system == "x86_64-linux") {
+            nixos-helios = config.flake.nixosConfigurations.conao-nixos-helios.config.system.build.toplevel;
+          };
         };
 
       flake =
