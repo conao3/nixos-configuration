@@ -3,9 +3,7 @@ name: NixOS Configuration CI
 on:
   push:
     branches:
-      - main
       - master
-      - claude/**
   pull_request:
   workflow_dispatch:
 
