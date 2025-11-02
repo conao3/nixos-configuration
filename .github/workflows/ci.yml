@@ -25,5 +25,8 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
 
-      - name: Run flake checks
-        run: nix flake check --all-systems --show-trace
+      - name: Check flake format
+        run: nix fmt -- --check .
+
+      - name: Build NixOS configuration
+        run: nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --show-trace
