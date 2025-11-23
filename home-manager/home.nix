@@ -175,7 +175,10 @@
           mcpServers = {
             claude-code = {
               command = "${pkgs.claude-code}/bin/claude";
-              args = ["mcp" "serve"];
+              args = [
+                "mcp"
+                "serve"
+              ];
             };
           };
         };

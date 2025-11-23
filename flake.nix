@@ -105,6 +105,46 @@
                 }
               ];
             };
+            "conao-nixos-eos" = inputs.nixpkgs.lib.nixosSystem {
+              system = linuxSystem;
+              specialArgs = { inherit inputs; };
+              modules = [
+                ./nixos/configuration.nix
+                ./hosts/eos
+                {
+                  nixpkgs = {
+                    overlays = [
+                      inputs.emacs-overlay.overlays.default
+                      (import ./overlays/go.nix)
+                    ];
+                    config.permittedInsecurePackages = [
+                      "googleearth-pro-7.3.6.10201"
+                    ];
+                  };
+                }
+                inputs.home-manager.nixosModules.home-manager
+                {
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    backupFileExtension = "backup";
+                    extraSpecialArgs = {
+                      inherit username inputs;
+                      system = linuxSystem;
+                    };
+                    users.${username} = import ./home-manager/home.nix;
+                    sharedModules = [
+                      (
+                        { config, lib, ... }:
+                        {
+                          home.homeDirectory = lib.mkForce "/home/${username}";
+                        }
+                      )
+                    ];
+                  };
+                }
+              ];
+            };
           };
 
           darwinConfigurations = {
