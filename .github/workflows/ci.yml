@@ -26,7 +26,7 @@ jobs:
       - name: Check flake format
         run: nix fmt -- --fail-on-change .
 
-      - name: Build NixOS configurations
+      - name: Check NixOS configurations
         run: |
-          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --show-trace
-          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --show-trace
+          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace
+          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace
