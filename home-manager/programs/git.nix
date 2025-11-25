@@ -2,12 +2,13 @@
   enable = true;
   # lfs.enable = true;
 
-  userName = "conao3";
-  userEmail = "conao3@gmail.com";
-
   ignores = import ../ext/git-ignore.nix;
 
-  extraConfig = {
+  settings = {
+    user = {
+      name = "conao3";
+      email = "conao3@gmail.com";
+    };
     # core = {
     #   quotepath = false;
     #   fsmonitor = true;
