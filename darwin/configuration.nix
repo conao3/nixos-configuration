@@ -57,17 +57,12 @@
       "gimp"
       "google-japanese-ime"
       "karabiner-elements"
-      "multipass"
       "obsidian"
       "ollama"
       "session-manager-plugin"
       "slack"
       "thunderbird"
-      "utm"
       "visual-studio-code"
-      "vivaldi"
-      "vmware-fusion"
-      "xmind"
     ];
   };
 
