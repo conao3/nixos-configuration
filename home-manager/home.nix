@@ -183,7 +183,7 @@
           };
         };
       };
-      ".nrepl/nrepl.edn" = {
+      ".config/nrepl/nrepl.edn" = {
         source = ./ext/nrepl.edn;
       };
     };
