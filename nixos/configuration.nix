@@ -48,6 +48,8 @@
     extraModprobeConfig = ''
       options hid_apple fnmode=2
     '';
+
+    binfmt.emulatedSystems = [ "aarch64-linux" ];
   };
 
   time.timeZone = "Asia/Tokyo";
