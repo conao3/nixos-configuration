@@ -78,6 +78,8 @@
     };
   };
   ```
+- nixpkgsでの名前
+  - graalvm: graalvmPackages.graalvm-ce
 
 ## NixOSについて
 - NixOSの環境でコマンドが動作しない場合は `steam-run` を前置することで起動することができます。
