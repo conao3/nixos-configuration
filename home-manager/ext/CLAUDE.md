@@ -7,6 +7,9 @@
 - 次にpackage.jsonなど言語ごとの設定ファイルを読みます。これらも有用なスクリプトが定義されていることがあります。
 - 必要な一時ファイルを作成するときは .claude-dev ディレクトリを作成して利用してください。
   - 一時ファイルだけではなく、必要なレポジトリをcloneしてくることも許可します。
+    - tailwindcss: https://github.com/tailwindlabs/tailwindcss.com.git
+    - spectrum design data: https://github.com/adobe/spectrum-design-data.git
+    - shadow-cljs: https://github.com/codesmith-gmbh/shadow-cljs.git
 
 # コーディングスタイルについて
 - コメントを追加することは禁止です。
