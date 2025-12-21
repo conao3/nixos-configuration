@@ -10,6 +10,7 @@
     - tailwindcss: https://github.com/tailwindlabs/tailwindcss.com.git
     - spectrum design data: https://github.com/adobe/spectrum-design-data.git
     - shadow-cljs: https://github.com/codesmith-gmbh/shadow-cljs.git
+    - clj-kondo: https://github.com/clj-kondo/clj-kondo.git
 
 # コーディングスタイルについて
 - コメントを追加することは禁止です。
