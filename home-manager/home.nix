@@ -280,6 +280,8 @@
         inputPackages = [
           # inputs.cljgen.packages.${system}.default
           # inputs.nix-flake-clojure.packages.${system}.default
+          inputs.gitm.packages.${system}.default
+          inputs.pype.packages.${system}.default
         ]
         ++ (
           if !pkgs.stdenv.isDarwin then

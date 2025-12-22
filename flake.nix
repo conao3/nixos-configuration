@@ -36,6 +36,14 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    gitm = {
+      url = "github:conao3/bash-gitm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pype = {
+      url = "github:conao3/python-pype";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -153,7 +161,7 @@
               specialArgs = { inherit username; };
               modules = [
                 ./darwin/configuration.nix
-                inputs.mac-app-util.darwinModules.default
+                # inputs.mac-app-util.darwinModules.default
                 {
                   nixpkgs.overlays = [
                     # inputs.emacs-overlay.overlays.default
@@ -172,7 +180,7 @@
                     };
                     users.${username} = import ./home-manager/home.nix;
                     sharedModules = [
-                      inputs.mac-app-util.homeManagerModules.default
+                      # inputs.mac-app-util.homeManagerModules.default
                       (
                         { config, lib, ... }:
                         {
