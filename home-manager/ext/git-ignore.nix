@@ -29,6 +29,7 @@
   "*.orig"
 
   ".claude"
+  ".serena"
   ".direnv"
   ".envrc"
   ".pnpm-store"

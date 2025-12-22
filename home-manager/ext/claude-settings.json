@@ -32,7 +32,7 @@
       "Bash(more:*)",
       "Bash(npm run:*)",
       "Bash(npx shadow-cljs:*)",
-      "Bash(printenv:*)"
+      "Bash(printenv:*)",
       "Bash(pwd:*)",
       "Bash(rg:*)",
       "Bash(sed:*)",
@@ -43,7 +43,7 @@
       "Bash(uniq:*)",
       "Bash(wc:*)",
       "Bash(which:*)",
-      "Bash(whoami:*)",
+      "Bash(whoami:*)"
     ],
     "deny": []
   },
