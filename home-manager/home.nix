@@ -195,6 +195,7 @@
 
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
+          # tailscale
           binutils
           cargo
           claude-code
@@ -214,6 +215,7 @@
           inetutils
           leiningen
           libgccjit
+          logseq
           mpv
           neil
           ngrok
@@ -227,7 +229,6 @@
           sbcl
           sqldef
           sqlite
-          # tailscale
           tig
           tokei
           tree
