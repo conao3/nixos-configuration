@@ -11,11 +11,11 @@ description: Claude Codeでの作業経験を日記として記録し、過去�
 作業開始前に関連する情報を取得する。
 
 ```bash
-grep -r "キーワード" ~/Documents/logseq/journals
+grep -r "キーワード" ~/Documents/logseq-src/journals
 ```
 
 ### 2. 日記ファイルを作成または追記
-ファイルパス: `~/Documents/logseq/journals/YYYY_MM_DD.md`
+ファイルパス: `~/Documents/logseq-src/journals/YYYY_MM_DD.md`
 
 Logseq形式で記述する。テンプレートは [references/template.md](references/template.md) を参照。
 
