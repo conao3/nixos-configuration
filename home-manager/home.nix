@@ -163,11 +163,9 @@
         source = ./.config;
         recursive = true;
       };
-      ".claude/CLAUDE.md" = {
-        source = ./ext/CLAUDE.md;
-      };
-      ".claude/settings.json" = {
-        source = ./ext/claude-settings.json;
+      ".claude" = {
+        source = ./ext/.claude;
+        recursive = true;
       };
       ".config/Claude/claude_desktop_config.json" = {
         text = builtins.toJSON {

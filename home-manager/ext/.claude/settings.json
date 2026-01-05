@@ -5,6 +5,7 @@
     "allow": [
       "WebFetch",
       "WebSearch",
+      "Skill(diary)",
       "mcp__asana",
       "mcp__chrome-devtools",
       "Bash(ag:*)",
@@ -21,6 +22,7 @@
       "Bash(find:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
+      "Bash(gh label list:*)",
       "Bash(gh pr view:*)",
       "Bash(gh project item-list:*)",
       "Bash(gh run list:*)",
