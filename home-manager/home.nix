@@ -195,13 +195,10 @@
 
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
-          # tailscale
           binutils
-          cargo
           claude-code
           clj-kondo
           coreutils
-          devenv
           diffutils
           dig
           duckdb
@@ -213,7 +210,6 @@
           git-secrets
           imagemagick
           inetutils
-          leiningen
           libgccjit
           logseq
           mpv
@@ -226,7 +222,6 @@
           postgresql
           rar
           rlwrap
-          sbcl
           sqldef
           sqlite
           tig
@@ -259,16 +254,7 @@
         ];
 
         macPackages = with pkgs; [
-          babashka
-          clojure
-          deno
           gnumake
-          nodejs
-          pdm
-          pipx
-          pnpm
-          poetry
-          uv
           volta
         ];
 
