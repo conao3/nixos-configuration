@@ -8,6 +8,7 @@
 - 必要な一時ファイルを作成するときは .claude-dev ディレクトリを作成して利用してください。
   - 一時ファイルだけではなく、必要なレポジトリをcloneしてくることも許可します。
     - tailwindcss: https://github.com/tailwindlabs/tailwindcss.com.git
+    - react-spectrum: https://github.com/adobe/react-spectrum.git
     - spectrum design data: https://github.com/adobe/spectrum-design-data.git
     - shadow-cljs: https://github.com/codesmith-gmbh/shadow-cljs.git
     - clj-kondo: https://github.com/clj-kondo/clj-kondo.git
