@@ -258,6 +258,7 @@
 
         languageServers = with pkgs; [
           clojure-lsp
+          emacs-lsp-booster
           typescript-language-server
           # nodePackages.graphql-language-service-cli
         ];
