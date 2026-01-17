@@ -181,9 +181,8 @@
           };
         };
       };
-      ".config/nrepl/nrepl.edn" = {
-        source = ./ext/nrepl.edn;
-      };
+      ".config/nrepl/nrepl.edn".source = ./ext/nrepl.edn;
+      ".config/wezterm/wezterm.lua".source = ./ext/wezterm.lua;
     };
 
     # https://search.nixos.org/packages?channel=24.11
@@ -305,6 +304,7 @@
     tmux.enable = true;
     vim.enable = true;
     vscode.enable = true;
+    wezterm.enable = true;
 
     atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;
