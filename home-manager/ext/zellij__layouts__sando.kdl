@@ -1,0 +1,18 @@
+layout {
+    cwd "~/dev/repos/sando"
+
+    pane size=1 borderless=true {
+        plugin location="tab-bar"
+    }
+
+    pane split_direction="horizontal" {
+        pane command="docker" { args "compose" "up" "--build"; }
+        pane command="make" { args "-C" "frontend" "dev"; }
+        pane command="make" { args "-C" "frontend" "storybook"; }
+        pane command="make" { args "-C" "backend" "dev"; }
+    }
+
+    pane size=2 borderless=true {
+        plugin location="status-bar"
+    }
+}

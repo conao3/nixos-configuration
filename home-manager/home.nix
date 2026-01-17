@@ -183,6 +183,8 @@
       };
       ".config/nrepl/nrepl.edn".source = ./ext/nrepl.edn;
       ".config/wezterm/wezterm.lua".source = ./ext/wezterm.lua;
+      ".config/zellij/config.kdl".source = ./ext/zellij__config.kdl;
+      ".config/zellij/layouts/sando.kdl".source = ./ext/zellij__layouts__sando.kdl;
     };
 
     # https://search.nixos.org/packages?channel=24.11
@@ -305,6 +307,7 @@
     vim.enable = true;
     vscode.enable = true;
     wezterm.enable = true;
+    zellij.enable = true;
 
     atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;

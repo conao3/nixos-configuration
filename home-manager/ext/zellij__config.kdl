@@ -1,0 +1,3 @@
+show_startup_tips false
+web_server true
+default_mode "locked"
