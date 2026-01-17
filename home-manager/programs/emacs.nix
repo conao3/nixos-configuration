@@ -19,6 +19,7 @@
         ]
       );
   extraConfig = ''
-    (setq exec-path (cons "${pkgs.gcc}/bin" exec-path))
+    (push "${pkgs.gcc}/bin" exec-path)
+    (push "${pkgs.nodejs}/bin" exec-path)
   '';
 }
