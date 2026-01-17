@@ -194,7 +194,6 @@
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
           binutils
-          claude-code
           clj-kondo
           coreutils
           diffutils
@@ -268,6 +267,8 @@
           # inputs.nix-flake-clojure.packages.${system}.default
           inputs.gitm.packages.${system}.default
           inputs.pype.packages.${system}.default
+          inputs.llm-agents.packages.${system}.claude-code
+          inputs.llm-agents.packages.${system}.vibe-kanban
         ]
         ++ (
           if !pkgs.stdenv.isDarwin then
