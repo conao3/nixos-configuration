@@ -269,6 +269,7 @@
           inputs.pype.packages.${system}.default
           inputs.llm-agents.packages.${system}.claude-code
           inputs.llm-agents.packages.${system}.vibe-kanban
+          pkgs.nodejs_24             # vibe-kanban requires npx
         ]
         ++ (
           if !pkgs.stdenv.isDarwin then
