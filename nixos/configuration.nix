@@ -160,7 +160,6 @@
   ];
 
   programs = {
-    fish.enable = true;
     zsh.enable = true;
     gnupg.agent = {
       enable = true;
