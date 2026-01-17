@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   system,
   username,
@@ -260,7 +259,7 @@
         languageServers = with pkgs; [
           clojure-lsp
           emacs-lsp-booster
-          typescript-language-server
+          nixd
           # nodePackages.graphql-language-service-cli
         ];
 
@@ -312,9 +311,17 @@
     atuin = import ./programs/atuin.nix;
     bash = import ./programs/bash.nix;
     direnv = import ./programs/direnv.nix;
-    emacs = import ./programs/emacs.nix (pkgs);
+    emacs = import ./programs/emacs.nix pkgs;
     git = import ./programs/git.nix;
     neovim = import ./programs/neovim.nix;
     zsh = import ./programs/zsh.nix;
+  };
+
+  services = {
+    emacs = {
+      enable = true;
+      defaultEditor = true;
+      startWithUserSession = "graphical";
+    };
   };
 }
