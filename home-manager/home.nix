@@ -252,6 +252,7 @@
 
         macPackages = with pkgs; [
           gnumake
+          pngpaste
           volta
         ];
 
