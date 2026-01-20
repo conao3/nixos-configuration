@@ -309,6 +309,7 @@
     vim.enable = true;
     vscode.enable = true;
     wezterm.enable = true;
+    zed-editor.enable = true;
     zellij.enable = true;
 
     atuin = import ./programs/atuin.nix;
