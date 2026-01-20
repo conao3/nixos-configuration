@@ -268,8 +268,11 @@
           # inputs.nix-flake-clojure.packages.${system}.default
           inputs.gitm.packages.${system}.default
           inputs.pype.packages.${system}.default
+          inputs.llm-agents.packages.${system}.codex
           inputs.llm-agents.packages.${system}.claude-code
           inputs.llm-agents.packages.${system}.vibe-kanban
+          inputs.llm-agents.packages.${system}.claude-code-acp
+          inputs.llm-agents.packages.${system}.codex-acp
           pkgs.nodejs_24             # vibe-kanban requires npx
         ]
         ++ (
