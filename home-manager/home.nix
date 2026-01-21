@@ -273,7 +273,7 @@
           inputs.llm-agents.packages.${system}.vibe-kanban
           inputs.llm-agents.packages.${system}.claude-code-acp
           inputs.llm-agents.packages.${system}.codex-acp
-          pkgs.nodejs_24             # vibe-kanban requires npx
+          pkgs.nodejs_24 # vibe-kanban requires npx
         ]
         ++ (
           if !pkgs.stdenv.isDarwin then
