@@ -233,6 +233,7 @@
         ];
 
         linuxPackages = with pkgs; [
+          xclip
           burpsuite
           chromium
           dbeaver-bin
