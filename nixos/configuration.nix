@@ -157,6 +157,8 @@
     extraGroups = [
       "wheel"
       "docker"
+      "kvm"
+      "libvirtd"
     ];
   };
 
@@ -212,6 +214,7 @@
 
   virtualisation = {
     docker.enable = true;
+    libvirtd.enable = true;     # enable kvm
     vmVariant = {
       virtualisation = {
         memorySize = 10240;
