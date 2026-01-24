@@ -10,12 +10,16 @@
       }
     )).emacsWithPackages
       (
-        epkgs: with epkgs; [
+        epkgs: (with epkgs; [
           vterm
           (treesit-grammars.with-grammars (
             grammars:
             builtins.filter (g: !(builtins.elem g.pname [ "tree-sitter-razor" ])) (builtins.attrValues grammars)
           ))
+        ])
+        ++ [
+          pkgs.gcc
+          pkgs.nodejs
         ]
       );
   extraConfig = ''
