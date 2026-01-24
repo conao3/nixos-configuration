@@ -256,6 +256,13 @@
           volta
         ];
 
+        shogiPackages = with pkgs; [
+          shogihome
+          yaneuraou
+          apery
+          gnushogi
+        ];
+
         languageServers = with pkgs; [
           clojure-lsp
           emacs-lsp-booster
@@ -288,7 +295,8 @@
       commonPackages
       ++ (if pkgs.stdenv.isDarwin then macPackages else linuxPackages)
       ++ languageServers
-      ++ inputPackages;
+      ++ inputPackages
+      ++ shogiPackages;
   };
 
   programs = {
@@ -328,7 +336,6 @@
     emacs = {
       enable = true;
       defaultEditor = true;
-      startWithUserSession = "graphical";
     };
   };
 }
