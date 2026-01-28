@@ -44,6 +44,24 @@ sudo nixos-rebuild switch --flake ~/dev/repos/nixos-configuration#helios
 darwin-rebuild switch --flake ~/dev/repos/nixos-configuration#macos
 ```
 
+## Maintenance
+
+### Update flake inputs aligned with binary cache
+
+To avoid long build times, update nixpkgs to match the revision used by numtide's binary cache:
+
+```sh
+REV=$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev')
+nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/${REV}
+```
+
+This ensures that packages will be fetched from cache instead of being built locally.
+
+Binary caches configured in `nixos/configuration.nix`:
+- `https://nix-community.cachix.org` - Nix community packages
+- `https://emacs-ci.cachix.org` - Multiple Emacs versions
+- `https://cache.numtide.com` - llm-agents.nix packages
+
 ## License
 
 MIT
