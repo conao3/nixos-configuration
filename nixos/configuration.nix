@@ -26,10 +26,14 @@
       ];
       substituters = [
         "https://nix-community.cachix.org"
+        "https://emacs-ci.cachix.org"
+        "https://cache.numtide.com"
         "https://cache.nixos.org/"
       ];
       trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "emacs-ci.cachix.org-1:B5FVOrxhXXrOL0S+tQ7USrhjMT5iOPH+QN9q0NItom4="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
       ];
     };
   };
