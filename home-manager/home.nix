@@ -208,8 +208,6 @@
           imagemagick
           inetutils
           libgccjit
-          logseq
-          mpv
           neil
           ngrok
           nix-output-monitor
@@ -233,7 +231,6 @@
         ];
 
         linuxPackages = with pkgs; [
-          xclip
           burpsuite
           chromium
           dbeaver-bin
@@ -243,11 +240,14 @@
           google-chrome
           googleearth-pro
           gparted
+          logseq
+          mpv
           ollama
           pciutils
           qpdfview
           steam-run
           vlc
+          xclip
           xsel
         ];
 
