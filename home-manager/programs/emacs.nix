@@ -10,7 +10,8 @@
       }
     )).emacsWithPackages
       (
-        epkgs: (with epkgs; [
+        epkgs:
+        (with epkgs; [
           vterm
           (treesit-grammars.with-grammars (
             grammars:
