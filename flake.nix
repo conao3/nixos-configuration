@@ -62,112 +62,80 @@
       ];
 
       perSystem =
-        { config, pkgs, ... }:
+        { pkgs, ... }:
         {
           treefmt.programs.nixfmt.enable = true;
+
+          devShells.default = pkgs.mkShell {
+            packages = with pkgs; [
+              gnumake
+            ];
+          };
         };
 
       flake =
         let
           username = "conao";
-
           linuxSystem = "x86_64-linux";
           macSystem = "aarch64-darwin";
+
+          commonNixpkgsConfig = {
+            overlays = [
+              inputs.emacs-overlay.overlays.default
+              (import ./overlays/go.nix)
+            ];
+            config.permittedInsecurePackages = [
+              "googleearth-pro-7.3.6.10201"
+            ];
+          };
+
+          mkNixosSystem =
+            hostname:
+            inputs.nixpkgs.lib.nixosSystem {
+              system = linuxSystem;
+              specialArgs = { inherit inputs; };
+              modules = [
+                ./nixos/configuration.nix
+                ./hosts/${hostname}
+                { nixpkgs = commonNixpkgsConfig; }
+                inputs.home-manager.nixosModules.home-manager
+                {
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    backupFileExtension = "backup";
+                    extraSpecialArgs = {
+                      inherit username inputs;
+                      system = linuxSystem;
+                    };
+                    users.${username} = import ./home-manager/home.nix;
+                    sharedModules = [
+                      (
+                        { lib, ... }:
+                        {
+                          home.homeDirectory = lib.mkForce "/home/${username}";
+                        }
+                      )
+                    ];
+                  };
+                }
+              ];
+            };
         in
         {
           nixosConfigurations = {
-            "conao-nixos-helios" = inputs.nixpkgs.lib.nixosSystem {
-              system = linuxSystem;
-              specialArgs = { inherit inputs; };
-              modules = [
-                ./nixos/configuration.nix
-                ./hosts/helios
-                {
-                  nixpkgs = {
-                    overlays = [
-                      inputs.emacs-overlay.overlays.default
-                      (import ./overlays/go.nix)
-                    ];
-                    config.permittedInsecurePackages = [
-                      "googleearth-pro-7.3.6.10201"
-                    ];
-                  };
-                }
-                inputs.home-manager.nixosModules.home-manager
-                {
-                  home-manager = {
-                    useGlobalPkgs = true;
-                    useUserPackages = true;
-                    backupFileExtension = "backup";
-                    extraSpecialArgs = {
-                      inherit username inputs;
-                      system = linuxSystem;
-                    };
-                    users.${username} = import ./home-manager/home.nix;
-                    sharedModules = [
-                      (
-                        { config, lib, ... }:
-                        {
-                          home.homeDirectory = lib.mkForce "/home/${username}";
-                        }
-                      )
-                    ];
-                  };
-                }
-              ];
-            };
-            "conao-nixos-eos" = inputs.nixpkgs.lib.nixosSystem {
-              system = linuxSystem;
-              specialArgs = { inherit inputs; };
-              modules = [
-                ./nixos/configuration.nix
-                ./hosts/eos
-                {
-                  nixpkgs = {
-                    overlays = [
-                      inputs.emacs-overlay.overlays.default
-                      (import ./overlays/go.nix)
-                    ];
-                    config.permittedInsecurePackages = [
-                      "googleearth-pro-7.3.6.10201"
-                    ];
-                  };
-                }
-                inputs.home-manager.nixosModules.home-manager
-                {
-                  home-manager = {
-                    useGlobalPkgs = true;
-                    useUserPackages = true;
-                    backupFileExtension = "backup";
-                    extraSpecialArgs = {
-                      inherit username inputs;
-                      system = linuxSystem;
-                    };
-                    users.${username} = import ./home-manager/home.nix;
-                    sharedModules = [
-                      (
-                        { config, lib, ... }:
-                        {
-                          home.homeDirectory = lib.mkForce "/home/${username}";
-                        }
-                      )
-                    ];
-                  };
-                }
-              ];
-            };
+            "conao-nixos-helios" = mkNixosSystem "helios";
+            "conao-nixos-eos" = mkNixosSystem "eos";
           };
 
           darwinConfigurations = {
             macos = inputs.nix-darwin.lib.darwinSystem {
               system = macSystem;
-              specialArgs = { inherit username; };
+              specialArgs = { inherit username inputs; };
               modules = [
                 ./darwin/configuration.nix
-                # inputs.mac-app-util.darwinModules.default
                 {
                   nixpkgs.overlays = [
-                    # inputs.emacs-overlay.overlays.default
                     (import ./overlays/go.nix)
                   ];
                 }
@@ -183,9 +151,8 @@
                     };
                     users.${username} = import ./home-manager/home.nix;
                     sharedModules = [
-                      # inputs.mac-app-util.homeManagerModules.default
                       (
-                        { config, lib, ... }:
+                        { lib, ... }:
                         {
                           home.homeDirectory = lib.mkForce "/Users/${username}";
                         }
