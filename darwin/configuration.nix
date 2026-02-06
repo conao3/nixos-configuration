@@ -3,6 +3,7 @@
 {
   nix = {
     optimise.automatic = true;
+    linux-builder.enable = true;
     settings = {
       experimental-features = "nix-command flakes";
       max-jobs = 8;
