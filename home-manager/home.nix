@@ -227,7 +227,7 @@
           zip
           zlib
 
-          cljstyle
+          # cljstyle
         ];
 
         linuxPackages = with pkgs; [
