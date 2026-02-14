@@ -63,13 +63,12 @@
 - バージョンを指定し、overlayとして上書きします。つまり以下の形となります。
   ```nix
   perSystem = {
-    pkgs,
     system,
     ...
   }: let
     overlay = final: prev: let
-      jdk = prev.jdk21;
-      nodejs = prev.nodejs_22;
+      jdk = prev.jdk25;
+      nodejs = prev.nodejs_24;
       clojure = prev.clojure.override {inherit jdk;};
       pnpm = prev.pnpm_10.override {inherit nodejs;};
     in {
