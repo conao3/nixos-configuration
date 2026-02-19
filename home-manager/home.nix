@@ -199,7 +199,7 @@
           diffutils
           dig
           duckdb
-          eask-cli
+          # eask-cli
           ffmpeg
           file
           ghostscript
@@ -244,6 +244,7 @@
           mpv
           ollama
           pciutils
+          pencil
           qpdfview
           steam-run
           vlc
@@ -278,9 +279,6 @@
           inputs.pype.packages.${system}.default
           inputs.llm-agents.packages.${system}.codex
           inputs.llm-agents.packages.${system}.claude-code
-          inputs.llm-agents.packages.${system}.vibe-kanban
-          inputs.llm-agents.packages.${system}.claude-code-acp
-          inputs.llm-agents.packages.${system}.codex-acp
           pkgs.nodejs_24 # vibe-kanban requires npx
         ]
         ++ (
@@ -290,6 +288,27 @@
             ]
           else
             [ ]
+        )
+        ++ (
+          with inputs.llm-agents.packages.${system}; [
+            vibe-kanban
+            auto-claude
+            claude-code-acp
+            codex-acp
+            # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
+            # TODO: https://github.com/steveyegge/efrit
+            beads
+            # gastown
+            agent-browser
+            agent-deck
+            ck
+            workmux
+            eca
+            happy-coder
+            coding-agent-search
+            catnip
+            copilot-language-server
+          ]
         );
 
       in
