@@ -33,7 +33,7 @@ in
         claude-code-acp
         codex
         codex-acp
-        zeroclaw
+        openclaw
       ]);
   };
 
