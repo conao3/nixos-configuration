@@ -26,6 +26,7 @@ in
       # https://search.nixos.org/packages
       (with pkgs; [
         gnumake
+        bottom                  # Rust re-implementation for top
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
