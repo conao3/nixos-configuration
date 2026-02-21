@@ -21,6 +21,10 @@ vm-agent:
 	nix build -L .#nixosConfigurations.agent-vm.config.system.build.vm
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm
 
+.PHONY: vm-agent-tunnel
+vm-agent-tunnel:
+	ssh -p 2222 -L 18789:127.0.0.1:18789 -N conao@localhost
+
 .PHONY: vm-agent-switch
 vm-agent-switch:
 	NIX_SSHOPTS="-p 2222" nixos-rebuild test --flake .#agent-vm --target-host conao@localhost --sudo; \
