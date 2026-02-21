@@ -44,6 +44,9 @@ in
     defaultSopsFile = ./secrets/secrets.yaml;
     secrets = {
       siliconflow-api-key = { };
+      openclaw-dot-env = {
+        path = "${config.home.homeDirectory}/.openclaw/.env";
+      };
     };
   };
 
