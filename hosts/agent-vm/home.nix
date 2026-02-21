@@ -29,6 +29,10 @@ in
         google-chrome
         bottom                  # Rust re-implementation for top
         _1password-gui
+        jq
+        ripgrep
+        fd
+        tree
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
