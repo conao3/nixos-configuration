@@ -15,4 +15,10 @@ vm-agent:
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	NIX_SSHOPTS="-p 2222" nixos-rebuild test --flake .#agent-vm --target-host conao@localhost --sudo
+	NIX_SSHOPTS="-p 2222" nixos-rebuild test --flake .#agent-vm --target-host conao@localhost --sudo; \
+	ret=$$?; \
+	if [ $$ret -eq 4 ]; then \
+		echo "Warning: nix-store.mount could not be restarted (expected in VM), configuration applied"; \
+	elif [ $$ret -ne 0 ]; then \
+		exit $$ret; \
+	fi
