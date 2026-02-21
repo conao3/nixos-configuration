@@ -2,6 +2,7 @@
   inputs,
   pkgs,
   config,
+  lib,
   ...
 }:
 
@@ -17,6 +18,41 @@ in
       source = ./ext/.config;
       recursive = true;
     };
+
+    activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      settings_file="$HOME/.claude/settings.json"
+      if [ ! -f "$settings_file" ] || [ -L "$settings_file" ]; then
+        rm -f "$settings_file"
+        mkdir -p "$(dirname "$settings_file")"
+        cat > "$settings_file" << 'SETTINGS_EOF'
+      {
+        "theme": "dark",
+        "defaultMode": "acceptEdits",
+        "env": {
+          "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+          "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+          "DISABLE_ERROR_REPORTING": "1",
+          "DISABLE_TELEMETRY": "1",
+          "BASH_DEFAULT_TIMEOUT_MS": "300000",
+          "BASH_MAX_TIMEOUT_MS": "1200000"
+        },
+        "includeCoAuthoredBy": false,
+        "language": "japanese"
+      }
+      SETTINGS_EOF
+      fi
+      claude_json="$HOME/.claude.json"
+      if [ ! -f "$claude_json" ] || ! jq -e '.hasCompletedOnboarding' "$claude_json" > /dev/null 2>&1; then
+        tmp=$(mktemp)
+        if [ -f "$claude_json" ]; then
+          jq '. + {hasCompletedOnboarding: true}' "$claude_json" > "$tmp"
+        else
+          echo '{"hasCompletedOnboarding": true}' > "$tmp"
+        fi
+        mv "$tmp" "$claude_json"
+        chmod 600 "$claude_json"
+      fi
+    '';
 
     shellAliases = {
       e = "$EDITOR";
