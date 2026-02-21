@@ -126,6 +126,14 @@
           nixosConfigurations = {
             "conao-nixos-helios" = mkNixosSystem "helios";
             "conao-nixos-eos" = mkNixosSystem "eos";
+            "zeroclaw-vm" = inputs.nixpkgs.lib.nixosSystem {
+              system = linuxSystem;
+              specialArgs = { inherit inputs; };
+              modules = [
+                ./hosts/zeroclaw-vm
+                { nixpkgs.config.allowUnfree = true; }
+              ];
+            };
           };
 
           darwinConfigurations = {

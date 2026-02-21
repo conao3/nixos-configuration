@@ -277,8 +277,6 @@
           # inputs.nix-flake-clojure.packages.${system}.default
           inputs.gitm.packages.${system}.default
           inputs.pype.packages.${system}.default
-          inputs.llm-agents.packages.${system}.codex
-          inputs.llm-agents.packages.${system}.claude-code
           pkgs.nodejs_24 # vibe-kanban requires npx
         ]
         ++ (
@@ -291,6 +289,9 @@
         )
         ++ (
           with inputs.llm-agents.packages.${system}; [
+            codex
+            claude-code
+            zeroclaw
             vibe-kanban
             auto-claude
             claude-code-acp
