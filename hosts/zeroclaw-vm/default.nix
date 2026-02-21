@@ -31,4 +31,12 @@
     inputs.llm-agents.packages.${pkgs.system}.zeroclaw
   ];
 
+  services = {
+    xserver = {
+      enable = true;
+      desktopManager.xfce.enable = true;
+    };
+    displayManager.defaultSession = "xfce";
+  };
+
 }
