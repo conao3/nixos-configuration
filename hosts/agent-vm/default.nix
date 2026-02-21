@@ -49,6 +49,19 @@
         enable = true;
         enableScreensaver = false;
       };
+      displayManager.sessionCommands = ''
+        (
+          prev_mode=""
+          while true; do
+            mode=$(head -1 /sys/class/drm/card0-Virtual-1/modes 2>/dev/null)
+            if [ -n "$mode" ] && [ "$mode" != "$prev_mode" ]; then
+              ${pkgs.xorg.xrandr}/bin/xrandr --output Virtual-1 --mode "$mode"
+              prev_mode="$mode"
+            fi
+            sleep 1
+          done
+        ) &
+      '';
     };
     displayManager = {
       defaultSession = "xfce";
@@ -85,5 +98,9 @@
           target = "/home/conao/.config/sops/age";
         };
       };
+    qemu.options = [
+      "-vga virtio"
+      "-display gtk,zoom-to-fit=off"
+    ];
   };
 }
