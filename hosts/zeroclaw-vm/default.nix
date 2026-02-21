@@ -21,8 +21,10 @@
 
   users.users.conao = {
     isNormalUser = true;
-    initialPassword = "conao";
     extraGroups = [ "wheel" ];
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFC6/Nfy2RrRM4oRtUw8U0JHq5CyDPXxpGGgBsnWku48 conao@nixos"
+    ];
   };
 
   security.sudo.wheelNeedsPassword = false;
@@ -39,7 +41,25 @@
         enableScreensaver = false;
       };
     };
-    displayManager.defaultSession = "xfce";
+    displayManager = {
+      defaultSession = "xfce";
+      autoLogin = {
+        enable = true;
+        user = "conao";
+      };
+    };
+    openssh = {
+      enable = true;
+      settings.PasswordAuthentication = false;
+    };
   };
+
+  virtualisation.vmVariant.virtualisation.forwardPorts = [
+    {
+      from = "host";
+      host.port = 2222;
+      guest.port = 22;
+    }
+  ];
 
 }
