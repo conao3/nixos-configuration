@@ -47,6 +47,10 @@
       url = "github:conao3/python-pype";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -69,6 +73,8 @@
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               gnumake
+              sops
+              age
             ];
           };
         };
@@ -138,6 +144,7 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     extraSpecialArgs = { inherit inputs; };
+                    sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
                     users.conao = import ./hosts/agent-vm/home.nix;
                   };
                 }

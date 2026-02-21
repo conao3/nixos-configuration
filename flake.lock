@@ -819,7 +819,28 @@
         "nix-flake-clojure": "nix-flake-clojure",
         "nixpkgs": "nixpkgs_6",
         "pype": "pype",
+        "sops-nix": "sops-nix",
         "treefmt-nix": "treefmt-nix_6"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1771524872,
+        "narHash": "sha256-eksVUcUsfS9mQx4D9DrYu88u9w70bAf+n6KmTDuIGEE=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "e85540ffe97322dc1fea14dd11cdc2f59d540ac7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
       }
     },
     "systems": {

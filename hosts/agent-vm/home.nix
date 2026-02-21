@@ -37,11 +37,24 @@ in
       ]);
   };
 
+  sops = {
+    age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
+    defaultSopsFile = ./secrets/secrets.yaml;
+    secrets = {
+      siliconflow-api-key = { };
+    };
+  };
+
   programs = {
     # https://nix-community.github.io/home-manager/options.xhtml
     home-manager.enable = true;
 
-    zsh.enable = true;
+    zsh = {
+      enable = true;
+      initExtra = ''
+        export SILICONFLOW_API_KEY="$(cat ${config.sops.secrets.siliconflow-api-key.path})"
+      '';
+    };
     wezterm.enable = true;
     emacs.enable = true;
   };

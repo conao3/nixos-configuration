@@ -1,5 +1,9 @@
 all:
 
+.PHONY: vm-agent-edit-secrets
+vm-agent-edit-secrets:
+	sops hosts/agent-vm/secrets/secrets.yaml
+
 .PHONY: update
 update:
 	nix flake update

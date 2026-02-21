@@ -80,6 +80,10 @@
       in
       {
         nixos-configuration = hostRepo "nixos-configuration";
+        sops-age = {
+          source = "/home/conao/.config/sops/age";
+          target = "/home/conao/.config/sops/age";
+        };
       };
   };
 }

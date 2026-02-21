@@ -1,0 +1,7 @@
+keys:
+  - &conao age1ugtzag72zlvnggwafyahj4tvc559v0exg5dm4jv36x8plkce0yksmjjhed
+creation_rules:
+  - path_regex: hosts/agent-vm/secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - age:
+          - *conao
