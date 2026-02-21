@@ -5,16 +5,26 @@
 }:
 
 {
-  home.stateVersion = "24.11";
+  home = {
+    stateVersion = "24.11";
 
-  home.file.".config" = {
-    source = ./ext/.config;
-    recursive = true;
+    file.".config" = {
+      source = ./ext/.config;
+      recursive = true;
+    };
+
+    shellAliases = {
+      e = "$EDITOR";
+    };
+
+    packages = [
+      inputs.llm-agents.packages.${pkgs.system}.zeroclaw
+      pkgs.wezterm
+    ];
   };
 
-  home.packages = [
-    inputs.llm-agents.packages.${pkgs.system}.zeroclaw
-    pkgs.emacs
-    pkgs.wezterm
-  ];
+  services.emacs = {
+    enable = true;
+    defaultEditor = true;
+  };
 }
