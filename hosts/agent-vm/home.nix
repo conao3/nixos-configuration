@@ -28,6 +28,7 @@ in
         gnumake
         google-chrome
         bottom                  # Rust re-implementation for top
+        _1password-gui
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
