@@ -155,6 +155,10 @@
         [ ]
     );
 
+    shellAliases = {
+      e = "$EDITOR";
+    };
+
     language.base = "en_US.UTF-8";
 
     file = {
