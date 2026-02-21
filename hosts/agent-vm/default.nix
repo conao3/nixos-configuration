@@ -7,17 +7,27 @@
 {
   system.stateVersion = "24.11";
 
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+
+  nix.settings = {
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    require-sigs = false;
+    trusted-users = [
+      "root"
+      "conao"
+    ];
+  };
 
   boot.loader.grub = {
     enable = true;
     device = "nodev";
-    efiSupport = true;
   };
-  boot.loader.efi.canTouchEfiVariables = true;
 
   users.users.conao = {
     isNormalUser = true;

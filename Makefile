@@ -8,11 +8,11 @@ update:
 MEMORY ?= 4096
 CORES ?= 2
 
-.PHONY: vm-zeroclaw
-vm-zeroclaw:
-	nix build -L .#nixosConfigurations.zeroclaw-vm.config.system.build.vm
+.PHONY: vm-agent
+vm-agent:
+	nix build -L .#nixosConfigurations.agent-vm.config.system.build.vm
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm
 
-.PHONY: vm-zeroclaw-switch
-vm-zeroclaw-switch:
-	ssh -p 2222 conao@localhost 'sudo nixos-rebuild switch --flake ~/dev/host-repos/nixos-configuration#zeroclaw-vm'
+.PHONY: vm-agent-switch
+vm-agent-switch:
+	NIX_SSHOPTS="-p 2222" nixos-rebuild test --flake .#agent-vm --target-host conao@localhost --sudo

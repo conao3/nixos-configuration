@@ -126,11 +126,11 @@
           nixosConfigurations = {
             "conao-nixos-helios" = mkNixosSystem "helios";
             "conao-nixos-eos" = mkNixosSystem "eos";
-            "zeroclaw-vm" = inputs.nixpkgs.lib.nixosSystem {
+            "agent-vm" = inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
               specialArgs = { inherit inputs; };
               modules = [
-                ./hosts/zeroclaw-vm
+                ./hosts/agent-vm
                 { nixpkgs.config.allowUnfree = true; }
                 inputs.home-manager.nixosModules.home-manager
                 {
@@ -138,7 +138,7 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     extraSpecialArgs = { inherit inputs; };
-                    users.conao = import ./hosts/zeroclaw-vm/home.nix;
+                    users.conao = import ./hosts/agent-vm/home.nix;
                   };
                 }
               ];
