@@ -1,9 +1,14 @@
 {
   inputs,
   pkgs,
+  config,
   ...
 }:
 
+let
+  system = pkgs.stdenv.hostPlatform.system;
+  username = config.home.username;
+in
 {
   home = {
     stateVersion = "24.11";
