@@ -1,3 +1,5 @@
 /example
 /.lsp
 /.clj-kondo
+/*.qcow2
+/result
