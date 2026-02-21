@@ -79,6 +79,11 @@
     };
   };
 
+  virtualisation.vmVariant.systemd.tmpfiles.rules = [
+    "d /home/conao/.config 0755 conao users -"
+    "d /home/conao/dev 0755 conao users -"
+  ];
+
   virtualisation.vmVariant.virtualisation = {
     forwardPorts = [
       {
