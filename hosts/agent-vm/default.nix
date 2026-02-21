@@ -79,9 +79,32 @@
     };
   };
 
-  virtualisation.vmVariant.systemd.tmpfiles.rules = [
+  systemd.tmpfiles.rules = [
     "d /home/conao/.config 0755 conao users -"
+    "d /home/conao/.config/sops 0755 conao users -"
+    "d /home/conao/.config/sops/age 0755 conao users -"
     "d /home/conao/dev 0755 conao users -"
+    "d /home/conao/dev/host-repos 0755 conao users -"
+    "d /home/conao/dev/host-repos/nixos-configuration 0755 conao users -"
+  ];
+
+  systemd.mounts = [
+    {
+      type = "9p";
+      options = "trans=virtio,version=9p2000.L";
+      what = "sops-age";
+      where = "/home/conao/.config/sops/age";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "systemd-modules-load.service" ];
+    }
+    {
+      type = "9p";
+      options = "trans=virtio,version=9p2000.L";
+      what = "nixos-configuration";
+      where = "/home/conao/dev/host-repos/nixos-configuration";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "systemd-modules-load.service" ];
+    }
   ];
 
   virtualisation.vmVariant.virtualisation = {
@@ -92,23 +115,11 @@
         guest.port = 22;
       }
     ];
-    sharedDirectories =
-      let
-        hostRepo = name: {
-          source = "/home/conao/dev/repos/${name}";
-          target = "/home/conao/dev/host-repos/${name}";
-        };
-      in
-      {
-        nixos-configuration = hostRepo "nixos-configuration";
-        sops-age = {
-          source = "/home/conao/.config/sops/age";
-          target = "/home/conao/.config/sops/age";
-        };
-      };
     qemu.options = [
       "-vga virtio"
       "-display gtk,zoom-to-fit=off"
+      "-virtfs local,path=/home/conao/.config/sops/age,security_model=none,mount_tag=sops-age"
+      "-virtfs local,path=/home/conao/dev/repos/nixos-configuration,security_model=none,mount_tag=nixos-configuration"
     ];
   };
 }

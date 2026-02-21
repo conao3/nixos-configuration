@@ -51,6 +51,9 @@ in
       openclaw-dot-env = {
         path = "${config.home.homeDirectory}/.openclaw/.env";
       };
+      claude-credentials = {
+        path = "${config.home.homeDirectory}/.claude/.credentials.json";
+      };
     };
   };
 
