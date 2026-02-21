@@ -73,6 +73,23 @@ in
     defaultEditor = true;
   };
 
+  systemd.user.services.openclaw-gateway = {
+    Unit = {
+      Description = "OpenClaw Gateway";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${inputs.llm-agents.packages.${system}.openclaw}/bin/openclaw gateway run";
+      Restart = "always";
+      RestartSec = "5";
+      KillMode = "process";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
   xdg.configFile."mimeapps.list".force = true;
 
   xdg.configFile."xfce4/helpers.rc" = {
