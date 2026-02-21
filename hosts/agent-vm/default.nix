@@ -122,4 +122,6 @@
       "-virtfs local,path=/home/conao/dev/repos/nixos-configuration,security_model=none,mount_tag=nixos-configuration"
     ];
   };
+
+  services.tailscale.enable = true;
 }
