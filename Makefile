@@ -12,3 +12,7 @@ CORES ?= 2
 vm-zeroclaw:
 	nix build -L .#nixosConfigurations.zeroclaw-vm.config.system.build.vm
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm
+
+.PHONY: vm-zeroclaw-switch
+vm-zeroclaw-switch:
+	ssh -p 2222 conao@localhost 'sudo nixos-rebuild switch --flake ~/dev/host-repos/nixos-configuration#zeroclaw-vm'

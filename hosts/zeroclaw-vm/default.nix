@@ -53,11 +53,23 @@
     };
   };
 
-  virtualisation.vmVariant.virtualisation.forwardPorts = [
-    {
-      from = "host";
-      host.port = 2222;
-      guest.port = 22;
-    }
-  ];
+  virtualisation.vmVariant.virtualisation = {
+    forwardPorts = [
+      {
+        from = "host";
+        host.port = 2222;
+        guest.port = 22;
+      }
+    ];
+    sharedDirectories =
+      let
+        hostRepo = name: {
+          source = "/home/conao/dev/repos/${name}";
+          target = "/home/conao/dev/host-repos/${name}";
+        };
+      in
+      {
+        nixos-configuration = hostRepo "nixos-configuration";
+      };
+  };
 }
