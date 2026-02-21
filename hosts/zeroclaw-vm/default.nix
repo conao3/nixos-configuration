@@ -29,10 +29,6 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  environment.systemPackages = [
-    inputs.llm-agents.packages.${pkgs.system}.zeroclaw
-  ];
-
   services = {
     xserver = {
       enable = true;

@@ -132,6 +132,15 @@
               modules = [
                 ./hosts/zeroclaw-vm
                 { nixpkgs.config.allowUnfree = true; }
+                inputs.home-manager.nixosModules.home-manager
+                {
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    extraSpecialArgs = { inherit inputs; };
+                    users.conao = import ./hosts/zeroclaw-vm/home.nix;
+                  };
+                }
               ];
             };
           };
