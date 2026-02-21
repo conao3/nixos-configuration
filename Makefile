@@ -23,7 +23,7 @@ vm-agent:
 
 .PHONY: vm-agent-tunnel
 vm-agent-tunnel:
-	ssh -p 2222 -L 18789:127.0.0.1:18789 -N conao@localhost
+	ssh -p 2222 -L 18789:127.0.0.1:18789 -L 18792:127.0.0.1:18792 -N conao@localhost
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
