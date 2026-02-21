@@ -147,9 +147,11 @@ in
     emacs.enable = true;
   };
 
-  services.emacs = {
-    enable = true;
-    defaultEditor = true;
+  services = {
+    emacs = {
+      enable = true;
+      defaultEditor = true;
+    };
   };
 
   systemd.user.services.openclaw-gateway = {
@@ -163,6 +165,9 @@ in
       Restart = "always";
       RestartSec = "5";
       KillMode = "process";
+      Environment = [
+        "PATH=${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin"
+      ];
     };
     Install = {
       WantedBy = [ "default.target" ];
