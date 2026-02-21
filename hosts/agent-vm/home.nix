@@ -53,7 +53,7 @@ in
 
     zsh = {
       enable = true;
-      initContent = ''
+      profileExtra = ''
         export SILICONFLOW_API_KEY="$(cat ${config.sops.secrets.siliconflow-api-key.path})"
       '';
     };
