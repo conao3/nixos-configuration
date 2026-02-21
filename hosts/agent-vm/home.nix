@@ -69,6 +69,9 @@ in
         ripgrep
         fd
         tree
+        python3
+        file
+        git
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
