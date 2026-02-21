@@ -40,6 +40,7 @@ in
     # https://nix-community.github.io/home-manager/options.xhtml
     home-manager.enable = true;
 
+    zsh.enable = true;
     wezterm.enable = true;
     emacs.enable = true;
   };
