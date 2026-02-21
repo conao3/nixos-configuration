@@ -22,10 +22,26 @@ in
       e = "$EDITOR";
     };
 
-    packages = [
-      inputs.llm-agents.packages.${pkgs.system}.zeroclaw
-      pkgs.wezterm
-    ];
+    packages =
+      # https://search.nixos.org/packages
+      (with pkgs; [
+        gnumake
+      ])
+      ++ (with inputs.llm-agents.packages.${system}; [
+        claude-code
+        claude-code-acp
+        codex
+        codex-acp
+        zeroclaw
+      ]);
+  };
+
+  programs = {
+    # https://nix-community.github.io/home-manager/options.xhtml
+    home-manager.enable = true;
+
+    wezterm.enable = true;
+    emacs.enable = true;
   };
 
   services.emacs = {
