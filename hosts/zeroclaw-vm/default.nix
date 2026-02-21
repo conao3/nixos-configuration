@@ -34,7 +34,10 @@
   services = {
     xserver = {
       enable = true;
-      desktopManager.xfce.enable = true;
+      desktopManager.xfce = {
+        enable = true;
+        enableScreensaver = false;
+      };
     };
     displayManager.defaultSession = "xfce";
   };
