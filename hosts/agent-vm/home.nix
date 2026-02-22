@@ -226,7 +226,18 @@ EOF
       RestartSec = "5";
       KillMode = "process";
       Environment = [
-        "PATH=${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin"
+        "PATH=${lib.concatStringsSep ":" [
+          "/run/wrappers/bin"
+          "${config.home.homeDirectory}/.nix-profile/bin"
+          "/nix/profile/bin"
+          "${config.home.homeDirectory}/.local/state/nix/profile/bin"
+          "/etc/profiles/per-user/${username}/bin"
+          "/nix/var/nix/profiles/default/bin"
+          "/run/current-system/sw/bin"
+          "/usr/local/bin"
+          "/usr/bin"
+          "/bin"
+        ]}"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
