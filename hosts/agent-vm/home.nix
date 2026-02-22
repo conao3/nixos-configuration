@@ -146,6 +146,14 @@ in
         unset _openclaw_auth_profiles
       '';
     };
+    git = {
+      enable = true;
+      settings = {
+        init.defaultBranch = "main";
+        user.email = "conao3@gmail.com";
+        user.name = "conao3";
+      };
+    };
     wezterm.enable = true;
     emacs.enable = true;
   };
