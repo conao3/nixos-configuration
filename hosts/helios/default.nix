@@ -11,4 +11,6 @@
   ];
 
   networking.hostName = "conao-nixos-helios";
+
+  services.tailscale.enable = true;
 }
