@@ -109,6 +109,7 @@
 
   virtualisation.vmVariant.virtualisation = {
     diskSize = 20 * 1024;
+    writableStoreUseTmpfs = false;
     forwardPorts = [
       {
         from = "host";
