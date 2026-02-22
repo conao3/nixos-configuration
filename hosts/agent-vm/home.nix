@@ -9,6 +9,7 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   username = config.home.username;
+  homeDir = config.home.homeDirectory;
 in
 {
   home = {
@@ -162,7 +163,7 @@ in
   };
 
   sops = {
-    age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
+    age.keyFile = "${homeDir}/.config/sops/age/keys.txt";
     defaultSopsFile = ./secrets/secrets.yaml;
     templates."agent-vm-env" = {
       content = ''
@@ -174,10 +175,10 @@ in
       anthropic-api-key = { };
       siliconflow-api-key = { };
       openclaw-dot-env = {
-        path = "${config.home.homeDirectory}/.openclaw/.env";
+        path = "${homeDir}/.openclaw/.env";
       };
       claude-credentials = {
-        path = "${config.home.homeDirectory}/.claude/.credentials.json";
+        path = "${homeDir}/.claude/.credentials.json";
       };
       slack-bot-token = { };
       slack-app-token = { };
@@ -186,6 +187,8 @@ in
       ssh-public-key = { };
     };
   };
+
+  home.sessionPath = [ "${homeDir}/.openclaw/workspace/bin" ];
 
   programs = {
     # https://nix-community.github.io/home-manager/options.xhtml
@@ -238,10 +241,11 @@ in
       Environment = [
         "PATH=${
           lib.concatStringsSep ":" [
+            "${homeDir}/.openclaw/workspace/bin"
             "/run/wrappers/bin"
-            "${config.home.homeDirectory}/.nix-profile/bin"
+            "${homeDir}/.nix-profile/bin"
             "/nix/profile/bin"
-            "${config.home.homeDirectory}/.local/state/nix/profile/bin"
+            "${homeDir}/.local/state/nix/profile/bin"
             "/etc/profiles/per-user/${username}/bin"
             "/nix/var/nix/profiles/default/bin"
             "/run/current-system/sw/bin"
