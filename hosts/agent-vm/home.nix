@@ -298,6 +298,23 @@ in
     };
   };
 
+  systemd.user.services.beads-ui = {
+    Unit = {
+      Description = "Beads UI";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      WorkingDirectory = "${homeDir}/.openclaw/workspace";
+      ExecStart = "${pkgs.pnpm}/bin/pnpm dlx beads-ui start --port 18701";
+      Restart = "always";
+      RestartSec = "5";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
   xdg.configFile."mimeapps.list".force = true;
 
   xdg.configFile."xfce4/helpers.rc" = {
