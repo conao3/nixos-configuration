@@ -25,6 +25,14 @@ in
         source = commonHomeDir + "/ext/.claude";
         recursive = true;
       };
+      ".config/git/hooks/pre-commit" = {
+        executable = true;
+        text = ''
+          #!/usr/bin/env bash
+          set -euo pipefail
+          exec ${pkgs.gitleaks}/bin/gitleaks git --staged --redact --no-banner
+        '';
+      };
     };
 
     activation.openclawSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -223,7 +231,9 @@ in
     bash = import (commonHomeDir + "/programs/bash.nix");
     direnv = import (commonHomeDir + "/programs/direnv.nix");
     emacs = import (commonHomeDir + "/programs/emacs.nix") pkgs;
-    git = import (commonHomeDir + "/programs/git.nix");
+    git = lib.recursiveUpdate (import (commonHomeDir + "/programs/git.nix")) {
+      settings.core.hooksPath = "~/.config/git/hooks";
+    };
     neovim = import (commonHomeDir + "/programs/neovim.nix");
   };
 
