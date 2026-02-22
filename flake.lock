@@ -882,11 +882,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1771774429,
-        "narHash": "sha256-EX1NyNkzIq6zpnTk9FmP0Db2XDoE2/kQae6uYShvdTc=",
+        "lastModified": 1771779077,
+        "narHash": "sha256-dcbLdjWGha0PVXljcLQg5MUT0Ev0RHnYBLR7b5vWbeQ=",
         "owner": "conao3",
         "repo": "rust-fetch-usage-limit",
-        "rev": "c1ebee469e7a4b0600658ec84b583ad6281f8c7b",
+        "rev": "12fd24c0e4cfa23733cdf19c75b741e609f59d64",
         "type": "github"
       },
       "original": {
