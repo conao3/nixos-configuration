@@ -127,7 +127,7 @@ in
       (with pkgs; [
         gnumake
         google-chrome
-        bottom                  # Rust re-implementation for top
+        bottom # Rust re-implementation for top
         _1password-gui
         jq
         ripgrep
@@ -141,6 +141,8 @@ in
         tmux
         zellij
         uv
+        bat
+        bun
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
@@ -148,6 +150,7 @@ in
         codex
         codex-acp
         openclaw
+        qmd # vector search
       ]);
   };
 
