@@ -51,6 +51,10 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    rust-fetch-usage-limit = {
+      url = "github:conao3/rust-fetch-usage-limit";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

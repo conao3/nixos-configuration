@@ -177,7 +177,10 @@ in
         openclaw
         qmd # vector search
         beads
-      ]);
+      ])
+      ++ [
+        inputs.rust-fetch-usage-limit.packages.${system}.default
+      ];
   };
 
   sops = {
