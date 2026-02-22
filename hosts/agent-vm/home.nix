@@ -10,14 +10,21 @@ let
   system = pkgs.stdenv.hostPlatform.system;
   username = config.home.username;
   homeDir = config.home.homeDirectory;
+  commonHomeDir = ../../home-manager;
 in
 {
   home = {
     stateVersion = "24.11";
 
-    file.".config" = {
-      source = ./ext/.config;
-      recursive = true;
+    file = {
+      ".config" = {
+        source = ./ext/.config;
+        recursive = true;
+      };
+      ".claude" = {
+        source = commonHomeDir + "/ext/.claude";
+        recursive = true;
+      };
     };
 
     activation.openclawSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -211,16 +218,13 @@ in
         unset _openclaw_auth_profiles
       '';
     };
-    git = {
-      enable = true;
-      settings = {
-        init.defaultBranch = "main";
-        user.email = "conao3@gmail.com";
-        user.name = "conao3";
-      };
-    };
     wezterm.enable = true;
-    emacs.enable = true;
+    atuin = import (commonHomeDir + "/programs/atuin.nix");
+    bash = import (commonHomeDir + "/programs/bash.nix");
+    direnv = import (commonHomeDir + "/programs/direnv.nix");
+    emacs = import (commonHomeDir + "/programs/emacs.nix") pkgs;
+    git = import (commonHomeDir + "/programs/git.nix");
+    neovim = import (commonHomeDir + "/programs/neovim.nix");
   };
 
   services = {
