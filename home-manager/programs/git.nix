@@ -9,11 +9,12 @@
       name = "conao3";
       email = "conao3@gmail.com";
     };
-    # core = {
-    #   quotepath = false;
-    #   fsmonitor = true;
-    #   untrackedcache = true;
-    # };
+    core = {
+      hooksPath = "~/.config/git/hooks";
+      # quotepath = false;
+      # fsmonitor = true;
+      # untrackedcache = true;
+    };
     init = {
       defaultBranch = "master";
     };
