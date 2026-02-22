@@ -99,6 +99,9 @@ in
         file
         git
         nodejs
+        gh
+        tmux
+        zellij
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
