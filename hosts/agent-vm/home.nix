@@ -131,6 +131,7 @@ in
         nodejs
         python3
         uv
+        pnpm
       ])
       # rust re-impl
       ++ (with pkgs; [
@@ -151,6 +152,7 @@ in
         jq
         tmux
         tree
+        lsof
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
@@ -159,6 +161,7 @@ in
         codex-acp
         openclaw
         qmd # vector search
+        beads
       ]);
   };
 
