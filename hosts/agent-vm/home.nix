@@ -188,18 +188,13 @@ in
     defaultSopsFile = ./secrets/secrets.yaml;
     templates."agent-vm-env" = {
       content = ''
-        ANTHROPIC_OAUTH_API_KEY=${config.sops.placeholder."anthropic-api-key"}
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
       '';
     };
     secrets = {
-      anthropic-api-key = { };
       siliconflow-api-key = { };
       openclaw-dot-env = {
         path = "${homeDir}/.openclaw/.env";
-      };
-      claude-credentials = {
-        path = "${homeDir}/.claude/.credentials.json";
       };
       slack-bot-token = { };
       slack-app-token = { };
