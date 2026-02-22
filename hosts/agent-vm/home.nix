@@ -262,6 +262,25 @@ in
     };
   };
 
+  systemd.user.services.qmd-mcp = {
+    Unit = {
+      Description = "QMD MCP Server (HTTP daemon)";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${inputs.llm-agents.packages.${system}.qmd}/bin/qmd mcp --http";
+      Restart = "always";
+      RestartSec = "5";
+      Environment = [
+        "NODE_LLAMA_CPP_GPU=false"
+      ];
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
   xdg.configFile."mimeapps.list".force = true;
 
   xdg.configFile."xfce4/helpers.rc" = {
