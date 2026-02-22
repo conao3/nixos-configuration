@@ -56,18 +56,18 @@ in
     '';
 
     activation.ghSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      gh_token=$(cat ${config.sops.secrets.github-token.path} 2>/dev/null || true)
-      if [ -n "$gh_token" ]; then
-        gh_hosts="$HOME/.config/gh/hosts.yml"
-        mkdir -p "$(dirname "$gh_hosts")"
-        cat > "$gh_hosts" << EOF
-github.com:
-    oauth_token: $gh_token
-    git_protocol: ssh
-    user: conao3
-EOF
-        chmod 600 "$gh_hosts"
-      fi
+            gh_token=$(cat ${config.sops.secrets.github-token.path} 2>/dev/null || true)
+            if [ -n "$gh_token" ]; then
+              gh_hosts="$HOME/.config/gh/hosts.yml"
+              mkdir -p "$(dirname "$gh_hosts")"
+              cat > "$gh_hosts" << EOF
+      github.com:
+          oauth_token: $gh_token
+          git_protocol: ssh
+          user: conao3
+      EOF
+              chmod 600 "$gh_hosts"
+            fi
     '';
 
     activation.sshSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -226,18 +226,20 @@ EOF
       RestartSec = "5";
       KillMode = "process";
       Environment = [
-        "PATH=${lib.concatStringsSep ":" [
-          "/run/wrappers/bin"
-          "${config.home.homeDirectory}/.nix-profile/bin"
-          "/nix/profile/bin"
-          "${config.home.homeDirectory}/.local/state/nix/profile/bin"
-          "/etc/profiles/per-user/${username}/bin"
-          "/nix/var/nix/profiles/default/bin"
-          "/run/current-system/sw/bin"
-          "/usr/local/bin"
-          "/usr/bin"
-          "/bin"
-        ]}"
+        "PATH=${
+          lib.concatStringsSep ":" [
+            "/run/wrappers/bin"
+            "${config.home.homeDirectory}/.nix-profile/bin"
+            "/nix/profile/bin"
+            "${config.home.homeDirectory}/.local/state/nix/profile/bin"
+            "/etc/profiles/per-user/${username}/bin"
+            "/nix/var/nix/profiles/default/bin"
+            "/run/current-system/sw/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+          ]
+        }"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
