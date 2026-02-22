@@ -287,7 +287,6 @@ in
   xdg.configFile."mimeapps.list".force = true;
 
   xdg.configFile."xfce4/helpers.rc" = {
-    force = true;
     text = ''
       WebBrowser=google-chrome
     '';

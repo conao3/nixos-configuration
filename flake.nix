@@ -143,6 +143,7 @@
                   home-manager = {
                     useGlobalPkgs = true;
                     useUserPackages = true;
+                    backupFileExtension = "backup";
                     extraSpecialArgs = { inherit inputs; };
                     sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
                     users.conao = import ./hosts/agent-vm/home.nix;
