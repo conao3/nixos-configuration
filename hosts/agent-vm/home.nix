@@ -153,7 +153,14 @@ EOF
   sops = {
     age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
     defaultSopsFile = ./secrets/secrets.yaml;
+    templates."agent-vm-env" = {
+      content = ''
+        ANTHROPIC_API_KEY=${config.sops.placeholder."anthropic-api-key"}
+        SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
+      '';
+    };
     secrets = {
+      anthropic-api-key = { };
       siliconflow-api-key = { };
       openclaw-dot-env = {
         path = "${config.home.homeDirectory}/.openclaw/.env";
@@ -176,7 +183,7 @@ EOF
     zsh = {
       enable = true;
       profileExtra = ''
-        export SILICONFLOW_API_KEY="$(cat ${config.sops.secrets.siliconflow-api-key.path})"
+        source ${config.sops.templates."agent-vm-env".path}
       '';
       initContent = ''
         _openclaw_auth_profiles="$HOME/.openclaw/agents/main/agent/auth-profiles.json"
@@ -220,6 +227,7 @@ EOF
       Environment = [
         "PATH=${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin"
       ];
+      EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
     Install = {
       WantedBy = [ "default.target" ];
