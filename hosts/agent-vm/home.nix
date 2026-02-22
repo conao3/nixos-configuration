@@ -29,6 +29,16 @@ in
             '.agents.defaults.model.primary = "openai-codex/gpt-5.3-codex" | .agents.defaults.model.fallbacks = ["custom-api-siliconflow-com-zai-org-glm-4-7/zai-org/GLM-4.7"]' \
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
+        if [ "$(jq -r '.env.shellEnv.enabled // false' "$openclaw_json")" != "true" ]; then
+          tmp=$(mktemp)
+          jq '.env = {"shellEnv": {"enabled": true, "timeoutMs": 15000}}' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
+        if [ "$(jq -r '.agents.defaults.contextTokens // 0' "$openclaw_json")" != "400000" ]; then
+          tmp=$(mktemp)
+          jq '.agents.defaults.contextTokens = 400000' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
         slack_bot=$(cat ${config.sops.secrets.slack-bot-token.path} 2>/dev/null || true)
         slack_app=$(cat ${config.sops.secrets.slack-app-token.path} 2>/dev/null || true)
         if [ -n "$slack_bot" ] && [ -n "$slack_app" ]; then
