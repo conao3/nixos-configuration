@@ -188,8 +188,8 @@ in
     defaultSopsFile = ./secrets/secrets.yaml;
     templates."agent-vm-env" = {
       content = ''
-        export ANTHROPIC_OAUTH_API_KEY=${config.sops.placeholder."anthropic-api-key"}
-        export SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
+        ANTHROPIC_OAUTH_API_KEY=${config.sops.placeholder."anthropic-api-key"}
+        SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
       '';
     };
     secrets = {
