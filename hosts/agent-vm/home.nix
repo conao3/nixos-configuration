@@ -45,6 +45,34 @@ in
       fi
     '';
 
+    activation.ghSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      gh_token=$(cat ${config.sops.secrets.github-token.path} 2>/dev/null || true)
+      if [ -n "$gh_token" ]; then
+        gh_hosts="$HOME/.config/gh/hosts.yml"
+        mkdir -p "$(dirname "$gh_hosts")"
+        cat > "$gh_hosts" << EOF
+github.com:
+    oauth_token: $gh_token
+    git_protocol: ssh
+    user: conao3
+EOF
+        chmod 600 "$gh_hosts"
+      fi
+    '';
+
+    activation.sshSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      ssh_private=$(cat ${config.sops.secrets.ssh-private-key.path} 2>/dev/null || true)
+      ssh_public=$(cat ${config.sops.secrets.ssh-public-key.path} 2>/dev/null || true)
+      if [ -n "$ssh_private" ] && [ -n "$ssh_public" ]; then
+        mkdir -p "$HOME/.ssh"
+        chmod 700 "$HOME/.ssh"
+        printf '%s\n' "$ssh_private" > "$HOME/.ssh/id_ed25519"
+        chmod 600 "$HOME/.ssh/id_ed25519"
+        printf '%s\n' "$ssh_public" > "$HOME/.ssh/id_ed25519.pub"
+        chmod 644 "$HOME/.ssh/id_ed25519.pub"
+      fi
+    '';
+
     activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       settings_file="$HOME/.claude/settings.json"
       if [ ! -f "$settings_file" ] || [ -L "$settings_file" ]; then
@@ -125,6 +153,9 @@ in
       };
       slack-bot-token = { };
       slack-app-token = { };
+      github-token = { };
+      ssh-private-key = { };
+      ssh-public-key = { };
     };
   };
 
