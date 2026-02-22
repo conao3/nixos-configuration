@@ -140,6 +140,7 @@ EOF
         gh
         tmux
         zellij
+        uv
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
