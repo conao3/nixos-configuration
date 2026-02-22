@@ -124,25 +124,32 @@ in
 
     packages =
       # https://search.nixos.org/packages
+      # langages
       (with pkgs; [
+        bun
+        nodejs
+        python3
+        uv
+      ])
+      # rust re-impl
+      ++ (with pkgs; [
+        bat # cat
+        bottom # top
+        fd # find
+        ripgrep # grep
+        zellij # tmux
+      ])
+      # utils
+      ++ (with pkgs; [
+        _1password-gui
+        file
+        gh
+        git
         gnumake
         google-chrome
-        bottom # Rust re-implementation for top
-        _1password-gui
         jq
-        ripgrep
-        fd
-        tree
-        python3
-        file
-        git
-        nodejs
-        gh
         tmux
-        zellij
-        uv
-        bat
-        bun
+        tree
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-code
