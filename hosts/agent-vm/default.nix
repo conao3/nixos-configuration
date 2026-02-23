@@ -4,10 +4,6 @@
   ...
 }:
 
-let
-  memorySize = 8192;
-in
-
 {
   system.stateVersion = "24.11";
 
@@ -111,7 +107,7 @@ in
   ];
 
   virtualisation.vmVariant.virtualisation = {
-    inherit memorySize;
+    memorySize = 4096;
     diskSize = 20 * 1024;
     writableStoreUseTmpfs = false;
     forwardPorts = [
@@ -127,8 +123,6 @@ in
       "-virtfs local,path=/home/conao/.config/sops/age,security_model=none,mount_tag=sops-age"
       "-chardev socket,id=char-dev-repos,path=/tmp/virtiofsd-dev-repos.sock"
       "-device vhost-user-fs-pci,chardev=char-dev-repos,tag=dev-repos"
-      "-object memory-backend-memfd,id=mem,share=on,size=${toString memorySize}M"
-      "-machine memory-backend=mem"
     ];
   };
 

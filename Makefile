@@ -27,7 +27,7 @@ vm-agent:
 	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/dev/repos --sandbox none & \
 	VIRTIOFSD_PID=$$!; \
 	sleep 1; \
-	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-conao-nixos-agent-vm; \
+	QEMU_OPTS="-m $(MEMORY) -smp $(CORES) -object memory-backend-memfd,id=mem,share=on,size=$(MEMORY)M -machine memory-backend=mem" ./result/bin/run-conao-nixos-agent-vm; \
 	kill $$VIRTIOFSD_PID 2>/dev/null || true
 
 .PHONY: vm-agent-switch
