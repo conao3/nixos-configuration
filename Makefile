@@ -1,5 +1,9 @@
 all:
 
+.PHONY: switch
+switch:
+	sudo nixos-rebuild switch --flake .
+
 .PHONY: lint
 lint:
 	nix eval .#nixosConfigurations.agent-vm.config.system.build.toplevel 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
@@ -25,10 +29,6 @@ vm-agent:
 	sleep 1; \
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm; \
 	kill $$VIRTIOFSD_PID 2>/dev/null || true
-
-.PHONY: switch
-switch:
-	sudo nixos-rebuild switch --flake .
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
