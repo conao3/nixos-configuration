@@ -282,10 +282,12 @@ in
       Wants = [ "network-online.target" ];
     };
     Service = {
-      Type = "oneshot";
-      RemainAfterExit = true;
+      Type = "forking";
+      PIDFile = "%t/beads-ui/server.pid";
       WorkingDirectory = "${homeDir}/.openclaw/workspace";
       ExecStart = "${pkgs.pnpm}/bin/pnpm dlx beads-ui start --port 18701";
+      ExecStop = "${pkgs.pnpm}/bin/pnpm dlx beads-ui stop";
+      Restart = "on-failure";
     };
     Install = {
       WantedBy = [ "default.target" ];
