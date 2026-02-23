@@ -4,10 +4,6 @@ all:
 lint:
 	nix eval .#nixosConfigurations.agent-vm.config.system.build.toplevel 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 
-.PHONY: vm-agent-edit-secrets
-vm-agent-edit-secrets:
-	sops hosts/agent-vm/secrets/secrets.yaml
-
 .PHONY: update
 update:
 	nix flake update
@@ -15,6 +11,10 @@ update:
 
 MEMORY ?= 4096
 CORES ?= 2
+
+.PHONY: vm-agent-edit-secrets
+vm-agent-edit-secrets:
+	sops hosts/agent-vm/secrets/secrets.yaml
 
 .PHONY: vm-agent
 vm-agent:
