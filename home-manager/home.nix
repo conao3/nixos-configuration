@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   system,
   username,
@@ -315,6 +316,7 @@
           pencil
           qpdfview
           steam-run
+          telegram-desktop
           vlc
           xclip
           xsel
