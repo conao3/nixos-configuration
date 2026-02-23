@@ -11,6 +11,8 @@ in
 {
   system.stateVersion = "24.11";
 
+  networking.hostName = "conao-nixos-agent";
+
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
     fsType = "ext4";
