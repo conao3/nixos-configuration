@@ -16,6 +16,30 @@
 
   zramSwap.enable = true;
 
+  systemd.user.services.vm-agent-tunnel = {
+    description = "SSH tunnel to agent-vm";
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = lib.concatStringsSep " " [
+        "${pkgs.autossh}/bin/autossh"
+        "-M 0"
+        "-N"
+        "-p 2222"
+        "-o ServerAliveInterval=10"
+        "-o ServerAliveCountMax=3"
+        "-o ExitOnForwardFailure=yes"
+        "-o StrictHostKeyChecking=no"
+        "-L 18789:127.0.0.1:18789"
+        "-L 18792:127.0.0.1:18792"
+        "-L 18701:127.0.0.1:18701"
+        "conao@localhost"
+      ];
+      Restart = "always";
+      RestartSec = "5";
+      Environment = "AUTOSSH_GATETIME=0";
+    };
+  };
+
   systemd.user.services.memory-alert = {
     description = "Memory usage alert";
     serviceConfig = {
