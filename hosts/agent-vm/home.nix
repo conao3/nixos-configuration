@@ -50,9 +50,19 @@ in
           jq '.env = {"shellEnv": {"enabled": true, "timeoutMs": 15000}}' \
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
-        if [ "$(jq -r '.agents.defaults.contextTokens // 0' "$openclaw_json")" != "400000" ]; then
+        if [ "$(jq -r '.agents.defaults.contextTokens // 0' "$openclaw_json")" != "128000" ]; then
           tmp=$(mktemp)
-          jq '.agents.defaults.contextTokens = 400000' \
+          jq '.agents.defaults.contextTokens = 128000' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
+        if [ "$(jq -r '.agents.defaults.compaction.mode // ""' "$openclaw_json")" != "default" ]; then
+          tmp=$(mktemp)
+          jq '.agents.defaults.compaction = {"mode": "default", "reserveTokensFloor": 40000}' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
+        if [ "$(jq -r '.session.reset.idleMinutes // 0' "$openclaw_json")" != "30" ]; then
+          tmp=$(mktemp)
+          jq '.session.reset.idleMinutes = 30' \
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
         slack_bot=$(cat ${config.sops.secrets.slack-bot-token.path} 2>/dev/null || true)
