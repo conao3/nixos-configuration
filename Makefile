@@ -35,7 +35,7 @@ vm-agent-tunnel:
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	ssh -p 2222 conao@localhost "cd /home/conao/dev/repos/nixos-configuration && sudo nixos-rebuild test --flake .#agent-vm"; \
+	sudo nixos-rebuild test --flake .#agent-vm; \
 	ret=$$?; \
 	if [ $$ret -eq 4 ]; then \
 		echo "Warning: nix-store.mount could not be restarted (expected in VM), configuration applied"; \
