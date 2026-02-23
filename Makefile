@@ -19,7 +19,12 @@ CORES ?= 2
 .PHONY: vm-agent
 vm-agent:
 	nix build -L .#nixosConfigurations.agent-vm.config.system.build.vm
-	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm
+	rm -f /tmp/virtiofsd-dev-repos.sock
+	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/dev/repos --sandbox none & \
+	VIRTIOFSD_PID=$$!; \
+	sleep 1; \
+	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm; \
+	kill $$VIRTIOFSD_PID 2>/dev/null || true
 
 .PHONY: vm-agent-tunnel
 vm-agent-tunnel:

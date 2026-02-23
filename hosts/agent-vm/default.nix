@@ -4,6 +4,10 @@
   ...
 }:
 
+let
+  memorySize = 8192;
+in
+
 {
   system.stateVersion = "24.11";
 
@@ -84,8 +88,7 @@
     "d /home/conao/.config/sops 0755 conao users -"
     "d /home/conao/.config/sops/age 0755 conao users -"
     "d /home/conao/dev 0755 conao users -"
-    "d /home/conao/dev/host-repos 0755 conao users -"
-    "d /home/conao/dev/host-repos/nixos-configuration 0755 conao users -"
+    "d /home/conao/dev/repos 0755 conao users -"
   ];
 
   systemd.mounts = [
@@ -98,16 +101,15 @@
       after = [ "systemd-modules-load.service" ];
     }
     {
-      type = "9p";
-      options = "trans=virtio,version=9p2000.L";
-      what = "nixos-configuration";
-      where = "/home/conao/dev/host-repos/nixos-configuration";
+      type = "virtiofs";
+      what = "dev-repos";
+      where = "/home/conao/dev/repos";
       wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-modules-load.service" ];
     }
   ];
 
   virtualisation.vmVariant.virtualisation = {
+    inherit memorySize;
     diskSize = 20 * 1024;
     writableStoreUseTmpfs = false;
     forwardPorts = [
@@ -119,9 +121,12 @@
     ];
     qemu.options = [
       "-vga virtio"
-      "-display gtk,zoom-to-fit=off"
+      "-display gtk,zoom-to-fit=on"
       "-virtfs local,path=/home/conao/.config/sops/age,security_model=none,mount_tag=sops-age"
-      "-virtfs local,path=/home/conao/dev/repos/nixos-configuration,security_model=none,mount_tag=nixos-configuration"
+      "-chardev socket,id=char-dev-repos,path=/tmp/virtiofsd-dev-repos.sock"
+      "-device vhost-user-fs-pci,chardev=char-dev-repos,tag=dev-repos"
+      "-object memory-backend-memfd,id=mem,share=on,size=${toString memorySize}M"
+      "-machine memory-backend=mem"
     ];
   };
 
