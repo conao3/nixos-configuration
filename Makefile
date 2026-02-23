@@ -22,7 +22,7 @@ edit-secrets:
 
 .PHONY: vm-agent
 vm-agent:
-	nix build -L .#nixosConfigurations.agent-vm.config.system.build.vm
+	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm
 	rm -f /tmp/virtiofsd-dev-repos.sock
 	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/dev/repos --sandbox none & \
 	VIRTIOFSD_PID=$$!; \

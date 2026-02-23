@@ -18,7 +18,7 @@
     templates."helios-env" = {
       owner = "conao";
       content = ''
-        LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
+        export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
       '';
     };
     secrets.linear-api-key = { };

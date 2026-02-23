@@ -195,7 +195,9 @@ in
     zsh = {
       enable = true;
       profileExtra = ''
+        set -a
         source ${config.sops.templates."agent-vm-env".path}
+        set +a
       '';
       initContent = ''
         _openclaw_auth_profiles="$HOME/.openclaw/agents/main/agent/auth-profiles.json"
