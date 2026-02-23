@@ -19,6 +19,7 @@
   systemd.user.services.vm-agent-tunnel = {
     description = "SSH tunnel to agent-vm";
     after = [ "network.target" ];
+    wantedBy = [ "default.target" ];
     serviceConfig = {
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.autossh}/bin/autossh"
