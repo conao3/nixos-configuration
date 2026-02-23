@@ -263,6 +263,7 @@
     packages =
       let
         cljstyle = pkgs.callPackage ./pkgs/cljstyle.nix { };
+        gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
 
         # https://search.nixos.org/packages
         commonPackages = with pkgs; [
@@ -301,6 +302,7 @@
           zlib
 
           # cljstyle
+          gogcli
         ];
 
         linuxPackages = with pkgs; [
