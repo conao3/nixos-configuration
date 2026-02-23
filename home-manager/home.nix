@@ -263,6 +263,7 @@
     packages =
       let
         cljstyle = pkgs.callPackage ./pkgs/cljstyle.nix { };
+        linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
         gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
 
         # https://search.nixos.org/packages
@@ -303,6 +304,7 @@
 
           # cljstyle
           gogcli
+          linear-cli
         ];
 
         linuxPackages = with pkgs; [
