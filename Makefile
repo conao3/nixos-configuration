@@ -32,4 +32,4 @@ vm-agent:
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#agent-vm --target-host conao@localhost --sudo
+	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo

@@ -136,7 +136,7 @@
           nixosConfigurations = {
             "conao-nixos-helios" = mkNixosSystem "helios";
             "conao-nixos-eos" = mkNixosSystem "eos";
-            "agent-vm" = inputs.nixpkgs.lib.nixosSystem {
+            "conao-nixos-agent" = inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
               specialArgs = { inherit inputs; };
               modules = [
