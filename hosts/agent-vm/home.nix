@@ -164,14 +164,16 @@ in
 
   sops = {
     age.keyFile = "${homeDir}/.config/sops/age/keys.txt";
-    defaultSopsFile = ./secrets/secrets.yaml;
+    defaultSopsFile = ../../secrets/secrets.yaml;
     templates."agent-vm-env" = {
       content = ''
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
+        LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
       '';
     };
     secrets = {
       siliconflow-api-key = { };
+      linear-api-key = { };
       openclaw-dot-env = {
         path = "${homeDir}/.openclaw/.env";
       };

@@ -12,6 +12,22 @@
 
   networking.hostName = "conao-nixos-helios";
 
+  sops = {
+    defaultSopsFile = ../../secrets/secrets.yaml;
+    age.keyFile = "/home/conao/.config/sops/age/keys.txt";
+    templates."helios-env" = {
+      owner = "conao";
+      content = ''
+        LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
+      '';
+    };
+    secrets.linear-api-key = { };
+  };
+
+  programs.zsh.interactiveShellInit = ''
+    [ -f ${config.sops.templates."helios-env".path} ] && source ${config.sops.templates."helios-env".path}
+  '';
+
   services.tailscale.enable = true;
 
   zramSwap.enable = true;

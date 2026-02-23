@@ -108,6 +108,7 @@
                 ./nixos/configuration.nix
                 ./hosts/${hostname}
                 { nixpkgs = commonNixpkgsConfig; }
+                inputs.sops-nix.nixosModules.sops
                 inputs.home-manager.nixosModules.home-manager
                 {
                   home-manager = {

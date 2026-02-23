@@ -16,9 +16,9 @@ update:
 MEMORY ?= 4096
 CORES ?= 2
 
-.PHONY: vm-agent-edit-secrets
-vm-agent-edit-secrets:
-	sops hosts/agent-vm/secrets/secrets.yaml
+.PHONY: edit-secrets
+edit-secrets:
+	sops secrets/secrets.yaml
 
 .PHONY: vm-agent
 vm-agent:
