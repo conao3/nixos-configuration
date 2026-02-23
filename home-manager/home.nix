@@ -160,6 +160,10 @@
       e = "$EDITOR";
     };
 
+    sessionVariables = {
+      BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
+    };
+
     language.base = "en_US.UTF-8";
 
     file = {

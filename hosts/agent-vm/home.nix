@@ -113,6 +113,10 @@ in
       e = "$EDITOR";
     };
 
+    sessionVariables = {
+      BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
+    };
+
     packages =
       # https://search.nixos.org/packages
       # langages
