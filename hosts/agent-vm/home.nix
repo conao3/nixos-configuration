@@ -159,6 +159,7 @@ in
       ])
       ++ [
         inputs.rust-fetch-usage-limit.packages.${system}.default
+        (pkgs.callPackage ./pkgs/linear-cli.nix { })
       ];
   };
 
