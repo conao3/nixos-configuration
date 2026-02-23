@@ -1,6 +1,30 @@
 {
   "theme": "dark",
   "defaultMode": "acceptEdits",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "WebFetch",
