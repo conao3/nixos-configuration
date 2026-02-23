@@ -26,10 +26,10 @@ vm-agent:
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES)" ./result/bin/run-nixos-vm; \
 	kill $$VIRTIOFSD_PID 2>/dev/null || true
 
+.PHONY: switch
+switch:
+	sudo nixos-rebuild switch --flake .
+
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	sudo nixos-rebuild switch --flake .#agent-vm
-
-.PHONY: vm-agent-switch-ssh
-vm-agent-switch-ssh:
 	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#agent-vm --target-host conao@localhost --sudo
