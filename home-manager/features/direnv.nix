@@ -8,4 +8,9 @@
       global.strict_env = true;
     };
   };
+
+  programs.git.ignores = [
+    ".direnv"
+    ".envrc"
+  ];
 }

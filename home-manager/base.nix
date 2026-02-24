@@ -24,11 +24,7 @@
     );
 
     language.base = "en_US.UTF-8";
-
-    shellAliases = {
-      e = "$EDITOR";
-    };
-  };
+};
 
   programs.home-manager.enable = true;
 }

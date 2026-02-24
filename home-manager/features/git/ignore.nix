@@ -3,14 +3,6 @@
   ".DS_Store"
   "._*"
 
-  # Emacs
-  "*~"
-  ".#*"
-  "\#*"
-  "*_flymake.*"
-  "flycheck_*"
-  ".dir-locals-2.el"
-
   # Vim
   "*.swp"
 
@@ -28,14 +20,10 @@
   "*.conao3"
   "*.orig"
 
-  ".claude"
   ".serena"
-  ".direnv"
-  ".envrc"
   ".pnpm-store"
 
   # Refference supprements
   ".ref"
   "/.gittree"
-  ".claude-dev"
 ]

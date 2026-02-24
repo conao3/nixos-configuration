@@ -20,4 +20,9 @@
       };
     };
   };
+
+  programs.git.ignores = [
+    ".claude"
+    ".claude-dev"
+  ];
 }

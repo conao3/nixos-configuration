@@ -33,4 +33,17 @@
     enable = true;
     defaultEditor = true;
   };
+
+  home.shellAliases = {
+    e = "$EDITOR";
+  };
+
+  programs.git.ignores = [
+    "*~"
+    ".#*"
+    "\\#*"
+    "*_flymake.*"
+    "flycheck_*"
+    ".dir-locals-2.el"
+  ];
 }
