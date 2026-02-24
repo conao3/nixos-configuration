@@ -1,0 +1,15 @@
+[
+  ../home-manager/base.nix
+  ../home-manager/vars.nix
+  ../home-manager/pkgs.nix
+  ../home-manager/files.nix
+  ../home-manager/services.nix
+  ../home-manager/programs/programs-enable.nix
+  ../home-manager/programs/atuin.nix
+  ../home-manager/programs/bash.nix
+  ../home-manager/programs/direnv.nix
+  ../home-manager/programs/emacs.nix
+  ../home-manager/programs/git.nix
+  ../home-manager/programs/neovim.nix
+  ../home-manager/programs/zsh.nix
+]

@@ -83,9 +83,10 @@
 
       flake =
         let
-          username = "conao";
           linuxSystem = "x86_64-linux";
           macSystem = "aarch64-darwin";
+
+          profiles = import ./home-profile;
 
           commonNixpkgsConfig = {
             overlays = [
@@ -101,33 +102,16 @@
             hostname:
             inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
-              specialArgs = { inherit inputs; };
+              specialArgs = {
+                inherit inputs;
+                homeProfile = profiles.${hostname};
+              };
               modules = [
                 ./nixos/configuration.nix
+                ./nixos/home-manager.nix
                 ./hosts/${hostname}
                 { nixpkgs = commonNixpkgsConfig; }
                 inputs.sops-nix.nixosModules.sops
-                inputs.home-manager.nixosModules.home-manager
-                {
-                  home-manager = {
-                    useGlobalPkgs = true;
-                    useUserPackages = true;
-                    backupFileExtension = "backup";
-                    extraSpecialArgs = {
-                      inherit username inputs;
-                      system = linuxSystem;
-                    };
-                    users.${username} = import ./home-manager/home.nix;
-                    sharedModules = [
-                      (
-                        { lib, ... }:
-                        {
-                          home.homeDirectory = lib.mkForce "/home/${username}";
-                        }
-                      )
-                    ];
-                  };
-                }
               ];
             };
         in
@@ -159,34 +143,18 @@
           darwinConfigurations = {
             macos = inputs.nix-darwin.lib.darwinSystem {
               system = macSystem;
-              specialArgs = { inherit username inputs; };
+              specialArgs = {
+                inherit inputs;
+                username = profiles.macos.user;
+                homeProfile = profiles.macos;
+              };
               modules = [
                 ./darwin/configuration.nix
+                ./darwin/home-manager.nix
                 {
                   nixpkgs.overlays = [
                     (import ./overlays/go.nix)
                   ];
-                }
-                inputs.home-manager.darwinModules.home-manager
-                {
-                  home-manager = {
-                    useGlobalPkgs = true;
-                    useUserPackages = true;
-                    backupFileExtension = "backup";
-                    extraSpecialArgs = {
-                      inherit username inputs;
-                      system = macSystem;
-                    };
-                    users.${username} = import ./home-manager/home.nix;
-                    sharedModules = [
-                      (
-                        { lib, ... }:
-                        {
-                          home.homeDirectory = lib.mkForce "/Users/${username}";
-                        }
-                      )
-                    ];
-                  };
                 }
               ];
             };
