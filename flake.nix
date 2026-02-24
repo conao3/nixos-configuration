@@ -66,14 +66,12 @@
       ];
 
       imports = [
-        inputs.treefmt-nix.flakeModule
+        ./flake/treefmt.nix
       ];
 
       perSystem =
         { pkgs, ... }:
         {
-          treefmt.programs.nixfmt.enable = true;
-
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               gnumake
