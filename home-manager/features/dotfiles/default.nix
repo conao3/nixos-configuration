@@ -2,7 +2,7 @@
 {
   home.file = {
     ".config" = {
-      source = ../../.config;
+      source = ./.config;
       recursive = true;
     };
     ".config/nrepl/nrepl.edn".source = ./nrepl.edn;
