@@ -63,6 +63,7 @@
       "ollama-app"
       "session-manager-plugin"
       "slack"
+      "tailscale"
       "thunderbird"
       "visual-studio-code"
       # keep-sorted end
