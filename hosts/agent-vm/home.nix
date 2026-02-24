@@ -21,18 +21,6 @@ in
         source = ./ext/.config;
         recursive = true;
       };
-      ".claude" = {
-        source = commonHomeDir + "/ext/.claude";
-        recursive = true;
-      };
-      ".config/git/hooks/pre-commit" = {
-        executable = true;
-        text = ''
-          #!/usr/bin/env bash
-          set -euo pipefail
-          exec ${pkgs.gitleaks}/bin/gitleaks git --staged --redact --no-banner
-        '';
-      };
     };
 
     activation.openclawSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -132,10 +120,6 @@ in
       fi
     '';
 
-    shellAliases = {
-      e = "$EDITOR";
-    };
-
     sessionVariables = {
       BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
     };
@@ -211,8 +195,17 @@ in
 
   home.sessionPath = [ "${homeDir}/.openclaw/workspace/bin" ];
 
+  imports = [
+    (commonHomeDir + "/features/atuin.nix")
+    (commonHomeDir + "/features/bash.nix")
+    (commonHomeDir + "/features/direnv.nix")
+    (commonHomeDir + "/features/emacs.nix")
+    (commonHomeDir + "/features/git")
+    (commonHomeDir + "/features/neovim")
+    (commonHomeDir + "/features/claude")
+  ];
+
   programs = {
-    # https://nix-community.github.io/home-manager/options.xhtml
     home-manager.enable = true;
 
     zsh = {
@@ -232,21 +225,6 @@ in
       '';
     };
     wezterm.enable = true;
-    atuin = import (commonHomeDir + "/programs/atuin.nix");
-    bash = import (commonHomeDir + "/programs/bash.nix");
-    direnv = import (commonHomeDir + "/programs/direnv.nix");
-    emacs = import (commonHomeDir + "/programs/emacs.nix") pkgs;
-    git = lib.recursiveUpdate (import (commonHomeDir + "/programs/git.nix")) {
-      settings.core.hooksPath = "~/.config/git/hooks";
-    };
-    neovim = import (commonHomeDir + "/programs/neovim.nix");
-  };
-
-  services = {
-    emacs = {
-      enable = true;
-      defaultEditor = true;
-    };
   };
 
   systemd.user.services.openclaw-gateway = {
