@@ -11,6 +11,7 @@
   ../home-manager/features/emacs.nix
   ../home-manager/features/git
   ../home-manager/features/neovim
+  ../home-manager/features/nom.nix
   ../home-manager/features/wezterm
   ../home-manager/features/zellij
   ../home-manager/features/zsh.nix

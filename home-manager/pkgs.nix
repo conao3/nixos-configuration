@@ -31,7 +31,6 @@
         libgccjit
         neil
         ngrok
-        nix-output-monitor
         nkf
         obsidian
         parallel
