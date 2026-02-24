@@ -25,7 +25,9 @@
   };
 
   programs.zsh.interactiveShellInit = ''
-    [ -f ${config.sops.templates."helios-env".path} ] && source ${config.sops.templates."helios-env".path}
+    [ -f ${config.sops.templates."helios-env".path} ] && source ${
+      config.sops.templates."helios-env".path
+    }
   '';
 
   services.tailscale.enable = true;
@@ -72,7 +74,7 @@
   };
 
   systemd.user.timers.memory-alert = {
-    wantedBy = ["timers.target"];
+    wantedBy = [ "timers.target" ];
     timerConfig = {
       OnBootSec = "1min";
       OnUnitActiveSec = "1min";
