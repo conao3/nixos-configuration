@@ -24,6 +24,7 @@ stdenv.mkDerivation {
   src = fetchurl sources.${stdenv.hostPlatform.system};
 
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ stdenv.cc.cc.lib ];
 
   sourceRoot = ".";
 
