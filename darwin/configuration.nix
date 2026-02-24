@@ -44,6 +44,7 @@
       # cleanup = "uninstall";  # clojure/mkcert issue
     };
     casks = [
+      # keep-sorted start
       "1password"
       "altair-graphql-client"
       "aquaskk"
@@ -64,22 +65,25 @@
       "slack"
       "thunderbird"
       "visual-studio-code"
+      # keep-sorted end
     ];
   };
 
   fonts.packages = with pkgs; [
+    # keep-sorted start
+    emacs-all-the-icons-fonts
+    font-awesome
+    font-awesome_5
+    hackgen-font
+    hackgen-nf-font
+    # nerdfonts
     noto-fonts
-    noto-fonts-lgc-plus
     noto-fonts-cjk-sans
     noto-fonts-cjk-serif
     noto-fonts-color-emoji
     noto-fonts-emoji-blob-bin
+    noto-fonts-lgc-plus
     noto-fonts-monochrome-emoji
-    hackgen-font
-    hackgen-nf-font
-    # nerdfonts
-    emacs-all-the-icons-fonts
-    font-awesome
-    font-awesome_5
+    # keep-sorted end
   ];
 }

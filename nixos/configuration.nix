@@ -25,15 +25,19 @@
         "@wheel"
       ];
       substituters = [
-        "https://nix-community.cachix.org"
-        "https://emacs-ci.cachix.org"
-        "https://cache.numtide.com"
+        # keep-sorted start
         "https://cache.nixos.org/"
+        "https://cache.numtide.com"
+        "https://emacs-ci.cachix.org"
+        "https://nix-community.cachix.org"
+        # keep-sorted end
       ];
       trusted-public-keys = [
-        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        # keep-sorted start
         "emacs-ci.cachix.org-1:B5FVOrxhXXrOL0S+tQ7USrhjMT5iOPH+QN9q0NItom4="
         "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        # keep-sorted end
       ];
     };
   };
@@ -129,10 +133,12 @@
         i3 = {
           enable = true;
           extraPackages = with pkgs; [
+            # keep-sorted start
             dmenu
-            i3status
-            i3lock
             i3blocks
+            i3lock
+            i3status
+            # keep-sorted end
           ];
         };
       };
@@ -159,10 +165,12 @@
     initialHashedPassword = "$y$j9T$uV54QRfWPePTdlGa6.3Bg0$mUm0g4FAdNT6OLzHkjllngfKWfd0ux0aBfENE6gCfK/";
     shell = pkgs.zsh;
     extraGroups = [
-      "wheel"
+      # keep-sorted start
       "docker"
       "kvm"
       "libvirtd"
+      "wheel"
+      # keep-sorted end
     ];
   };
 
@@ -189,14 +197,16 @@
   fonts = {
     fontDir.enable = true;
     packages = with pkgs; [
+      # keep-sorted start
+      hackgen-font
+      hackgen-nf-font
       noto-fonts
       noto-fonts-cjk-sans
       noto-fonts-cjk-serif
       noto-fonts-color-emoji
       noto-fonts-emoji-blob-bin
-      hackgen-font
-      hackgen-nf-font
       texlivePackages.haranoaji
+      # keep-sorted end
     ];
     fontconfig = {
       defaultFonts = {

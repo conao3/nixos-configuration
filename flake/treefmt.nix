@@ -5,6 +5,9 @@
 {
   imports = [ inputs.treefmt-nix.flakeModule ];
   perSystem = {
-    treefmt.programs.nixfmt.enable = true;
+    treefmt.programs = {
+      keep-sorted.enable = true;
+      nixfmt.enable = true;
+    };
   };
 }

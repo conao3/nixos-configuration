@@ -1,18 +1,20 @@
 [
   ../home-manager/base.nix
   ../home-manager/pkgs.nix
-  ../home-manager/features/dotfiles
-  ../home-manager/features/programs-enable.nix
+  # keep-sorted start
   ../home-manager/features/atuin.nix
   ../home-manager/features/bash.nix
   ../home-manager/features/beads.nix
   ../home-manager/features/claude
   ../home-manager/features/direnv.nix
+  ../home-manager/features/dotfiles
   ../home-manager/features/emacs.nix
   ../home-manager/features/git
   ../home-manager/features/neovim
   ../home-manager/features/nom.nix
+  ../home-manager/features/programs-enable.nix
   ../home-manager/features/wezterm
   ../home-manager/features/zellij
   ../home-manager/features/zsh.nix
+  # keep-sorted end
 ]

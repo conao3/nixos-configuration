@@ -14,6 +14,7 @@
 
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
+        # keep-sorted start
         binutils
         clj-kondo
         coreutils
@@ -26,9 +27,11 @@
         ghostscript
         ghq
         git-secrets
+        gogcli
         imagemagick
         inetutils
         libgccjit
+        linear-cli
         neil
         ngrok
         nkf
@@ -46,13 +49,11 @@
         unzip
         zip
         zlib
-
-        # cljstyle
-        gogcli
-        linear-cli
+        # keep-sorted end
       ];
 
       linuxPackages = with pkgs; [
+        # keep-sorted start
         burpsuite
         chromium
         dbeaver-bin
@@ -73,26 +74,33 @@
         vlc
         xclip
         xsel
+        # keep-sorted end
       ];
 
       macPackages = with pkgs; [
+        # keep-sorted start
         gnumake
         pngpaste
         volta
+        # keep-sorted end
       ];
 
       shogiPackages = with pkgs; [
-        shogihome
-        yaneuraou
+        # keep-sorted start
         apery
         gnushogi
+        shogihome
+        yaneuraou
+        # keep-sorted end
       ];
 
       languageServers = with pkgs; [
+        # keep-sorted start
         clojure-lsp
         emacs-lsp-booster
         nixd
         # nodePackages.graphql-language-service-cli
+        # keep-sorted end
       ];
 
       inputPackages = [
@@ -113,25 +121,27 @@
       ++ (
         with inputs.llm-agents.packages.${system};
         [
-          codex
-          claude-code
-          zeroclaw
-          vibe-kanban
-          auto-claude
-          claude-code-acp
-          codex-acp
-          # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
-          # TODO: https://github.com/steveyegge/efrit
-          beads
-          # gastown
+          # keep-sorted start
           agent-browser
           agent-deck
-          ck
-          workmux
-          eca
-          happy-coder
+          auto-claude
+          beads
           catnip
+          ck
+          claude-code
+          claude-code-acp
+          codex
+          codex-acp
           copilot-language-server
+          eca
+          # gastown
+          happy-coder
+          # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
+          # TODO: https://github.com/steveyegge/efrit
+          vibe-kanban
+          workmux
+          zeroclaw
+          # keep-sorted end
         ]
         ++ lib.optional pkgs.stdenv.isLinux coding-agent-search
       );
