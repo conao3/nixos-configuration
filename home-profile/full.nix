@@ -1,15 +1,17 @@
 [
   ../home-manager/base.nix
-  ../home-manager/vars.nix
   ../home-manager/pkgs.nix
-  ../home-manager/files.nix
-  ../home-manager/services.nix
-  ../home-manager/programs/programs-enable.nix
-  ../home-manager/programs/atuin.nix
-  ../home-manager/programs/bash.nix
-  ../home-manager/programs/direnv.nix
-  ../home-manager/programs/emacs.nix
-  ../home-manager/programs/git.nix
-  ../home-manager/programs/neovim.nix
-  ../home-manager/programs/zsh.nix
+  ../home-manager/features/dotfiles
+  ../home-manager/features/programs-enable.nix
+  ../home-manager/features/atuin.nix
+  ../home-manager/features/bash.nix
+  ../home-manager/features/beads.nix
+  ../home-manager/features/claude
+  ../home-manager/features/direnv.nix
+  ../home-manager/features/emacs.nix
+  ../home-manager/features/git
+  ../home-manager/features/neovim
+  ../home-manager/features/wezterm
+  ../home-manager/features/zellij
+  ../home-manager/features/zsh.nix
 ]

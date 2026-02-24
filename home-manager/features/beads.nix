@@ -5,9 +5,8 @@
   ...
 }:
 {
-  services.emacs = {
-    enable = true;
-    defaultEditor = true;
+  home.sessionVariables = {
+    BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
   };
 
   systemd.user.services = lib.mkIf (!pkgs.stdenv.isDarwin) {

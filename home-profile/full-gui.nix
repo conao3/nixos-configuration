@@ -1,4 +1,3 @@
 [
-  ../home-manager/xsession.nix
-  ../home-manager/xfconf.nix
+  ../home-manager/features/xfce.nix
 ]

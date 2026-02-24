@@ -28,4 +28,9 @@
       (push "${pkgs.nodejs}/bin" exec-path)
     '';
   };
+
+  services.emacs = {
+    enable = true;
+    defaultEditor = true;
+  };
 }

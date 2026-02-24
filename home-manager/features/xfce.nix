@@ -1,5 +1,10 @@
 { pkgs, ... }:
 {
+  xsession = {
+    enable = !pkgs.stdenv.isDarwin;
+    initExtra = "xset r rate 200 50";
+  };
+
   xfconf = {
     enable = !pkgs.stdenv.isDarwin;
     settings = {

@@ -1,40 +1,11 @@
-{ pkgs, ... }:
+{ ... }:
 {
   home.file = {
     ".config" = {
-      source = ./.config;
+      source = ../../.config;
       recursive = true;
     };
-    ".claude" = {
-      source = ./ext/.claude;
-      recursive = true;
-    };
-    ".config/Claude/claude_desktop_config.json" = {
-      text = builtins.toJSON {
-        globalShortcut = "Alt+Cmd+Space";
-        mcpServers = {
-          claude-code = {
-            command = "${pkgs.claude-code}/bin/claude";
-            args = [
-              "mcp"
-              "serve"
-            ];
-          };
-        };
-      };
-    };
-    ".config/nrepl/nrepl.edn".source = ./ext/nrepl.edn;
-    ".config/wezterm/wezterm.lua".source = ./ext/wezterm.lua;
-    ".config/zellij/config.kdl".source = ./ext/zellij__config.kdl;
-    ".config/zellij/layouts/sando.kdl".source = ./ext/zellij__layouts__sando.kdl;
-    ".config/git/hooks/pre-commit" = {
-      executable = true;
-      text = ''
-        #!/usr/bin/env bash
-        set -euo pipefail
-        exec ${pkgs.gitleaks}/bin/gitleaks git --staged --redact --no-banner
-      '';
-    };
+    ".config/nrepl/nrepl.edn".source = ./nrepl.edn;
     ".config/fcitx5/config".text = ''
       [Hotkey]
       EnumerateWithTriggerKeys=True

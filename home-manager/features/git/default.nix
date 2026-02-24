@@ -1,10 +1,10 @@
-{ ... }:
+{ pkgs, ... }:
 {
   programs.git = {
     enable = true;
     # lfs.enable = true;
 
-    ignores = import ../ext/git-ignore.nix;
+    ignores = import ./ignore.nix;
 
     settings = {
       user = {
@@ -45,5 +45,14 @@
         enabled = true;
       };
     };
+  };
+
+  home.file.".config/git/hooks/pre-commit" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec ${pkgs.gitleaks}/bin/gitleaks git --staged --redact --no-banner
+    '';
   };
 }
