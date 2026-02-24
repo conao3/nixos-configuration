@@ -17,7 +17,7 @@ let
     };
     "aarch64-darwin" = {
       url = "https://github.com/steipete/gogcli/releases/download/v0.11.0/gogcli_0.11.0_darwin_arm64.tar.gz";
-      sha256 = lib.fakeHash;
+      sha256 = "sha256-y/NgmM52UWARr34JFVoKyR35Q2gJp5PEo+IpMbZwFMo=";
     };
     "x86_64-darwin" = {
       url = "https://github.com/steipete/gogcli/releases/download/v0.11.0/gogcli_0.11.0_darwin_amd64.tar.gz";
