@@ -11,6 +11,7 @@ let
   username = config.home.username;
   homeDir = config.home.homeDirectory;
   commonHomeDir = ../../home-manager;
+  ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
 {
   home = {
@@ -59,22 +60,19 @@ in
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
         # Configure ollama provider (Mac via Tailscale) for heartbeat
-        mac_tailscale_ip=$(${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null | jq -r '.Peer[] | select(.HostName | test("naoyas-macbook-pro")) | .TailscaleIPs[0] // empty' 2>/dev/null || true)
-        if [ -n "$mac_tailscale_ip" ]; then
-          ollama_base_url="http://''${mac_tailscale_ip}:11434"
-          current_ollama_url=$(jq -r '.models.providers.ollama.baseUrl // ""' "$openclaw_json")
-          if [ "$current_ollama_url" != "$ollama_base_url" ]; then
-            tmp=$(mktemp)
-            jq --arg url "$ollama_base_url" \
-              '.models.providers.ollama = {"baseUrl": $url, "apiType": "openai-completions"}' \
-              "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
-          fi
-          current_hb_model=$(jq -r '.agents.defaults.heartbeat.model // ""' "$openclaw_json")
-          if [ "$current_hb_model" != "ollama/llama3.2:3b" ]; then
-            tmp=$(mktemp)
-            jq '.agents.defaults.heartbeat.model = "ollama/llama3.2:3b"' \
-              "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
-          fi
+        ollama_base_url="http://${ollamaTailnetHost}:11434"
+        current_ollama_url=$(jq -r '.models.providers.ollama.baseUrl // ""' "$openclaw_json")
+        if [ "$current_ollama_url" != "$ollama_base_url" ]; then
+          tmp=$(mktemp)
+          jq --arg url "$ollama_base_url" \
+            '.models.providers.ollama = {"baseUrl": $url, "models": []}' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
+        current_hb_model=$(jq -r '.agents.defaults.heartbeat.model // ""' "$openclaw_json")
+        if [ "$current_hb_model" != "ollama/llama3.2:3b" ]; then
+          tmp=$(mktemp)
+          jq '.agents.defaults.heartbeat.model = "ollama/llama3.2:3b"' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
         slack_bot=$(cat ${config.sops.secrets.slack-bot-token.path} 2>/dev/null || true)
         slack_app=$(cat ${config.sops.secrets.slack-app-token.path} 2>/dev/null || true)
@@ -122,6 +120,7 @@ in
 
     sessionVariables = {
       BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
+      OLLAMA_BASE_URL = "http://${ollamaTailnetHost}:11434";
     };
 
     packages =
