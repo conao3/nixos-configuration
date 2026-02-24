@@ -365,28 +365,31 @@
           else
             [ ]
         )
-        ++ (with inputs.llm-agents.packages.${system}; [
-          codex
-          claude-code
-          zeroclaw
-          vibe-kanban
-          auto-claude
-          claude-code-acp
-          codex-acp
-          # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
-          # TODO: https://github.com/steveyegge/efrit
-          beads
-          # gastown
-          agent-browser
-          agent-deck
-          ck
-          workmux
-          eca
-          happy-coder
-          coding-agent-search
-          catnip
-          copilot-language-server
-        ]);
+        ++ (
+          with inputs.llm-agents.packages.${system};
+          [
+            codex
+            claude-code
+            zeroclaw
+            vibe-kanban
+            auto-claude
+            claude-code-acp
+            codex-acp
+            # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
+            # TODO: https://github.com/steveyegge/efrit
+            beads
+            # gastown
+            agent-browser
+            agent-deck
+            ck
+            workmux
+            eca
+            happy-coder
+            catnip
+            copilot-language-server
+          ]
+          ++ lib.optional pkgs.stdenv.isLinux coding-agent-search
+        );
 
       in
       commonPackages
