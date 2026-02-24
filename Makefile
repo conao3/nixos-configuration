@@ -33,3 +33,7 @@ vm-agent:
 .PHONY: vm-agent-switch
 vm-agent-switch:
 	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo
+
+.PHONY: vm-agent-fix-openclaw
+vm-agent-fix-openclaw:
+	cat prompts/fix-openclaw.md | claude --dangerously-skip-permissions
