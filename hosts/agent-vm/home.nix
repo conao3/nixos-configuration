@@ -65,6 +65,11 @@ in
           jq '.session.reset.idleMinutes = 30' \
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
+        if [ "$(jq -r '.agents.defaults.heartbeat.session // ""' "$openclaw_json")" != "global" ]; then
+          tmp=$(mktemp)
+          jq '.agents.defaults.heartbeat.session = "global"' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
         slack_bot=$(cat ${config.sops.secrets.slack-bot-token.path} 2>/dev/null || true)
         slack_app=$(cat ${config.sops.secrets.slack-app-token.path} 2>/dev/null || true)
         if [ -n "$slack_bot" ] && [ -n "$slack_app" ]; then
@@ -253,6 +258,7 @@ in
             "/bin"
           ]
         }"
+        "NODE_LLAMA_CPP_SKIP_DOWNLOAD=true"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
