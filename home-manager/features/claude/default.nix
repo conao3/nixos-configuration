@@ -1,4 +1,47 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
+let
+  wrapperSpecs = [
+    {
+      name = "claude.conao3";
+      bin = "${pkgs.claude-code}/bin/claude";
+      envKey = "CLAUDE_CONFIG_DIR";
+      dir = ".agents/.claude.conao3";
+    }
+    {
+      name = "claude.toyokumo";
+      bin = "${pkgs.claude-code}/bin/claude";
+      envKey = "CLAUDE_CONFIG_DIR";
+      dir = ".agents/.claude.toyokumo";
+    }
+    {
+      name = "claude.agent001";
+      bin = "${pkgs.claude-code}/bin/claude";
+      envKey = "CLAUDE_CONFIG_DIR";
+      dir = ".agents/.claude.agent001";
+    }
+    {
+      name = "codex.conao3";
+      bin = "${pkgs.codex}/bin/codex";
+      envKey = "CODEX_HOME";
+      dir = ".agents/.codex.conao3";
+    }
+    {
+      name = "codex.agent001";
+      bin = "${pkgs.codex}/bin/codex";
+      envKey = "CODEX_HOME";
+      dir = ".agents/.codex.agent001";
+    }
+  ];
+
+  mkWrapper = spec:
+    pkgs.runCommand spec.name { buildInputs = [ pkgs.makeWrapper ]; } ''
+      makeWrapper ${spec.bin} $out/bin/${spec.name} \
+        --set ${spec.envKey} "$HOME/${spec.dir}"
+    '';
+
+  wrapperPackages = map mkWrapper wrapperSpecs;
+  agentDirs = [ "$HOME/.agents" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
+in
 {
   home.file = {
     ".claude" = {
@@ -20,6 +63,12 @@
       };
     };
   };
+
+  home.packages = wrapperPackages;
+
+  home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${lib.escapeShellArg dir}") agentDirs}
+  '';
 
   programs.git.ignores = [
     ".claude"
