@@ -16,7 +16,10 @@
     jq.enable = true;
     lsd.enable = true;
     ripgrep.enable = true;
-    tmux.enable = true;
+    tmux = {
+      enable = true;
+      prefix = "C-q";
+    };
     vim.enable = true;
     vscode.enable = true;
     zed-editor.enable = true;
