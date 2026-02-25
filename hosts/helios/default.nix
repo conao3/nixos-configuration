@@ -10,6 +10,10 @@
   ];
 
   networking.hostName = "conao-nixos-helios";
+  networking.firewall.trustedInterfaces = [
+    "docker0"
+    "br-+"
+  ];
 
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
