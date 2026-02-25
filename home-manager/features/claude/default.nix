@@ -1,33 +1,43 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  system,
+  ...
+}:
 let
+  llmAgents = inputs.llm-agents.packages.${system};
+  claudeBin = "${llmAgents.claude-code}/bin/claude";
+  codexBin = "${llmAgents.codex}/bin/codex";
+
   wrapperSpecs = [
     {
       name = "claude.conao3";
-      bin = "${pkgs.claude-code}/bin/claude";
+      bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.conao3";
     }
     {
       name = "claude.toyokumo";
-      bin = "${pkgs.claude-code}/bin/claude";
+      bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.toyokumo";
     }
     {
       name = "claude.agent001";
-      bin = "${pkgs.claude-code}/bin/claude";
+      bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.agent001";
     }
     {
       name = "codex.conao3";
-      bin = "${pkgs.codex}/bin/codex";
+      bin = codexBin;
       envKey = "CODEX_HOME";
       dir = ".agents/.codex.conao3";
     }
     {
       name = "codex.agent001";
-      bin = "${pkgs.codex}/bin/codex";
+      bin = codexBin;
       envKey = "CODEX_HOME";
       dir = ".agents/.codex.agent001";
     }
@@ -53,7 +63,7 @@ in
         globalShortcut = "Alt+Cmd+Space";
         mcpServers = {
           claude-code = {
-            command = "${pkgs.claude-code}/bin/claude";
+            command = claudeBin;
             args = [
               "mcp"
               "serve"
