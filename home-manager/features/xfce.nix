@@ -1,5 +1,25 @@
 { pkgs, ... }:
 {
+  home.file.".themes/ConaoCompact/xfce-notify-4.0/gtk.css".text = ''
+    #XfceNotifyWindow {
+      border-radius: 6px;
+      border-width: 1px;
+      border-color: #ffffff;
+    }
+
+    #XfceNotifyWindow label#summary {
+      font-weight: Bold;
+    }
+
+    /* Keep notification icons compact. */
+    #XfceNotifyWindow image {
+      min-width: 24px;
+      min-height: 24px;
+      margin: 0;
+      padding: 0;
+    }
+  '';
+
   xsession = {
     enable = !pkgs.stdenv.isDarwin;
     initExtra = "xset r rate 200 50";
@@ -124,6 +144,11 @@
       keyboards = {
         "/Default/KeyRepeat/Delay" = 200;
         "/Default/KeyRepeat/Rate" = 50;
+      };
+
+      xfce4-notifyd = {
+        "notification-display-fields" = "icon-summary";
+        theme = "ConaoCompact";
       };
     };
   };
