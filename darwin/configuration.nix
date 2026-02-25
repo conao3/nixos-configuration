@@ -63,11 +63,15 @@
       "ollama-app"
       "session-manager-plugin"
       "slack"
-      "tailscale"
       "thunderbird"
       "visual-studio-code"
       # keep-sorted end
     ];
+  };
+
+  services.tailscale = {
+    enable = true;
+    overrideLocalDns = true;
   };
 
   fonts.packages = with pkgs; [
