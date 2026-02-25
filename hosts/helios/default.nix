@@ -4,7 +4,6 @@
   pkgs,
   ...
 }:
-
 {
   imports = [
     ./hardware-configuration.nix
@@ -22,6 +21,10 @@
       '';
     };
     secrets.linear-api-key = { };
+    secrets.dev-ca-key = {
+      owner = "conao";
+      path = "/home/conao/.local/share/dev-ca/rootCA-key.pem";
+    };
   };
 
   programs.zsh.interactiveShellInit = ''
@@ -34,6 +37,8 @@
     enable = true;
     extraSetFlags = [ "--ssh" ];
   };
+
+  security.pki.certificateFiles = [ ../../secrets/dev-rootCA.pem ];
 
   zramSwap.enable = true;
 
