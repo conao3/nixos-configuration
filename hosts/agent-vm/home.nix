@@ -254,6 +254,7 @@ in
           ]
         }"
         "NODE_LLAMA_CPP_SKIP_DOWNLOAD=true"
+        "NODE_OPTIONS=--no-network-family-autoselection --dns-result-order=ipv4first"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
