@@ -1,4 +1,4 @@
 { ... }:
 {
-  home.file.".local/share/dev-ca/rootCA.pem".source = ../../secrets/dev-rootCA.pem;
+  home.file.".config/dev-ca/rootCA.pem".source = ../../secrets/dev-rootCA.pem;
 }
