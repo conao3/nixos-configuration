@@ -100,6 +100,9 @@ function App(): React.JSX.Element {
     ipVersion: false,
   });
   const [selectedKey, setSelectedKey] = useState<string>("");
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(KNOWN_URL_GROUPS.map((group) => [group.name, true])),
+  );
   const query = useQuery({
     queryKey: ["ports"],
     queryFn: fetchPorts,
@@ -204,9 +207,19 @@ function App(): React.JSX.Element {
           {KNOWN_URL_GROUPS.map((group) => {
             const upCount = group.items.filter((item) => listeningPorts.has(item.port)).length;
             const groupActive = upCount > 0;
+            const isOpen = openGroups[group.name] ?? true;
             return (
-              <details key={group.name} className="rounded-lg border border-slate-200 bg-slate-50" open>
-                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
+              <div key={group.name} className="rounded-lg border border-slate-200 bg-slate-50">
+                <button
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
+                  type="button"
+                  onClick={() =>
+                    setOpenGroups((prev) => ({
+                      ...prev,
+                      [group.name]: !(prev[group.name] ?? true),
+                    }))
+                  }
+                >
                   <span
                     className={clsx(
                       "rounded-full px-2 py-0.5 text-xs font-bold",
@@ -219,8 +232,8 @@ function App(): React.JSX.Element {
                     {groupActive ? "UP" : "DOWN"}
                   </span>
                   <span className="font-semibold">{group.name}</span>
-                </summary>
-                <div className="grid gap-2 px-2 pb-2">
+                </button>
+                {isOpen ? <div className="grid gap-2 px-2 pb-2">
                   {group.items.map((item) => {
                     const url = `http://localhost:${item.port}`;
                     const active = listeningPorts.has(item.port);
@@ -248,8 +261,8 @@ function App(): React.JSX.Element {
                       </a>
                     );
                   })}
-                </div>
-              </details>
+                </div> : null}
+              </div>
             );
           })}
         </div>
