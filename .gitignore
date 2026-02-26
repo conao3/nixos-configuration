@@ -4,3 +4,4 @@
 /*.qcow2
 /result
 node_modules/
+pkgs/ports-portal-frontend/dist/

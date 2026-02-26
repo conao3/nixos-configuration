@@ -62,6 +62,17 @@ th {
   background: #f1f8f6;
 }
 
+.sortButton {
+  all: unset;
+  cursor: pointer;
+  display: inline-block;
+  width: 100%;
+}
+
+.sortMark {
+  color: #547c86;
+}
+
 tr:last-child td {
   border-bottom: none;
 }

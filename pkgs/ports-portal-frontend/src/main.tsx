@@ -1,6 +1,15 @@
 import "./style.css";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+  ColumnDef,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 type PortEntry = {
   proto: string;
@@ -15,95 +24,98 @@ type PortsResponse = {
   ports?: PortEntry[];
 };
 
-type AppState = {
-  loading: boolean;
-  error: string;
+type PortsData = {
   updatedAt: string;
   ports: PortEntry[];
 };
 
+async function fetchPorts(): Promise<PortsData> {
+  const response = await fetch("/data/ports.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const data = (await response.json()) as PortsResponse;
+  return {
+    updatedAt: data.updatedAt ?? "-",
+    ports: data.ports ?? [],
+  };
+}
+
 function App(): React.JSX.Element {
-  const [state, setState] = useState<AppState>({
-    loading: true,
-    error: "",
-    updatedAt: "",
-    ports: [],
+  const [sorting, setSorting] = useState<SortingState>([{ id: "port", desc: false }]);
+  const query = useQuery({
+    queryKey: ["ports"],
+    queryFn: fetchPorts,
+    refetchInterval: 30000,
   });
 
-  useEffect(() => {
-    let cancelled = false;
+  const columns = useMemo<ColumnDef<PortEntry>[]>(
+    () => [
+      { accessorKey: "proto", header: "Proto" },
+      { accessorKey: "address", header: "Local Address" },
+      {
+        accessorKey: "port",
+        header: "Port",
+        sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
+      },
+      { accessorKey: "process", header: "Process" },
+      {
+        accessorKey: "pid",
+        header: "PID",
+        sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
+      },
+    ],
+    [],
+  );
 
-    async function load(): Promise<void> {
-      try {
-        const response = await fetch("/data/ports.json", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = (await response.json()) as PortsResponse;
-        const ports = (data.ports ?? []).slice().sort((a, b) => {
-          const ap = Number.parseInt(a.port, 10);
-          const bp = Number.parseInt(b.port, 10);
-          if (Number.isNaN(ap) || Number.isNaN(bp)) {
-            return 0;
-          }
-          return ap - bp;
-        });
-        if (!cancelled) {
-          setState({
-            loading: false,
-            error: "",
-            updatedAt: data.updatedAt ?? "-",
-            ports,
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setState({
-            loading: false,
-            error: err instanceof Error ? err.message : String(err),
-            updatedAt: "-",
-            ports: [],
-          });
-        }
-      }
-    }
-
-    void load();
-    const timer = setInterval(() => {
-      void load();
-    }, 30000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
+  const table = useReactTable({
+    data: query.data?.ports ?? [],
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
     <div className="wrap">
       <div className="header">
         <h1>Listening Ports</h1>
-        <div className="meta">{state.loading ? "Loading..." : `Updated: ${state.updatedAt}`}</div>
+        <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
       </div>
-      {state.error ? <div className="error">Failed to load data: {state.error}</div> : null}
+      {query.isError ? <div className="error">Failed to load data: {String(query.error)}</div> : null}
       <div className="panel">
         <table>
           <thead>
-            <tr>
-              <th>Proto</th>
-              <th>Local Address</th>
-              <th>Port</th>
-              <th>Process</th>
-              <th>PID</th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+                  return (
+                    <th key={header.id}>
+                      {header.isPlaceholder ? null : (
+                        <button
+                          className="sortButton"
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          <span className="sortMark">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
+                        </button>
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {state.ports.map((item, idx) => (
-              <tr key={`${item.proto}:${item.address}:${item.port}:${item.pid}:${idx}`}>
-                <td>{item.proto}</td>
-                <td>{item.address}</td>
-                <td>{item.port}</td>
-                <td>{item.process}</td>
-                <td>{item.pid}</td>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -118,4 +130,9 @@ if (!rootElement) {
   throw new Error("app root element was not found");
 }
 
-createRoot(rootElement).render(<App />);
+const queryClient = new QueryClient();
+createRoot(rootElement).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>,
+);
