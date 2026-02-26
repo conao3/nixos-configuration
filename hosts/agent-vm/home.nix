@@ -119,7 +119,6 @@ in
     '';
 
     sessionVariables = {
-      BEADS_DIR = "$HOME/dev/repos/openclaw-workspace/.beads";
       OLLAMA_BASE_URL = "http://${ollamaTailnetHost}:11434";
     };
 
@@ -161,7 +160,6 @@ in
         codex-acp
         openclaw
         qmd # vector search
-        beads
       ])
       ++ [
         inputs.rust-fetch-usage-limit.packages.${system}.default
@@ -276,25 +274,6 @@ in
       Environment = [
         "NODE_LLAMA_CPP_GPU=false"
       ];
-    };
-    Install = {
-      WantedBy = [ "default.target" ];
-    };
-  };
-
-  systemd.user.services.beads-ui = {
-    Unit = {
-      Description = "Beads UI";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-    };
-    Service = {
-      Type = "forking";
-      PIDFile = "%t/beads-ui/server.pid";
-      WorkingDirectory = "${homeDir}/.openclaw/workspace";
-      ExecStart = "${pkgs.pnpm}/bin/pnpm dlx beads-ui start --port 18701";
-      ExecStop = "${pkgs.pnpm}/bin/pnpm dlx beads-ui stop";
-      Restart = "on-failure";
     };
     Install = {
       WantedBy = [ "default.target" ];

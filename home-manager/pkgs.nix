@@ -125,7 +125,6 @@
           agent-browser
           agent-deck
           auto-claude
-          beads
           catnip
           ck
           claude-code
