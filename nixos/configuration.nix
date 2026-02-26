@@ -7,6 +7,10 @@
 }:
 
 {
+  imports = [
+    ./ports-portal.nix
+  ];
+
   system.stateVersion = "24.11";
 
   nix = {
@@ -172,18 +176,12 @@
       enable = true;
       port = 9400;
     };
-    nginx = {
-      enable = true;
-      virtualHosts."ports.local" = {
-        listen = [
-          {
-            addr = "127.0.0.1";
-            port = 9500;
-          }
-        ];
-        root = "/var/www/ports";
-      };
-    };
+  };
+
+  services.ports-portal = {
+    enable = true;
+    port = 9500;
+    updateInterval = "5min";
   };
 
   users.users.conao = {
@@ -260,55 +258,6 @@
         memorySize = 10240;
         cores = 4;
       };
-    };
-  };
-
-  systemd.tmpfiles.rules = [
-    "d /var/www/ports 0755 root root -"
-  ];
-
-  systemd.services.ports-portal = {
-    description = "Generate ports portal HTML";
-    serviceConfig = {
-      Type = "oneshot";
-    };
-    script = ''
-      set -euo pipefail
-      out="/var/www/ports/index.html"
-      tmp="$(mktemp)"
-      {
-        echo '<!doctype html>'
-        echo '<html><head><meta charset="utf-8">'
-        echo '<title>Listening Ports</title>'
-        echo '<style>body{font-family:system-ui, sans-serif; margin:24px;} table{border-collapse:collapse;} th,td{border:1px solid #ddd; padding:6px 10px;} th{background:#f5f5f5;}</style>'
-        echo '</head><body>'
-        echo "<h1>Listening Ports</h1>"
-        echo "<p>Updated: $(date -Is)</p>"
-        echo '<table><thead><tr><th>Proto</th><th>Local Address</th><th>Port</th><th>Process</th><th>PID</th></tr></thead><tbody>'
-        ${pkgs.iproute2}/bin/ss -lntupH | while read -r line; do
-          proto=$(echo "$line" | ${pkgs.gawk}/bin/awk '{print $1}')
-          local=$(echo "$line" | ${pkgs.gawk}/bin/awk '{print $5}')
-          addr=''${local%:*}
-          port=''${local##*:}
-          proc=$(echo "$line" | ${pkgs.gawk}/bin/awk -F'users:' '{print $2}')
-          pname=$(echo "$proc" | ${pkgs.gawk}/bin/awk -F'"' '{print $2}')
-          pid=$(echo "$proc" | ${pkgs.gawk}/bin/awk -F'pid=' '{print $2}' | ${pkgs.gawk}/bin/awk -F',' '{print $1}')
-          echo "<tr><td>''${proto}</td><td>''${addr}</td><td>''${port}</td><td>''${pname}</td><td>''${pid}</td></tr>"
-        done
-        echo '</tbody></table>'
-        echo '</body></html>'
-      } > "$tmp"
-      mv "$tmp" "$out"
-      chmod 0644 "$out"
-    '';
-  };
-
-  systemd.timers.ports-portal = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "1min";
-      OnUnitActiveSec = "5min";
-      Unit = "ports-portal.service";
     };
   };
 }
