@@ -137,20 +137,25 @@ tbody tr {
   padding: 8px 2px;
 }
 
-.detailList {
-  display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
-  gap: 8px 10px;
-  margin: 0;
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.detailList dt {
+.detailTable th,
+.detailTable td {
+  border-bottom: 1px solid #e5edeb;
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.detailTable th {
+  width: 140px;
   color: #35505a;
   font-weight: 600;
-}
-
-.detailList dd {
-  margin: 0;
+  background: transparent;
+  position: static;
 }
 
 .detailValue {

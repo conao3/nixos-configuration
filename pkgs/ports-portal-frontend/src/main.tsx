@@ -22,8 +22,6 @@ type PortEntry = {
   process: string;
   pid: string;
   cwd: string;
-  exe: string;
-  cmdline: string;
 };
 
 type PortsResponse = {
@@ -36,6 +34,27 @@ type PortsData = {
   ports: PortEntry[];
 };
 
+type ProcessDetail = {
+  pid: string;
+  ppid: string;
+  user: string;
+  cwd: string;
+  exe: string;
+  cmdline: string;
+  startedAt: string;
+  elapsed: string;
+  otherListeningPorts: string[];
+};
+
+function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {
+  return (
+    <tr>
+      <th>{props.label}</th>
+      <td>{props.children}</td>
+    </tr>
+  );
+}
+
 async function fetchPorts(): Promise<PortsData> {
   const response = await fetch("/data/ports.json", { cache: "no-store" });
   if (!response.ok) {
@@ -47,6 +66,14 @@ async function fetchPorts(): Promise<PortsData> {
     updatedAt: data.updatedAt ?? "-",
     ports: data.ports ?? [],
   };
+}
+
+async function fetchProcessDetail(pid: string): Promise<ProcessDetail> {
+  const response = await fetch(`/api/process/${pid}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return (await response.json()) as ProcessDetail;
 }
 
 function App(): React.JSX.Element {
@@ -122,6 +149,12 @@ function App(): React.JSX.Element {
     return table.getRowModel().rows.find((row) => row.id === selectedKey)?.original ?? table.getRowModel().rows[0]?.original;
   }, [selectedKey, table]);
 
+  const detailQuery = useQuery({
+    queryKey: ["process-detail", selectedPort?.pid ?? ""],
+    queryFn: () => fetchProcessDetail(String(selectedPort?.pid ?? "")),
+    enabled: Boolean(selectedPort?.pid && selectedPort.pid !== "-"),
+  });
+
   return (
     <div className="wrap">
       <div className="header">
@@ -191,30 +224,36 @@ function App(): React.JSX.Element {
           {selectedPort ? (
             <>
               <h2>Port Detail</h2>
-              <dl className="detailList">
-                <dt>Proto</dt>
-                <dd>{selectedPort.proto}</dd>
-                <dt>Address</dt>
-                <dd>{selectedPort.address}</dd>
-                <dt>IP Version</dt>
-                <dd>{selectedPort.ipVersion}</dd>
-                <dt>Port</dt>
-                <dd>
-                  <a href={`http://localhost:${selectedPort.port}`} target="_blank" rel="noreferrer">
-                    {selectedPort.port}
-                  </a>
-                </dd>
-                <dt>Process</dt>
-                <dd>{selectedPort.process}</dd>
-                <dt>PID</dt>
-                <dd>{selectedPort.pid}</dd>
-                <dt>Working Dir</dt>
-                <dd className="detailValue">{selectedPort.cwd}</dd>
-                <dt>Executable</dt>
-                <dd className="detailValue">{selectedPort.exe}</dd>
-                <dt>Command Line</dt>
-                <dd className="detailValue">{selectedPort.cmdline}</dd>
-              </dl>
+              <table className="detailTable">
+                <tbody>
+                  <DetailRow label="Proto">{selectedPort.proto}</DetailRow>
+                  <DetailRow label="Address">{selectedPort.address}</DetailRow>
+                  <DetailRow label="IP Version">{selectedPort.ipVersion}</DetailRow>
+                  <DetailRow label="Port">
+                      <a href={`http://localhost:${selectedPort.port}`} target="_blank" rel="noreferrer">
+                        {selectedPort.port}
+                      </a>
+                  </DetailRow>
+                  <DetailRow label="Process">{selectedPort.process}</DetailRow>
+                  <DetailRow label="PID">{selectedPort.pid}</DetailRow>
+                  <DetailRow label="User">{detailQuery.data?.user ?? "-"}</DetailRow>
+                  <DetailRow label="PPID">{detailQuery.data?.ppid ?? "-"}</DetailRow>
+                  <DetailRow label="Working Dir">
+                    <span className="detailValue">{detailQuery.data?.cwd ?? "-"}</span>
+                  </DetailRow>
+                  <DetailRow label="Executable">
+                    <span className="detailValue">{detailQuery.data?.exe ?? "-"}</span>
+                  </DetailRow>
+                  <DetailRow label="Command Line">
+                    <span className="detailValue">{detailQuery.data?.cmdline ?? "-"}</span>
+                  </DetailRow>
+                  <DetailRow label="Started At">{detailQuery.data?.startedAt ?? "-"}</DetailRow>
+                  <DetailRow label="Elapsed">{detailQuery.data?.elapsed ?? "-"}</DetailRow>
+                  <DetailRow label="Other Listen Ports">{detailQuery.data?.otherListeningPorts?.join(", ") || "-"}</DetailRow>
+                </tbody>
+              </table>
+              {detailQuery.isFetching ? <div className="meta">Loading detail...</div> : null}
+              {detailQuery.isError ? <div className="error">Failed to load detail: {String(detailQuery.error)}</div> : null}
             </>
           ) : (
             <div className="meta">No rows</div>

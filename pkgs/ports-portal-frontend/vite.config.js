@@ -11,6 +11,10 @@ export default defineConfig({
         target: "http://127.0.0.1:9500",
         changeOrigin: false,
       },
+      "/api": {
+        target: "http://127.0.0.1:9500",
+        changeOrigin: false,
+      },
     },
   },
   build: {

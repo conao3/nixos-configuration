@@ -8,6 +8,7 @@ let
   cfg = config.services.ports-portal;
   generator = pkgs.callPackage ../pkgs/ports-portal-generator.nix { };
   frontend = pkgs.callPackage ../pkgs/ports-portal-frontend.nix { };
+  detailApiScript = pkgs.writeText "ports-portal-detail-api.py" (builtins.readFile ./ports-portal-detail-api.py);
 in
 {
   options.services.ports-portal = {
@@ -36,6 +37,12 @@ in
       default = "5min";
       description = "Systemd timer interval for regenerating the page.";
     };
+
+    detailApiPort = lib.mkOption {
+      type = lib.types.port;
+      default = 9501;
+      description = "Port on localhost for on-demand process detail API.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -56,6 +63,13 @@ in
           alias = "${cfg.dataDir}/";
           extraConfig = ''
             add_header Cache-Control "no-store";
+          '';
+        };
+        locations."/api/" = {
+          proxyPass = "http://127.0.0.1:${toString cfg.detailApiPort}/";
+          extraConfig = ''
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
           '';
         };
       };
@@ -83,6 +97,21 @@ in
         OnBootSec = "1min";
         OnUnitActiveSec = cfg.updateInterval;
         Unit = "ports-portal.service";
+      };
+    };
+
+    systemd.services.ports-portal-detail-api = {
+      description = "Ports portal on-demand process detail API";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" ];
+      serviceConfig = {
+        ExecStart = "${pkgs.python3}/bin/python3 ${detailApiScript}";
+        Restart = "always";
+        RestartSec = "2";
+        Environment = [
+          "PORTS_PORTAL_API_HOST=127.0.0.1"
+          "PORTS_PORTAL_API_PORT=${toString cfg.detailApiPort}"
+        ];
       };
     };
   };
