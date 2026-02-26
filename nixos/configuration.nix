@@ -163,7 +163,14 @@
         disableWhileTyping = true;
       };
     };
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      openFirewall = false;
+      listenAddresses = [
+        { addr = "127.0.0.1"; }
+        { addr = "::1"; }
+      ];
+    };
     open-webui = {
       enable = true;
       port = 9402;
