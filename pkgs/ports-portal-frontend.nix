@@ -7,7 +7,7 @@ buildNpmPackage {
   version = "0.1.0";
 
   src = ./ports-portal-frontend;
-  npmDepsHash = "sha256-WM5HHBhv4ihNpBBRsEUDiPBaeDI3iN1jWHIJCrV5TNM=";
+  npmDepsHash = "sha256-PrnNrEUH7z3IbpKpPXRfjceUxZI10GQnJjjYrMHHRpA=";
 
   npmBuildScript = "build";
 
