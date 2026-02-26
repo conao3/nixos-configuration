@@ -47,8 +47,8 @@ type ProcessDetail = {
 };
 
 const KNOWN_URLS: Array<{ port: string; name: string; path?: string }> = [
-  { port: "9400", name: "open-webui" },
-  { port: "9500", name: "dashboard" },
+  { port: "9400", name: "dashboard" },
+  { port: "9402", name: "open-webui" },
 ];
 
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {

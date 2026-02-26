@@ -8,7 +8,7 @@ let
   cfg = config.services.dashboard;
   generator = pkgs.callPackage ../pkgs/dashboard-generator.nix { };
   frontend = pkgs.callPackage ../pkgs/dashboard-frontend.nix { };
-  detailApiScript = pkgs.writeText "dashboard-detail-api.py" (builtins.readFile ./dashboard-detail-api.py);
+  backendScript = pkgs.writeText "dashboard-backend.py" (builtins.readFile ./dashboard-backend.py);
 in
 {
   options.services.dashboard = {
@@ -38,10 +38,10 @@ in
       description = "Systemd timer interval for regenerating the page.";
     };
 
-    detailApiPort = lib.mkOption {
+    backendPort = lib.mkOption {
       type = lib.types.port;
-      default = 9501;
-      description = "Port on localhost for on-demand process detail API.";
+      default = 9401;
+      description = "Port on localhost for backend API.";
     };
   };
 
@@ -66,7 +66,7 @@ in
           '';
         };
         locations."/api/" = {
-          proxyPass = "http://127.0.0.1:${toString cfg.detailApiPort}/";
+          proxyPass = "http://127.0.0.1:${toString cfg.backendPort}/";
           extraConfig = ''
             proxy_http_version 1.1;
             proxy_set_header Host $host;
@@ -100,17 +100,17 @@ in
       };
     };
 
-    systemd.services.dashboard-detail-api = {
-      description = "Dashboard on-demand process detail API";
+    systemd.services.dashboard-backend = {
+      description = "Dashboard backend API";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       serviceConfig = {
-        ExecStart = "${pkgs.python3}/bin/python3 ${detailApiScript}";
+        ExecStart = "${pkgs.python3}/bin/python3 ${backendScript}";
         Restart = "always";
         RestartSec = "2";
         Environment = [
-          "DASHBOARD_API_HOST=127.0.0.1"
-          "DASHBOARD_API_PORT=${toString cfg.detailApiPort}"
+          "DASHBOARD_BACKEND_HOST=127.0.0.1"
+          "DASHBOARD_BACKEND_PORT=${toString cfg.backendPort}"
         ];
       };
     };

@@ -6,8 +6,8 @@ import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-HOST = os.environ.get("DASHBOARD_API_HOST", "127.0.0.1")
-PORT = int(os.environ.get("DASHBOARD_API_PORT", "9501"))
+HOST = os.environ.get("DASHBOARD_BACKEND_HOST", "127.0.0.1")
+PORT = int(os.environ.get("DASHBOARD_BACKEND_PORT", "9401"))
 
 
 def safe_read(path):

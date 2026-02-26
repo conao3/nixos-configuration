@@ -174,13 +174,13 @@
     };
     open-webui = {
       enable = true;
-      port = 9400;
+      port = 9402;
     };
   };
 
   services.dashboard = {
     enable = true;
-    port = 9500;
+    port = 9400;
     updateInterval = "5min";
   };
 
