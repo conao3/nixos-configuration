@@ -181,7 +181,6 @@
   services.dashboard = {
     enable = true;
     port = 9400;
-    updateInterval = "5min";
   };
 
   users.users.conao = {

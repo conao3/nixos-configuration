@@ -6,7 +6,6 @@
 }:
 let
   cfg = config.services.dashboard;
-  generator = pkgs.callPackage ../pkgs/dashboard/generator.nix { };
   frontend = pkgs.callPackage ../pkgs/dashboard/frontend.nix { };
   backendScript = pkgs.writeText "dashboard-backend.py" (builtins.readFile ../pkgs/dashboard/backend.py);
 in
@@ -60,8 +59,10 @@ in
           tryFiles = "$uri /index.html";
         };
         locations."/data/" = {
-          alias = "${cfg.dataDir}/";
+          proxyPass = "http://127.0.0.1:${toString cfg.backendPort}/data/";
           extraConfig = ''
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
             add_header Cache-Control "no-store";
           '';
         };
@@ -72,31 +73,6 @@ in
             proxy_set_header Host $host;
           '';
         };
-      };
-    };
-
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0755 root root -"
-    ];
-
-    systemd.services.dashboard = {
-      description = "Generate dashboard JSON";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-      };
-      script = ''
-        set -euo pipefail
-        ${generator}/bin/dashboard-generator ${cfg.dataDir}/ports.json
-      '';
-    };
-
-    systemd.timers.dashboard = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "1min";
-        OnUnitActiveSec = cfg.updateInterval;
-        Unit = "dashboard.service";
       };
     };
 
