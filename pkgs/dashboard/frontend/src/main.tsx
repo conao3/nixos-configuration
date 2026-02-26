@@ -1,6 +1,7 @@
 import "./style.css";
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import clsx from "clsx";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   ColumnFiltersState,
@@ -62,9 +63,9 @@ const KNOWN_URL_GROUPS: Array<{ name: string; items: Array<{ label: string; port
 
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {
   return (
-    <tr>
-      <th>{props.label}</th>
-      <td>{props.children}</td>
+    <tr className="align-middle">
+      <th className="w-36 border-b border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">{props.label}</th>
+      <td className="border-b border-slate-200 px-3 py-2">{props.children}</td>
     </tr>
   );
 }
@@ -135,7 +136,7 @@ function App(): React.JSX.Element {
         cell: (info) => {
           const cwd = String(info.getValue());
           return (
-            <span className="pathCell" title={cwd}>
+            <span className="inline-block max-w-[360px] overflow-hidden text-ellipsis whitespace-nowrap align-bottom" title={cwd}>
               {cwd}
             </span>
           );
@@ -174,15 +175,16 @@ function App(): React.JSX.Element {
   );
 
   return (
-    <div className="wrap">
-      <div className="header">
-        <h1>Dashboard</h1>
-        <div className="controls">
-          <label className="filterLabel" htmlFor="ipVersionFilter">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#f4f9ff,_#edf7f1_55%,_#e7f1ff)] p-4 text-slate-900">
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h1 className="m-0 text-3xl font-semibold">Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-700" htmlFor="ipVersionFilter">
             IP Filter
           </label>
           <select
             id="ipVersionFilter"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
             value={String(table.getColumn("ipVersion")?.getFilterValue() ?? "all")}
             onChange={(event) => {
               const value = event.target.value;
@@ -193,30 +195,56 @@ function App(): React.JSX.Element {
             <option value="ipv6">IPv6</option>
             <option value="all">All</option>
           </select>
-          <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
+          <div className="text-sm text-slate-700">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
         </div>
       </div>
-      <div className="panel knownPanel">
-        <h2>KnownURL</h2>
-        <div className="knownList">
+      <div className="mb-3 rounded-xl border border-slate-200 bg-white/85 p-3 shadow-md shadow-slate-400/10">
+        <h2 className="mb-2 text-base font-semibold">KnownURL</h2>
+        <div className="grid grid-cols-1 gap-2">
           {KNOWN_URL_GROUPS.map((group) => {
             const upCount = group.items.filter((item) => listeningPorts.has(item.port)).length;
             const groupActive = upCount > 0;
             return (
-              <details key={group.name} className="knownAccordion" open>
-                <summary className="knownSummary">
-                  <span className={groupActive ? "statusUp" : "statusDown"}>{groupActive ? "UP" : "DOWN"}</span>
-                  <span className="knownName">{group.name}</span>
+              <details key={group.name} className="rounded-lg border border-slate-200 bg-slate-50" open>
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
+                  <span
+                    className={clsx(
+                      "rounded-full px-2 py-0.5 text-xs font-bold",
+                      {
+                        "bg-emerald-100 text-emerald-800": groupActive,
+                        "bg-rose-100 text-rose-800": !groupActive,
+                      },
+                    )}
+                  >
+                    {groupActive ? "UP" : "DOWN"}
+                  </span>
+                  <span className="font-semibold">{group.name}</span>
                 </summary>
-                <div className="knownItems">
+                <div className="grid gap-2 px-2 pb-2">
                   {group.items.map((item) => {
                     const url = `http://localhost:${item.port}`;
                     const active = listeningPorts.has(item.port);
                     return (
-                      <a key={`${group.name}:${item.label}:${item.port}`} className="knownItem" href={url} target="_blank" rel="noreferrer">
-                        <span className={active ? "statusUp" : "statusDown"}>{active ? "UP" : "DOWN"}</span>
-                        <span className="knownRole">{item.label}</span>
-                        <span className="knownUrl">{url}</span>
+                      <a
+                        key={`${group.name}:${item.label}:${item.port}`}
+                        className="grid grid-cols-[auto_auto_1fr] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 no-underline"
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <span
+                          className={clsx(
+                            "rounded-full px-2 py-0.5 text-xs font-bold",
+                            {
+                              "bg-emerald-100 text-emerald-800": active,
+                              "bg-rose-100 text-rose-800": !active,
+                            },
+                          )}
+                        >
+                          {active ? "UP" : "DOWN"}
+                        </span>
+                        <span className="text-sm text-slate-700">{item.label}</span>
+                        <span className="truncate text-sm text-slate-600">{url}</span>
                       </a>
                     );
                   })}
@@ -226,25 +254,25 @@ function App(): React.JSX.Element {
           })}
         </div>
       </div>
-      {query.isError ? <div className="error">Failed to load data: {String(query.error)}</div> : null}
-      <div className="twoPane">
-        <div className="panel listPane">
-          <table>
+      {query.isError ? <div className="px-1 py-2 text-sm text-rose-800">Failed to load data: {String(query.error)}</div> : null}
+      <div className="grid h-[1000px] w-full grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)] gap-3 max-[1024px]:grid-cols-1">
+        <div className="overflow-auto rounded-xl border border-slate-200 bg-white/85 p-0 shadow-md shadow-slate-400/10">
+          <table className="w-full border-collapse">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     const sorted = header.column.getIsSorted();
                     return (
-                      <th key={header.id}>
+                      <th key={header.id} className="sticky top-0 z-[2] border-b border-slate-200 bg-emerald-50 px-3 py-2 text-left font-semibold">
                         {header.isPlaceholder ? null : (
                           <button
-                            className="sortButton"
+                            className="w-full cursor-pointer text-left"
                             type="button"
                             onClick={header.column.getToggleSortingHandler()}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
-                            <span className="sortMark">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
+                            <span className="text-slate-500">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
                           </button>
                         )}
                       </th>
@@ -257,22 +285,26 @@ function App(): React.JSX.Element {
               {table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={selectedPort === row.original ? "rowSelected" : ""}
+                  className={clsx("cursor-pointer", {
+                    "bg-emerald-100": selectedPort === row.original,
+                  })}
                   onClick={() => setSelectedKey(row.id)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                    <td key={cell.id} className="border-b border-slate-200 px-3 py-2 align-middle text-sm">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
                   ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="panel detailPane">
+        <div className="overflow-auto rounded-xl border border-slate-200 bg-white/85 p-3 shadow-md shadow-slate-400/10">
           {selectedPort ? (
             <>
-              <h2>Port Detail</h2>
-              <table className="detailTable">
+              <h2 className="mb-2 text-lg font-semibold">Port Detail</h2>
+              <table className="w-full table-fixed border-collapse">
                 <tbody>
                   <DetailRow label="Proto">{selectedPort.proto}</DetailRow>
                   <DetailRow label="Address">{selectedPort.address}</DetailRow>
@@ -287,24 +319,24 @@ function App(): React.JSX.Element {
                   <DetailRow label="User">{detailQuery.data?.user ?? "-"}</DetailRow>
                   <DetailRow label="PPID">{detailQuery.data?.ppid ?? "-"}</DetailRow>
                   <DetailRow label="Working Dir">
-                    <span className="detailValue">{detailQuery.data?.cwd ?? "-"}</span>
+                    <span className="break-all font-mono text-[0.9rem]">{detailQuery.data?.cwd ?? "-"}</span>
                   </DetailRow>
                   <DetailRow label="Executable">
-                    <span className="detailValue">{detailQuery.data?.exe ?? "-"}</span>
+                    <span className="break-all font-mono text-[0.9rem]">{detailQuery.data?.exe ?? "-"}</span>
                   </DetailRow>
                   <DetailRow label="Command Line">
-                    <span className="detailValue">{detailQuery.data?.cmdline ?? "-"}</span>
+                    <span className="break-all font-mono text-[0.9rem]">{detailQuery.data?.cmdline ?? "-"}</span>
                   </DetailRow>
                   <DetailRow label="Started At">{detailQuery.data?.startedAt ?? "-"}</DetailRow>
                   <DetailRow label="Elapsed">{detailQuery.data?.elapsed ?? "-"}</DetailRow>
                   <DetailRow label="Other Listen Ports">{detailQuery.data?.otherListeningPorts?.join(", ") || "-"}</DetailRow>
                 </tbody>
               </table>
-              {detailQuery.isFetching ? <div className="meta">Loading detail...</div> : null}
-              {detailQuery.isError ? <div className="error">Failed to load detail: {String(detailQuery.error)}</div> : null}
+              {detailQuery.isFetching ? <div className="pt-2 text-sm text-slate-700">Loading detail...</div> : null}
+              {detailQuery.isError ? <div className="pt-2 text-sm text-rose-800">Failed to load detail: {String(detailQuery.error)}</div> : null}
             </>
           ) : (
-            <div className="meta">No rows</div>
+            <div className="text-sm text-slate-700">No rows</div>
           )}
         </div>
       </div>
