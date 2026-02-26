@@ -62,5 +62,37 @@
       ShowPreeditForPassword=False
       AutoSavePeriod=30
     '';
+    ".config/fcitx5/conf/skk.conf".text = ''
+      # Rule
+      Rule=azik
+      # Punctuation Style
+      PunctuationStyle=Japanese
+      # Initial Input Mode
+      InitialInputMode=Hiragana
+      # Page size
+      PageSize=7
+      # Candidate Layout
+      Candidate Layout=Vertical
+      # Return-key does not insert new line on commit
+      EggLikeNewLine=True
+      # Show Annotation
+      ShowAnnotation=True
+      # Candidate Key
+      CandidateChooseKey="Digit (0,1,2,...)"
+      # Number candidate of Triggers To Show Candidate Window
+      NTriggersToShowCandWin=4
+
+      [CandidatesPageUpKey]
+      0=Page_Up
+
+      [CandidatesPageDownKey]
+      0=Next
+
+      [CursorUp]
+      0=Up
+
+      [CursorDown]
+      0=Down
+    '';
   };
 }
