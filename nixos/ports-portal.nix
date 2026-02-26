@@ -7,6 +7,7 @@
 let
   cfg = config.services.ports-portal;
   generator = pkgs.callPackage ../pkgs/ports-portal-generator.nix { };
+  frontend = pkgs.callPackage ../pkgs/ports-portal-frontend.nix { };
 in
 {
   options.services.ports-portal = {
@@ -24,10 +25,10 @@ in
       description = "Address for nginx to bind.";
     };
 
-    outputDir = lib.mkOption {
+    dataDir = lib.mkOption {
       type = lib.types.str;
-      default = "/var/www/ports";
-      description = "Directory where generated HTML is written.";
+      default = "/var/lib/ports-portal";
+      description = "Directory where generated JSON data is written.";
     };
 
     updateInterval = lib.mkOption {
@@ -47,22 +48,32 @@ in
             port = cfg.port;
           }
         ];
-        root = cfg.outputDir;
+        root = frontend;
+        locations."/" = {
+          tryFiles = "$uri /index.html";
+        };
+        locations."/data/" = {
+          alias = "${cfg.dataDir}/";
+          extraConfig = ''
+            add_header Cache-Control "no-store";
+          '';
+        };
       };
     };
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.outputDir} 0755 root root -"
+      "d ${cfg.dataDir} 0755 root root -"
     ];
 
     systemd.services.ports-portal = {
-      description = "Generate ports portal HTML";
+      description = "Generate ports portal JSON";
+      wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
       };
       script = ''
         set -euo pipefail
-        ${generator}/bin/ports-portal-generator ${cfg.outputDir}/index.html
+        ${generator}/bin/ports-portal-generator ${cfg.dataDir}/ports.json
       '';
     };
 
