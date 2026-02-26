@@ -1,24 +1,28 @@
 { pkgs, ... }:
 {
-  home.file.".themes/ConaoCompact/xfce-notify-4.0/gtk.css".text = ''
-    #XfceNotifyWindow {
-      border-radius: 6px;
-      border-width: 1px;
-      border-color: #ffffff;
-    }
-
-    #XfceNotifyWindow label#summary {
-      font-weight: Bold;
-    }
-
-    /* Keep notification icons compact. */
-    #XfceNotifyWindow image {
-      min-width: 24px;
-      min-height: 24px;
-      margin: 0;
-      padding: 0;
-    }
-  '';
+  services.dunst = {
+    enable = !pkgs.stdenv.isDarwin;
+    settings = {
+      global = {
+        # Use a fixed monitor for stable placement.
+        monitor = 0;
+        follow = "none";
+        width = 360;
+        offset = "24x24";
+        origin = "top-right";
+        corner_radius = 8;
+      };
+      urgency_low = {
+        timeout = 4;
+      };
+      urgency_normal = {
+        timeout = 6;
+      };
+      urgency_critical = {
+        timeout = 8;
+      };
+    };
+  };
 
   xsession = {
     enable = !pkgs.stdenv.isDarwin;
@@ -144,11 +148,6 @@
       keyboards = {
         "/Default/KeyRepeat/Delay" = 200;
         "/Default/KeyRepeat/Rate" = 50;
-      };
-
-      xfce4-notifyd = {
-        "notification-display-fields" = "icon-summary";
-        theme = "ConaoCompact";
       };
     };
   };
