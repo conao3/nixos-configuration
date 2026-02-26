@@ -9,6 +9,7 @@
   # https://search.nixos.org/packages?channel=24.11
   home.packages =
     let
+      ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
 
