@@ -46,10 +46,18 @@ type ProcessDetail = {
   otherListeningPorts: string[];
 };
 
-const KNOWN_URLS: Array<{ port: string; name: string; path?: string }> = [
-  { port: "9400", name: "dashboard" },
-  { port: "9401", name: "dashboard-backend", path: "/api/process/1" },
-  { port: "9402", name: "open-webui" },
+const KNOWN_URL_GROUPS: Array<{ name: string; items: Array<{ label: string; port: string }> }> = [
+  {
+    name: "dashboard",
+    items: [
+      { label: "frontend", port: "9400" },
+      { label: "backend", port: "9401" },
+    ],
+  },
+  {
+    name: "open-webui",
+    items: [{ label: "app", port: "9402" }],
+  },
 ];
 
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {
@@ -191,15 +199,29 @@ function App(): React.JSX.Element {
       <div className="panel knownPanel">
         <h2>KnownURL</h2>
         <div className="knownList">
-          {KNOWN_URLS.map((item) => {
-            const url = `http://localhost:${item.port}${item.path ?? ""}`;
-            const active = listeningPorts.has(item.port);
+          {KNOWN_URL_GROUPS.map((group) => {
+            const upCount = group.items.filter((item) => listeningPorts.has(item.port)).length;
+            const groupActive = upCount > 0;
             return (
-              <a key={`${item.port}:${item.name}`} className="knownItem" href={url} target="_blank" rel="noreferrer">
-                <span className={active ? "statusUp" : "statusDown"}>{active ? "UP" : "DOWN"}</span>
-                <span className="knownName">{item.name}</span>
-                <span className="knownUrl">{url}</span>
-              </a>
+              <details key={group.name} className="knownAccordion" open>
+                <summary className="knownSummary">
+                  <span className={groupActive ? "statusUp" : "statusDown"}>{groupActive ? "UP" : "DOWN"}</span>
+                  <span className="knownName">{group.name}</span>
+                </summary>
+                <div className="knownItems">
+                  {group.items.map((item) => {
+                    const url = `http://localhost:${item.port}`;
+                    const active = listeningPorts.has(item.port);
+                    return (
+                      <a key={`${group.name}:${item.label}:${item.port}`} className="knownItem" href={url} target="_blank" rel="noreferrer">
+                        <span className={active ? "statusUp" : "statusDown"}>{active ? "UP" : "DOWN"}</span>
+                        <span className="knownRole">{item.label}</span>
+                        <span className="knownUrl">{url}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </details>
             );
           })}
         </div>

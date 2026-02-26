@@ -84,6 +84,31 @@ h1 {
   background: #f7fbfa;
 }
 
+.knownAccordion {
+  border: 1px solid #d8e6e2;
+  border-radius: 10px;
+  background: #f7fbfa;
+}
+
+.knownSummary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.knownSummary::-webkit-details-marker {
+  display: none;
+}
+
+.knownItems {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+
 .statusUp,
 .statusDown {
   font-size: 0.76rem;
@@ -104,6 +129,11 @@ h1 {
 
 .knownName {
   font-weight: 600;
+}
+
+.knownRole {
+  color: #35505a;
+  font-size: 0.86rem;
 }
 
 .knownUrl {
