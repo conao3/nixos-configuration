@@ -6,7 +6,7 @@ buildNpmPackage {
   pname = "dashboard-frontend";
   version = "0.1.0";
 
-  src = ./dashboard-frontend;
+  src = ./frontend;
   npmDepsHash = "sha256-3wcXR5pCEaLXmhy3fbvg9u5Stdwp9GOIpdeAy2f3pHk=";
 
   npmBuildScript = "build";

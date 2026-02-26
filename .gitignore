@@ -4,4 +4,4 @@
 /*.qcow2
 /result
 node_modules/
-pkgs/dashboard-frontend/dist/
+pkgs/dashboard/frontend/dist/
