@@ -25,18 +25,6 @@ in
       description = "Address for nginx to bind.";
     };
 
-    dataDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/var/lib/dashboard";
-      description = "Directory where generated JSON data is written.";
-    };
-
-    updateInterval = lib.mkOption {
-      type = lib.types.str;
-      default = "5min";
-      description = "Systemd timer interval for regenerating the page.";
-    };
-
     backendPort = lib.mkOption {
       type = lib.types.port;
       default = 9401;
@@ -80,6 +68,10 @@ in
       description = "Dashboard backend API";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
+      path = with pkgs; [
+        iproute2
+        procps
+      ];
       serviceConfig = {
         ExecStart = "${pkgs.python3}/bin/python3 ${backendScript}";
         Restart = "always";

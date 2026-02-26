@@ -23,8 +23,10 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
+              iproute2
               nodejs_24
               pnpm
+              procps
               python3
             ];
           };
@@ -38,6 +40,8 @@
 
           backend = pkgs.mkShell {
             packages = with pkgs; [
+              iproute2
+              procps
               python3
             ];
           };
@@ -53,8 +57,10 @@
           dashboard = pkgs.writeShellApplication {
             name = "dashboard";
             runtimeInputs = with pkgs; [
+              iproute2
               nodejs_24
               pnpm
+              procps
               python3
             ];
             text = ''
