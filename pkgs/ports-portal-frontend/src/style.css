@@ -73,6 +73,15 @@ th {
   color: #547c86;
 }
 
+.pathCell {
+  display: inline-block;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
 tr:last-child td {
   border-bottom: none;
 }

@@ -17,6 +17,7 @@ type PortEntry = {
   port: string;
   process: string;
   pid: string;
+  cwd: string;
 };
 
 type PortsResponse = {
@@ -57,6 +58,14 @@ function App(): React.JSX.Element {
       {
         accessorKey: "port",
         header: "Port",
+        cell: (info) => {
+          const port = String(info.getValue());
+          return (
+            <a href={`http://localhost:${port}`} target="_blank" rel="noreferrer">
+              {port}
+            </a>
+          );
+        },
         sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
       },
       { accessorKey: "process", header: "Process" },
@@ -64,6 +73,18 @@ function App(): React.JSX.Element {
         accessorKey: "pid",
         header: "PID",
         sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
+      },
+      {
+        accessorKey: "cwd",
+        header: "Working Dir",
+        cell: (info) => {
+          const cwd = String(info.getValue());
+          return (
+            <span className="pathCell" title={cwd}>
+              {cwd}
+            </span>
+          );
+        },
       },
     ],
     [],

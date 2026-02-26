@@ -35,19 +35,25 @@ writeShellApplication {
         proc=$(echo "$line" | awk -F'users:' '{print $2}')
         pname=$(echo "$proc" | awk -F'"' '{print $2}')
         pid=$(echo "$proc" | awk -F'pid=' '{print $2}' | awk -F',' '{print $1}')
+        cwd="-"
         [ -n "$pname" ] || pname="-"
         [ -n "$pid" ] || pid="-"
+        if printf '%s' "$pid" | grep -Eq '^[0-9]+$'; then
+          cwd=$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)
+          [ -n "$cwd" ] || cwd="-"
+        fi
 
         if [ "$first" -eq 0 ]; then
           printf ',\n'
         fi
         first=0
-        printf '    {"proto":"%s","address":"%s","port":"%s","process":"%s","pid":"%s"}' \
+        printf '    {"proto":"%s","address":"%s","port":"%s","process":"%s","pid":"%s","cwd":"%s"}' \
           "$(json_escape "$proto")" \
           "$(json_escape "$addr")" \
           "$(json_escape "$port")" \
           "$(json_escape "$pname")" \
-          "$(json_escape "$pid")"
+          "$(json_escape "$pid")" \
+          "$(json_escape "$cwd")"
       done
     } > "$tmp.ports"
 
