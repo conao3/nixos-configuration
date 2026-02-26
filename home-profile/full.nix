@@ -12,6 +12,7 @@
   ../home-manager/features/neovim
   ../home-manager/features/nom.nix
   ../home-manager/features/programs-enable.nix
+  ../home-manager/features/pure.nix
   ../home-manager/features/wezterm
   ../home-manager/features/zellij
   ../home-manager/features/zsh.nix
