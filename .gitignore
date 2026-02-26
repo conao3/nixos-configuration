@@ -3,3 +3,4 @@
 /.clj-kondo
 /*.qcow2
 /result
+node_modules/
