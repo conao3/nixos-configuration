@@ -1,5 +1,14 @@
 { pkgs, ... }:
 {
+  home.file.".local/bin/ghq-sync" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      set -euxo pipefail -o posix
+      gh repo list conao3 --limit 1000 --source --json sshUrl --jq '.[].sshUrl' | ghq get -p
+    '';
+  };
+
   programs.git = {
     enable = true;
     # lfs.enable = true;
