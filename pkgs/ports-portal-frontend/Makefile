@@ -1,4 +1,3 @@
 .PHONY: dev
 dev:
-	[ -d node_modules ] || corepack pnpm install
-	corepack pnpm dev
+	nix develop . --command sh -c '[ -d node_modules ] || pnpm install --frozen-lockfile; pnpm dev'
