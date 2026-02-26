@@ -26,7 +26,7 @@
     extraConfig = ''
       (push "${pkgs.gcc}/bin" exec-path)
       (push "${pkgs.nodejs}/bin" exec-path)
-
+    '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
       (defun conao-disable-fcitx5 (&rest _)
         (when (file-executable-p "${pkgs.fcitx5}/bin/fcitx5-remote")
           (call-process "${pkgs.fcitx5}/bin/fcitx5-remote" nil nil nil "-c")))
