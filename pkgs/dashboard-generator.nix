@@ -6,7 +6,7 @@
   coreutils,
 }:
 writeShellApplication {
-  name = "ports-portal-generator";
+  name = "dashboard-generator";
 
   runtimeInputs = [
     iproute2
@@ -17,7 +17,7 @@ writeShellApplication {
   text = ''
     set -euo pipefail
 
-    out="''${1:?usage: ports-portal-generator <output-file>}"
+    out="''${1:?usage: dashboard-generator <output-file>}"
     tmp="$(mktemp)"
     updated_at="$(date -Is)"
     first=1
@@ -79,6 +79,6 @@ writeShellApplication {
     description = "Generate JSON listing listening TCP/UDP ports";
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
-    mainProgram = "ports-portal-generator";
+    mainProgram = "dashboard-generator";
   };
 }

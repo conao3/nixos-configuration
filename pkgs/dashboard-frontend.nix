@@ -3,10 +3,10 @@
   buildNpmPackage,
 }:
 buildNpmPackage {
-  pname = "ports-portal-frontend";
+  pname = "dashboard-frontend";
   version = "0.1.0";
 
-  src = ./ports-portal-frontend;
+  src = ./dashboard-frontend;
   npmDepsHash = "sha256-LDlZML3CgqUJwz3f0QHkroZj8fe6RVfhkuP1Q04bA6s=";
 
   npmBuildScript = "build";
@@ -19,7 +19,7 @@ buildNpmPackage {
   '';
 
   meta = {
-    description = "Vite-built React frontend for local ports portal";
+    description = "Vite-built React frontend for local dashboard";
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
   };

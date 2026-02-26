@@ -5,14 +5,14 @@
   ...
 }:
 let
-  cfg = config.services.ports-portal;
-  generator = pkgs.callPackage ../pkgs/ports-portal-generator.nix { };
-  frontend = pkgs.callPackage ../pkgs/ports-portal-frontend.nix { };
-  detailApiScript = pkgs.writeText "ports-portal-detail-api.py" (builtins.readFile ./ports-portal-detail-api.py);
+  cfg = config.services.dashboard;
+  generator = pkgs.callPackage ../pkgs/dashboard-generator.nix { };
+  frontend = pkgs.callPackage ../pkgs/dashboard-frontend.nix { };
+  detailApiScript = pkgs.writeText "dashboard-detail-api.py" (builtins.readFile ./dashboard-detail-api.py);
 in
 {
-  options.services.ports-portal = {
-    enable = lib.mkEnableOption "localhost-only portal for listening ports";
+  options.services.dashboard = {
+    enable = lib.mkEnableOption "localhost-only dashboard for listening ports";
 
     port = lib.mkOption {
       type = lib.types.port;
@@ -28,7 +28,7 @@ in
 
     dataDir = lib.mkOption {
       type = lib.types.str;
-      default = "/var/lib/ports-portal";
+      default = "/var/lib/dashboard";
       description = "Directory where generated JSON data is written.";
     };
 
@@ -48,7 +48,7 @@ in
   config = lib.mkIf cfg.enable {
     services.nginx = {
       enable = true;
-      virtualHosts."ports.local" = {
+      virtualHosts."dashboard.local" = {
         listen = [
           {
             addr = cfg.bindAddress;
@@ -79,29 +79,29 @@ in
       "d ${cfg.dataDir} 0755 root root -"
     ];
 
-    systemd.services.ports-portal = {
-      description = "Generate ports portal JSON";
+    systemd.services.dashboard = {
+      description = "Generate dashboard JSON";
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
       };
       script = ''
         set -euo pipefail
-        ${generator}/bin/ports-portal-generator ${cfg.dataDir}/ports.json
+        ${generator}/bin/dashboard-generator ${cfg.dataDir}/ports.json
       '';
     };
 
-    systemd.timers.ports-portal = {
+    systemd.timers.dashboard = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnBootSec = "1min";
         OnUnitActiveSec = cfg.updateInterval;
-        Unit = "ports-portal.service";
+        Unit = "dashboard.service";
       };
     };
 
-    systemd.services.ports-portal-detail-api = {
-      description = "Ports portal on-demand process detail API";
+    systemd.services.dashboard-detail-api = {
+      description = "Dashboard on-demand process detail API";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       serviceConfig = {
@@ -109,8 +109,8 @@ in
         Restart = "always";
         RestartSec = "2";
         Environment = [
-          "PORTS_PORTAL_API_HOST=127.0.0.1"
-          "PORTS_PORTAL_API_PORT=${toString cfg.detailApiPort}"
+          "DASHBOARD_API_HOST=127.0.0.1"
+          "DASHBOARD_API_PORT=${toString cfg.detailApiPort}"
         ];
       };
     };

@@ -1,5 +1,5 @@
 {
-  description = "ports-portal-frontend development environment";
+  description = "dashboard-frontend development environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

@@ -8,7 +8,7 @@
 
 {
   imports = [
-    ./ports-portal.nix
+    ./dashboard.nix
   ];
 
   system.stateVersion = "24.11";
@@ -178,7 +178,7 @@
     };
   };
 
-  services.ports-portal = {
+  services.dashboard = {
     enable = true;
     port = 9500;
     updateInterval = "5min";

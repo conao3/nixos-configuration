@@ -48,7 +48,7 @@ type ProcessDetail = {
 
 const KNOWN_URLS: Array<{ port: string; name: string; path?: string }> = [
   { port: "9400", name: "open-webui" },
-  { port: "9500", name: "ports-portal" },
+  { port: "9500", name: "dashboard" },
 ];
 
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {
@@ -167,7 +167,7 @@ function App(): React.JSX.Element {
   return (
     <div className="wrap">
       <div className="header">
-        <h1>Listening Ports</h1>
+        <h1>Dashboard</h1>
         <div className="controls">
           <label className="filterLabel" htmlFor="ipVersionFilter">
             IP Filter
