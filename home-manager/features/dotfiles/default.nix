@@ -45,8 +45,8 @@
 
       [Behavior]
       ActiveByDefault=False
-      resetStateWhenFocusIn=Yes
-      ShareInputState=All
+      resetStateWhenFocusIn=Program
+      ShareInputState=No
       PreeditEnabledByDefault=True
       ShowInputMethodInformation=True
       showInputMethodInformationWhenFocusIn=False

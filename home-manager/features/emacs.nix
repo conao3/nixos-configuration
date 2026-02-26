@@ -26,6 +26,14 @@
     extraConfig = ''
       (push "${pkgs.gcc}/bin" exec-path)
       (push "${pkgs.nodejs}/bin" exec-path)
+
+      (defun conao-disable-fcitx5 (&rest _)
+        (when (file-executable-p "${pkgs.fcitx5}/bin/fcitx5-remote")
+          (call-process "${pkgs.fcitx5}/bin/fcitx5-remote" nil nil nil "-c")))
+
+      (add-hook 'focus-in-hook #'conao-disable-fcitx5)
+      (add-hook 'after-make-frame-functions #'conao-disable-fcitx5)
+      (conao-disable-fcitx5)
     '';
   };
 
