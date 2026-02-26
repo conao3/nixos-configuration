@@ -174,6 +174,10 @@
     open-webui = {
       enable = true;
       port = 9402;
+      # https://docs.openwebui.com/reference/env-configuration
+      environment = {
+        WEBUI_AUTH = "False";
+      };
     };
   };
 
