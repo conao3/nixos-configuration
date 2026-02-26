@@ -1,5 +1,12 @@
 { pkgs, ... }:
 {
+  xdg.configFile."autostart/xfce4-notifyd.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=xfce4-notifyd
+    Hidden=true
+  '';
+
   services.dunst = {
     enable = !pkgs.stdenv.isDarwin;
     settings = {
