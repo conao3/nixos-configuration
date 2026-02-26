@@ -46,6 +46,11 @@ type ProcessDetail = {
   otherListeningPorts: string[];
 };
 
+const KNOWN_URLS: Array<{ port: string; name: string; path?: string }> = [
+  { port: "9400", name: "open-webui" },
+  { port: "9500", name: "ports-portal" },
+];
+
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {
   return (
     <tr>
@@ -154,6 +159,10 @@ function App(): React.JSX.Element {
     queryFn: () => fetchProcessDetail(String(selectedPort?.pid ?? "")),
     enabled: Boolean(selectedPort?.pid && selectedPort.pid !== "-"),
   });
+  const listeningPorts = useMemo(
+    () => new Set((query.data?.ports ?? []).map((item) => item.port)),
+    [query.data?.ports],
+  );
 
   return (
     <div className="wrap">
@@ -176,6 +185,22 @@ function App(): React.JSX.Element {
             <option value="all">All</option>
           </select>
           <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
+        </div>
+      </div>
+      <div className="panel knownPanel">
+        <h2>KnownURL</h2>
+        <div className="knownList">
+          {KNOWN_URLS.map((item) => {
+            const url = `http://localhost:${item.port}${item.path ?? ""}`;
+            const active = listeningPorts.has(item.port);
+            return (
+              <a key={`${item.port}:${item.name}`} className="knownItem" href={url} target="_blank" rel="noreferrer">
+                <span className={active ? "statusUp" : "statusDown"}>{active ? "UP" : "DOWN"}</span>
+                <span className="knownName">{item.name}</span>
+                <span className="knownUrl">{url}</span>
+              </a>
+            );
+          })}
         </div>
       </div>
       {query.isError ? <div className="error">Failed to load data: {String(query.error)}</div> : null}

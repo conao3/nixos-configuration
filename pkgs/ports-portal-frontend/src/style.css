@@ -56,6 +56,63 @@ h1 {
   box-shadow: 0 6px 24px #5a726d1c;
 }
 
+.knownPanel {
+  margin-bottom: 12px;
+}
+
+.knownPanel h2 {
+  margin: 4px 0 10px;
+  font-size: 1.05rem;
+}
+
+.knownList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.knownItem {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #d8e6e2;
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-decoration: none;
+  color: inherit;
+  background: #f7fbfa;
+}
+
+.statusUp,
+.statusDown {
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.statusUp {
+  background: #d7f4de;
+  color: #145a32;
+}
+
+.statusDown {
+  background: #f8dddd;
+  color: #8f1d1d;
+}
+
+.knownName {
+  font-weight: 600;
+}
+
+.knownUrl {
+  color: #45626b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .twoPane {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
