@@ -32,6 +32,7 @@ writeShellApplication {
         local_addr=$(echo "$line" | awk '{print $5}')
         addr=''${local_addr%:*}
         port=''${local_addr##*:}
+        ip_version="ipv6"
         proc=$(echo "$line" | awk -F'users:' '{print $2}')
         pname=$(echo "$proc" | awk -F'"' '{print $2}')
         pid=$(echo "$proc" | awk -F'pid=' '{print $2}' | awk -F',' '{print $1}')
@@ -48,13 +49,17 @@ writeShellApplication {
           cmdline=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
           [ -n "$cmdline" ] || cmdline="-"
         fi
+        if printf '%s' "$addr" | grep -q '\.'; then
+          ip_version="ipv4"
+        fi
 
         if [ "$first" -eq 0 ]; then
           printf ',\n'
         fi
         first=0
-        printf '    {"proto":"%s","address":"%s","port":"%s","process":"%s","pid":"%s","cwd":"%s","exe":"%s","cmdline":"%s"}' \
+        printf '    {"proto":"%s","ipVersion":"%s","address":"%s","port":"%s","process":"%s","pid":"%s","cwd":"%s","exe":"%s","cmdline":"%s"}' \
           "$(json_escape "$proto")" \
+          "$(json_escape "$ip_version")" \
           "$(json_escape "$addr")" \
           "$(json_escape "$port")" \
           "$(json_escape "$pname")" \

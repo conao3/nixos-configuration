@@ -3,16 +3,20 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
+  ColumnFiltersState,
   ColumnDef,
   SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
 type PortEntry = {
   proto: string;
+  ipVersion: "ipv4" | "ipv6";
   address: string;
   port: string;
   process: string;
@@ -47,6 +51,12 @@ async function fetchPorts(): Promise<PortsData> {
 
 function App(): React.JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([{ id: "port", desc: false }]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    { id: "ipVersion", value: "ipv4" },
+  ]);
+  const [columnVisibility] = useState<VisibilityState>({
+    ipVersion: false,
+  });
   const [selectedKey, setSelectedKey] = useState<string>("");
   const query = useQuery({
     queryKey: ["ports"],
@@ -57,6 +67,7 @@ function App(): React.JSX.Element {
   const columns = useMemo<ColumnDef<PortEntry>[]>(
     () => [
       { accessorKey: "proto", header: "Proto" },
+      { accessorKey: "ipVersion", header: "IP Version" },
       { accessorKey: "address", header: "Local Address" },
       {
         accessorKey: "port",
@@ -96,9 +107,11 @@ function App(): React.JSX.Element {
   const table = useReactTable({
     data: query.data?.ports ?? [],
     columns,
-    state: { sorting },
+    state: { sorting, columnFilters, columnVisibility },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
@@ -113,7 +126,24 @@ function App(): React.JSX.Element {
     <div className="wrap">
       <div className="header">
         <h1>Listening Ports</h1>
-        <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
+        <div className="controls">
+          <label className="filterLabel" htmlFor="ipVersionFilter">
+            IP Filter
+          </label>
+          <select
+            id="ipVersionFilter"
+            value={String(table.getColumn("ipVersion")?.getFilterValue() ?? "all")}
+            onChange={(event) => {
+              const value = event.target.value;
+              table.getColumn("ipVersion")?.setFilterValue(value === "all" ? undefined : value);
+            }}
+          >
+            <option value="ipv4">IPv4</option>
+            <option value="ipv6">IPv6</option>
+            <option value="all">All</option>
+          </select>
+          <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
+        </div>
       </div>
       {query.isError ? <div className="error">Failed to load data: {String(query.error)}</div> : null}
       <div className="twoPane">
@@ -166,6 +196,8 @@ function App(): React.JSX.Element {
                 <dd>{selectedPort.proto}</dd>
                 <dt>Address</dt>
                 <dd>{selectedPort.address}</dd>
+                <dt>IP Version</dt>
+                <dd>{selectedPort.ipVersion}</dd>
                 <dt>Port</dt>
                 <dd>
                   <a href={`http://localhost:${selectedPort.port}`} target="_blank" rel="noreferrer">

@@ -37,6 +37,17 @@ h1 {
   font-size: 0.95rem;
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterLabel {
+  color: #35505a;
+  font-size: 0.9rem;
+}
+
 .panel {
   background: #ffffffd1;
   border: 1px solid #d4e2e0;
