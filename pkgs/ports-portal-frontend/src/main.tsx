@@ -18,6 +18,8 @@ type PortEntry = {
   process: string;
   pid: string;
   cwd: string;
+  exe: string;
+  cmdline: string;
 };
 
 type PortsResponse = {
@@ -45,6 +47,7 @@ async function fetchPorts(): Promise<PortsData> {
 
 function App(): React.JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([{ id: "port", desc: false }]);
+  const [selectedKey, setSelectedKey] = useState<string>("");
   const query = useQuery({
     queryKey: ["ports"],
     queryFn: fetchPorts,
@@ -99,6 +102,13 @@ function App(): React.JSX.Element {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const selectedPort = useMemo(() => {
+    if (!selectedKey) {
+      return table.getRowModel().rows[0]?.original;
+    }
+    return table.getRowModel().rows.find((row) => row.id === selectedKey)?.original ?? table.getRowModel().rows[0]?.original;
+  }, [selectedKey, table]);
+
   return (
     <div className="wrap">
       <div className="header">
@@ -106,41 +116,78 @@ function App(): React.JSX.Element {
         <div className="meta">{query.isLoading ? "Loading..." : `Updated: ${query.data?.updatedAt ?? "-"}`}</div>
       </div>
       {query.isError ? <div className="error">Failed to load data: {String(query.error)}</div> : null}
-      <div className="panel">
-        <table>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const sorted = header.column.getIsSorted();
-                  return (
-                    <th key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <button
-                          className="sortButton"
-                          type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          <span className="sortMark">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
-                        </button>
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="twoPane">
+        <div className="panel listPane">
+          <table>
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const sorted = header.column.getIsSorted();
+                    return (
+                      <th key={header.id}>
+                        {header.isPlaceholder ? null : (
+                          <button
+                            className="sortButton"
+                            type="button"
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <span className="sortMark">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
+                          </button>
+                        )}
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={selectedPort === row.original ? "rowSelected" : ""}
+                  onClick={() => setSelectedKey(row.id)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="panel detailPane">
+          {selectedPort ? (
+            <>
+              <h2>Port Detail</h2>
+              <dl className="detailList">
+                <dt>Proto</dt>
+                <dd>{selectedPort.proto}</dd>
+                <dt>Address</dt>
+                <dd>{selectedPort.address}</dd>
+                <dt>Port</dt>
+                <dd>
+                  <a href={`http://localhost:${selectedPort.port}`} target="_blank" rel="noreferrer">
+                    {selectedPort.port}
+                  </a>
+                </dd>
+                <dt>Process</dt>
+                <dd>{selectedPort.process}</dd>
+                <dt>PID</dt>
+                <dd>{selectedPort.pid}</dd>
+                <dt>Working Dir</dt>
+                <dd className="detailValue">{selectedPort.cwd}</dd>
+                <dt>Executable</dt>
+                <dd className="detailValue">{selectedPort.exe}</dd>
+                <dt>Command Line</dt>
+                <dd className="detailValue">{selectedPort.cmdline}</dd>
+              </dl>
+            </>
+          ) : (
+            <div className="meta">No rows</div>
+          )}
+        </div>
       </div>
     </div>
   );

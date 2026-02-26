@@ -36,24 +36,32 @@ writeShellApplication {
         pname=$(echo "$proc" | awk -F'"' '{print $2}')
         pid=$(echo "$proc" | awk -F'pid=' '{print $2}' | awk -F',' '{print $1}')
         cwd="-"
+        exe="-"
+        cmdline="-"
         [ -n "$pname" ] || pname="-"
         [ -n "$pid" ] || pid="-"
         if printf '%s' "$pid" | grep -Eq '^[0-9]+$'; then
           cwd=$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)
           [ -n "$cwd" ] || cwd="-"
+          exe=$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)
+          [ -n "$exe" ] || exe="-"
+          cmdline=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+          [ -n "$cmdline" ] || cmdline="-"
         fi
 
         if [ "$first" -eq 0 ]; then
           printf ',\n'
         fi
         first=0
-        printf '    {"proto":"%s","address":"%s","port":"%s","process":"%s","pid":"%s","cwd":"%s"}' \
+        printf '    {"proto":"%s","address":"%s","port":"%s","process":"%s","pid":"%s","cwd":"%s","exe":"%s","cmdline":"%s"}' \
           "$(json_escape "$proto")" \
           "$(json_escape "$addr")" \
           "$(json_escape "$port")" \
           "$(json_escape "$pname")" \
           "$(json_escape "$pid")" \
-          "$(json_escape "$cwd")"
+          "$(json_escape "$cwd")" \
+          "$(json_escape "$exe")" \
+          "$(json_escape "$cmdline")"
       done
     } > "$tmp.ports"
 
