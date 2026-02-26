@@ -158,6 +158,10 @@
       };
       openFirewall = true;
     };
+    open-webui = {
+      enable = true;
+      port = 9400;
+    };
   };
 
   users.users.conao = {
