@@ -177,6 +177,7 @@
       # https://docs.openwebui.com/reference/env-configuration
       environment = {
         WEBUI_AUTH = "False";
+        OLLAMA_API_BASE_URL = "http://127.0.0.1:9403";
       };
     };
   };
@@ -184,6 +185,26 @@
   services.dashboard = {
     enable = true;
     port = 9400;
+  };
+
+  systemd.services.ollama-tunnel = {
+    wantedBy = [ "multi-user.target" ];
+    after = [
+      "network-online.target"
+      "tailscaled.service"
+    ];
+    wants = [
+      "network-online.target"
+      "tailscaled.service"
+    ];
+    serviceConfig = {
+      Type = "simple";
+      User = "conao";
+      WorkingDirectory = "/home/conao";
+      ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
+      Restart = "always";
+      RestartSec = 3;
+    };
   };
 
   users.users.conao = {

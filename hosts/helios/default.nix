@@ -24,7 +24,16 @@
         export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
       '';
     };
+    templates."ollama-tunnel-script" = {
+      owner = "conao";
+      mode = "0500";
+      content = ''
+        #!/bin/sh
+        exec ${config.sops.placeholder."ollama-tunnel-exec"}
+      '';
+    };
     secrets.linear-api-key = { };
+    secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
       owner = "conao";
       path = "/home/conao/.local/share/dev-ca/rootCA-key.pem";
