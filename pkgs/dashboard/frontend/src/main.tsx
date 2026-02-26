@@ -48,6 +48,7 @@ type ProcessDetail = {
 
 const KNOWN_URLS: Array<{ port: string; name: string; path?: string }> = [
   { port: "9400", name: "dashboard" },
+  { port: "9401", name: "dashboard-backend", path: "/api/process/1" },
   { port: "9402", name: "open-webui" },
 ];
 

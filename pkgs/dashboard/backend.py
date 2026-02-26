@@ -3,6 +3,7 @@ import os
 import pwd
 import re
 import subprocess
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -99,6 +100,59 @@ def proc_detail(pid):
     return detail
 
 
+def ports_snapshot():
+    snapshot = {
+        "updatedAt": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
+        "ports": [],
+    }
+    try:
+        ss_out = subprocess.check_output(
+            ["ss", "-lntupH"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return snapshot
+
+    for line in ss_out.splitlines():
+        parts = line.split()
+        if len(parts) < 6:
+            continue
+
+        proto = parts[0]
+        local = parts[4]
+        users = line.split("users:", 1)[1] if "users:" in line else ""
+        process_match = re.search(r'"([^"]+)"', users)
+        pid_match = re.search(r"pid=(\d+)", users)
+
+        addr = local.rsplit(":", 1)[0]
+        port = local.rsplit(":", 1)[-1]
+        ip_version = "ipv4" if "." in addr else "ipv6"
+        process = process_match.group(1) if process_match else "-"
+        pid = pid_match.group(1) if pid_match else "-"
+        cwd = "-"
+
+        if pid.isdigit():
+            try:
+                cwd = os.path.realpath(f"/proc/{pid}/cwd")
+            except Exception:
+                pass
+
+        snapshot["ports"].append(
+            {
+                "proto": proto,
+                "ipVersion": ip_version,
+                "address": addr,
+                "port": port,
+                "process": process,
+                "pid": pid,
+                "cwd": cwd,
+            }
+        )
+
+    return snapshot
+
+
 class Handler(BaseHTTPRequestHandler):
     def _write_json(self, code, payload):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -111,8 +165,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/data/ports.json":
+            self._write_json(200, ports_snapshot())
+            return
+
         if not path.startswith("/process/"):
-            self._write_json(404, {"error": "not found"})
+            self._write_json(404, {"error": "not found", "path": path})
             return
 
         pid = path.rsplit("/", 1)[-1]

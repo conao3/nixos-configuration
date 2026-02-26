@@ -8,7 +8,7 @@ let
   cfg = config.services.dashboard;
   generator = pkgs.callPackage ../pkgs/dashboard/generator.nix { };
   frontend = pkgs.callPackage ../pkgs/dashboard/frontend.nix { };
-  backendScript = pkgs.writeText "dashboard-backend.py" (builtins.readFile ./dashboard-backend.py);
+  backendScript = pkgs.writeText "dashboard-backend.py" (builtins.readFile ../pkgs/dashboard/backend.py);
 in
 {
   options.services.dashboard = {
