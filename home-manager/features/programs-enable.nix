@@ -20,6 +20,9 @@
       enable = true;
       prefix = "C-q";
       keyMode = "emacs";
+      extraConfig = ''
+        set -s copy-command 'xsel -i --clipboard'
+      '';
     };
     vim.enable = true;
     vscode.enable = true;
