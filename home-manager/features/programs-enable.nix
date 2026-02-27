@@ -19,6 +19,7 @@
     tmux = {
       enable = true;
       prefix = "C-q";
+      keyMode = "emacs";
     };
     vim.enable = true;
     vscode.enable = true;
