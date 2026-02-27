@@ -3,6 +3,7 @@ all:
 .PHONY: switch
 switch:
 	sudo nixos-rebuild switch --flake .
+	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
 
 .PHONY: lint
 lint:
