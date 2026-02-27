@@ -52,24 +52,40 @@ let
   wrapperPackages = map mkWrapper wrapperSpecs;
   agentDirs = [ "$HOME/.agents" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
 
-  # { path = ".theme"; from = null; to = "dark"; }
-  settingsPatches = [
-    { path = ".theme"; from = null; to = "dark"; }
-    { path = ".defaultMode"; from = null; to = "acceptEdits"; }
-    { path = ".skipDangerousModePermissionPrompt"; from = null; to = true; }
-    { path = ".env.CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR"; from = null; to = "1"; }
-    { path = ".env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY"; from = null; to = "1"; }
-    { path = ".env.CLAUDE_CODE_ENABLE_TELEMETRY"; from = null; to = "0"; }
-    { path = ".env.DISABLE_ERROR_REPORTING"; from = null; to = "1"; }
-    { path = ".env.DISABLE_TELEMETRY"; from = null; to = "1"; }
-    { path = ".env.CDK_DISABLE_CLI_TELEMETRY"; from = null; to = "true"; }
-    { path = ".env.SAM_CLI_TELEMETRY"; from = null; to = "0"; }
-    { path = ".env.BASH_DEFAULT_TIMEOUT_MS"; from = null; to = "300000"; }
-    { path = ".env.BASH_MAX_TIMEOUT_MS"; from = null; to = "1200000"; }
-    { path = ".preferredNotifChannel"; from = null; to = "terminal_bell"; }
-    { path = ".includeCoAuthoredBy"; from = null; to = false; }
-    { path = ".language"; from = null; to = "japanese"; }
-  ];
+  claudeSettings = {
+    theme = "dark";
+    defaultMode = "acceptEdits";
+    skipDangerousModePermissionPrompt = true;
+    env = {
+      CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR = "1";
+      CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY = "1";
+      CLAUDE_CODE_ENABLE_TELEMETRY = "0";
+      DISABLE_ERROR_REPORTING = "1";
+      DISABLE_TELEMETRY = "1";
+      CDK_DISABLE_CLI_TELEMETRY = "true";
+      SAM_CLI_TELEMETRY = "0";
+      BASH_DEFAULT_TIMEOUT_MS = "300000";
+      BASH_MAX_TIMEOUT_MS = "1200000";
+    };
+    preferredNotifChannel = "terminal_bell";
+    includeCoAuthoredBy = false;
+    language = "japanese";
+  };
+
+  flattenSettings = prefix: attrs:
+    lib.concatLists (lib.mapAttrsToList (
+      name: value: let
+        path = "${prefix}.${name}";
+      in
+        if builtins.isAttrs value && value ? from && value ? to then
+          [ { inherit path; inherit (value) from to; } ]
+        else if builtins.isAttrs value then
+          flattenSettings path value
+        else
+          [ { inherit path; from = null; to = value; } ]
+    ) attrs);
+
+  settingsPatches = flattenSettings "" claudeSettings;
 
   applyPatch = patch: let
     fromJson = builtins.toJSON patch.from;
