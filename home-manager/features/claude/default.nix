@@ -51,7 +51,7 @@ let
   mkWrapper = spec:
     pkgs.runCommand spec.name { buildInputs = [ pkgs.makeWrapper ]; } ''
       makeWrapper ${spec.bin} $out/bin/${spec.name} \
-        --set ${spec.envKey} "$HOME/${spec.dir}"
+        --run 'export ${spec.envKey}="$HOME/${spec.dir}"'
     '';
 
   wrapperPackages = map mkWrapper wrapperSpecs;
