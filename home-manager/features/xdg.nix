@@ -1,4 +1,8 @@
 {
+  xdg.configFile."xfce4/helpers.rc".text = ''
+    WebBrowser=firefox
+  '';
+
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
