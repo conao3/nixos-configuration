@@ -125,7 +125,7 @@ in
   home.packages = wrapperPackages;
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${lib.escapeShellArg dir}") agentDirs}
+    ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
   '';
 
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
