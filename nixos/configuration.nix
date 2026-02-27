@@ -17,11 +17,11 @@
     registry = {
       toyokumo-kmailer.to = {
         type = "path";
-        path = "/home/conao/dev/repos/nix-flakes/repos/toyokumo/kmailer";
+        path = "/home/conao/ghq/github.com/conao3/nix-flakes/repos/toyokumo/kmailer";
       };
       toyokumo-account-kintoneapp.to = {
         type = "path";
-        path = "/home/conao/dev/repos/nix-flakes/repos/toyokumo/account-kintoneapp";
+        path = "/home/conao/ghq/github.com/conao3/nix-flakes/repos/toyokumo/account-kintoneapp";
       };
     };
     gc = {
