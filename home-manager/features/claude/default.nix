@@ -59,6 +59,9 @@ let
   claudeConfigDirs =
     [ "$HOME/.claude" ]
     ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
+  claudeJsonFiles =
+    [ "$HOME/.claude.json" ]
+    ++ map (spec: "$HOME/${spec.dir}/.claude.json") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
 
   claudeSettings = {
     theme = "dark";
@@ -93,7 +96,21 @@ let
           [ { inherit path; from = null; to = value; } ]
     ) attrs);
 
+  claudeMcpServers = {
+    mcpServers = {
+      chrome_devtools = {
+        command = "npx";
+        args = [ "chrome-devtools-mcp@latest" ];
+      };
+      deepwiki = {
+        type = "http";
+        url = "https://mcp.deepwiki.com/mcp";
+      };
+    };
+  };
+
   settingsPatches = flattenSettings "" claudeSettings;
+  mcpPatches = flattenSettings "" claudeMcpServers;
 
   applyPatch = patch: let
     fromJson = builtins.toJSON patch.from;
@@ -150,6 +167,14 @@ in
       fi
       ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
     '') claudeConfigDirs}
+    ${lib.concatMapStringsSep "\n" (file: ''
+      settingsTarget="${file}"
+      if [ ! -f "$settingsTarget" ] || [ -L "$settingsTarget" ]; then
+        rm -f "$settingsTarget"
+        echo '{}' > "$settingsTarget"
+      fi
+      ${lib.concatMapStringsSep "\n" applyPatch mcpPatches}
+    '') claudeJsonFiles}
   '';
 
   programs.git.ignores = [
