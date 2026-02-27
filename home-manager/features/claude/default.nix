@@ -132,6 +132,10 @@ in
 
   home.packages = wrapperPackages;
 
+  home.shellAliases = {
+    claude = "claude.conao3";
+  };
+
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
   '';
