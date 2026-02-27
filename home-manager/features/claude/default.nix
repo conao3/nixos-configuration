@@ -130,11 +130,10 @@ in
     };
   };
 
-  home.packages = wrapperPackages;
-
-  home.shellAliases = {
-    claude = "claude.conao3";
-  };
+  home.packages = wrapperPackages ++ [
+    (pkgs.writeShellScriptBin "claude" ''exec claude.conao3 "$@"'')
+    (pkgs.writeShellScriptBin "codex" ''exec codex.conao3 "$@"'')
+  ];
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}

@@ -128,9 +128,7 @@
           auto-claude
           catnip
           ck
-          claude-code
           claude-code-acp
-          codex
           codex-acp
           copilot-language-server
           eca
