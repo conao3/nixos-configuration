@@ -39,6 +39,21 @@ cd $(ghq root)/github.com/conao3/nixos-configuration
 | `ghq create <user>/<project>` | 新規リポジトリを作成 |
 | `ghq root` | ルートディレクトリを表示 |
 
+## リポジトリのリネーム
+
+ghq にはリネーム専用コマンドはない。リモート (GitHub 等) でリネームした後、以下の手順で対応する。
+
+```sh
+ghq rm <old-user>/<old-project>
+ghq get <new-user>/<new-project>
+```
+
+ローカルで手動移動した場合は `ghq migrate` で ghq 管理下に取り込む。
+
+```sh
+ghq migrate /path/to/manually-moved-repo
+```
+
 ## fzf との連携
 
 ```sh
