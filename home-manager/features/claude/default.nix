@@ -12,30 +12,35 @@ let
 
   wrapperSpecs = [
     {
+      type = "claude";
       name = "claude.conao3";
       bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.conao3";
     }
     {
+      type = "claude";
       name = "claude.toyokumo";
       bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.toyokumo";
     }
     {
+      type = "claude";
       name = "claude.agent001";
       bin = claudeBin;
       envKey = "CLAUDE_CONFIG_DIR";
       dir = ".agents/.claude.agent001";
     }
     {
+      type = "codex";
       name = "codex.conao3";
       bin = codexBin;
       envKey = "CODEX_HOME";
       dir = ".agents/.codex.conao3";
     }
     {
+      type = "codex";
       name = "codex.agent001";
       bin = codexBin;
       envKey = "CODEX_HOME";
@@ -51,6 +56,9 @@ let
 
   wrapperPackages = map mkWrapper wrapperSpecs;
   agentDirs = [ "$HOME/.agents" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
+  claudeConfigDirs =
+    [ "$HOME/.claude" ]
+    ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
 
   claudeSettings = {
     theme = "dark";
@@ -128,15 +136,17 @@ in
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
   '';
 
-  home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    settingsTarget="$HOME/.claude/settings.json"
+  home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
     settingsWarnFile="$HOME/.claude/settings-warnings.log"
     rm -f "$settingsWarnFile"
-    if [ ! -f "$settingsTarget" ] || [ -L "$settingsTarget" ]; then
-      rm -f "$settingsTarget"
-      echo '{}' > "$settingsTarget"
-    fi
-    ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
+    ${lib.concatMapStringsSep "\n" (dir: ''
+      settingsTarget="${dir}/settings.json"
+      if [ ! -f "$settingsTarget" ] || [ -L "$settingsTarget" ]; then
+        rm -f "$settingsTarget"
+        echo '{}' > "$settingsTarget"
+      fi
+      ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
+    '') claudeConfigDirs}
   '';
 
   programs.git.ignores = [
