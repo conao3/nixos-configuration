@@ -132,6 +132,22 @@
         "type": "github"
       }
     },
+    "devo": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772298882,
+        "narHash": "sha256-4iJ4DjSOT0EWiv3ke4YSnaHQN9IIpEi0TWy0GA1HFJg=",
+        "ref": "refs/heads/master",
+        "rev": "fb0091f58fed65edd3472e677338f1729c9c45d2",
+        "revCount": 9,
+        "type": "git",
+        "url": "file:///home/conao/ghq/github.com/conao3/rust-devo"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///home/conao/ghq/github.com/conao3/rust-devo"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -844,6 +860,7 @@
       "inputs": {
         "claude-desktop": "claude-desktop",
         "cljgen": "cljgen",
+        "devo": "devo",
         "emacs-overlay": "emacs-overlay",
         "flake-parts": "flake-parts_2",
         "gitm": "gitm",

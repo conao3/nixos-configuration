@@ -56,6 +56,10 @@
       url = "github:conao3/rust-fetch-usage-limit";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    devo = {
+      url = "git+file:///home/conao/ghq/github.com/conao3/rust-devo";
+      flake = false;
+    };
   };
 
   outputs =

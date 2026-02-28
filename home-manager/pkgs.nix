@@ -12,6 +12,12 @@
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
+      devo = pkgs.rustPlatform.buildRustPackage {
+        pname = "devo";
+        version = "0.1.0";
+        src = inputs.devo;
+        cargoLock.lockFile = inputs.devo + "/Cargo.lock";
+      };
 
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
@@ -109,6 +115,7 @@
         # inputs.nix-flake-clojure.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.pype.packages.${system}.default
+        devo
         pkgs.nodejs_24 # vibe-kanban requires npx
       ]
       ++ (
