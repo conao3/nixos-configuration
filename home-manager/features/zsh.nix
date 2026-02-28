@@ -12,7 +12,7 @@
       function ghq() {
         if [ "$1" = "cd" ]; then
           shift
-          local repo=$(command ghq list | fzf --query "$*")
+          local repo=$(command ghq list | fzf --query "conao3/$*")
           if [ -n "$repo" ]; then
             cd "$(command ghq root)/$repo"
           fi
