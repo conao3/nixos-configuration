@@ -135,13 +135,13 @@
     };
   };
 
-  systemd.user.timers.agent-memory-sync = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "3min";
-      OnUnitActiveSec = "1h";
-      Persistent = true;
-      RandomizedDelaySec = "5min";
-    };
-  };
+  # systemd.user.timers.agent-memory-sync = {
+  #   wantedBy = [ "timers.target" ];
+  #   timerConfig = {
+  #     OnBootSec = "3min";
+  #     OnUnitActiveSec = "1h";
+  #     Persistent = true;
+  #     RandomizedDelaySec = "5min";
+  #   };
+  # };
 }
