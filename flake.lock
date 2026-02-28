@@ -135,17 +135,17 @@
     "devo": {
       "flake": false,
       "locked": {
-        "lastModified": 1772298882,
-        "narHash": "sha256-4iJ4DjSOT0EWiv3ke4YSnaHQN9IIpEi0TWy0GA1HFJg=",
-        "ref": "refs/heads/master",
-        "rev": "fb0091f58fed65edd3472e677338f1729c9c45d2",
-        "revCount": 9,
-        "type": "git",
-        "url": "file:///home/conao/ghq/github.com/conao3/rust-devo"
+        "lastModified": 1772298814,
+        "narHash": "sha256-o3GpBnsVUcSzQM6ITn3nS6DmaV2+qoZKCQpZ73+DH0w=",
+        "owner": "conao3",
+        "repo": "rust-devo",
+        "rev": "344adacaec6b3aa1534a5cdc2936e10832d7d09d",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/conao/ghq/github.com/conao3/rust-devo"
+        "owner": "conao3",
+        "repo": "rust-devo",
+        "type": "github"
       }
     },
     "devshell": {

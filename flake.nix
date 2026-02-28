@@ -57,7 +57,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     devo = {
-      url = "git+file:///home/conao/ghq/github.com/conao3/rust-devo";
+      url = "github:conao3/rust-devo";
       flake = false;
     };
   };
