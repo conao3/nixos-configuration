@@ -14,6 +14,8 @@ GitHub CLI。リポジトリ、issue、PR などを CLI から操作する。
 | `gh repo clone <user>/<project>` | リポジトリをクローン |
 | `gh repo view` | リポジトリ情報を表示 |
 | `gh repo view --web` | ブラウザで開く |
+| `gh repo edit --visibility public --accept-visibility-change-consequences` | private を public に変更 |
+| `gh repo edit --visibility private --accept-visibility-change-consequences` | public を private に変更 |
 
 ghq と組み合わせる場合:
 
