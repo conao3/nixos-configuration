@@ -59,6 +59,9 @@ let
   claudeConfigDirs =
     [ "$HOME/.claude" ]
     ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
+  codexConfigDirs =
+    [ "$HOME/.codex" ]
+    ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "codex") wrapperSpecs);
   claudeJsonFiles =
     [ "$HOME/.claude.json" ]
     ++ map (spec: "$HOME/${spec.dir}/.claude.json") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
@@ -109,8 +112,36 @@ let
     };
   };
 
+  codexConfig = {
+    mcp_servers = {
+      chrome_devtools = {
+        command = "npx";
+        args = [
+          "-y"
+          "chrome-devtools-mcp@latest"
+        ];
+      };
+      deepwiki = {
+        url = "https://mcp.deepwiki.com/mcp";
+      };
+    };
+  };
+
   settingsPatches = flattenSettings "" claudeSettings;
   mcpPatches = flattenSettings "" claudeMcpServers;
+  codexServerNames = builtins.attrNames codexConfig.mcp_servers;
+  flattenCodexConfig = prefix: attrs:
+    lib.concatLists (lib.mapAttrsToList (
+      name: value:
+      let
+        path = if prefix == "" then name else "${prefix}.${name}";
+      in
+      if builtins.isAttrs value then
+        flattenCodexConfig path value
+      else
+        [ { inherit path value; } ]
+    ) attrs);
+  codexPatches = flattenCodexConfig "" codexConfig;
 
   applyPatch = patch: let
     fromJson = builtins.toJSON patch.from;
@@ -175,6 +206,25 @@ in
       fi
       ${lib.concatMapStringsSep "\n" applyPatch mcpPatches}
     '') claudeJsonFiles}
+  '';
+
+  home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+    ${lib.concatMapStringsSep "\n" (dir: ''
+      mkdir -p "${dir}"
+      configTarget="${dir}/config.toml"
+      if [ ! -f "$configTarget" ] || [ -L "$configTarget" ]; then
+        rm -f "$configTarget"
+        touch "$configTarget"
+      fi
+
+      # Update MCP entries directly in TOML.
+      ${lib.concatMapStringsSep "\n" (serverName:
+        "${pkgs.dasel}/bin/dasel delete -f \"$configTarget\" -r toml -w toml ${lib.escapeShellArg "mcp_servers.${serverName}"} >/dev/null 2>&1 || true"
+      ) codexServerNames}
+      ${lib.concatMapStringsSep "\n" (patch:
+        "${pkgs.dasel}/bin/dasel put -f \"$configTarget\" -r toml -w toml -t json -v ${lib.escapeShellArg (builtins.toJSON patch.value)} ${lib.escapeShellArg patch.path}"
+      ) codexPatches}
+    '') codexConfigDirs}
   '';
 
   programs.git.ignores = [
