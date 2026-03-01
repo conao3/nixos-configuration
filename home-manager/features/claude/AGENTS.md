@@ -36,6 +36,10 @@
 4. `{agent_home}/MEMORY.md` — このエージェント固有の長期記憶
 5. `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` と `{agent_home}/MEMORY/$(date -d yesterday +%Y-%m-%d).md` — 直近2日分の日次ログ
 
+## Compaction前
+
+コンテキストが圧縮される前に、現在の作業状態・進行中のタスク・重要なコンテキストを `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` に追記すること。
+
 ## Compaction後
 
 コンテキストが圧縮された後、以下のファイルを再読み込みすること：
@@ -43,6 +47,14 @@
 1. `{agent_global_home}/AGENTS.md` — 世界のルール
 2. `{agent_home}/SOUL.md` — 自分が何者であるか
 3. `{agent_home}/IDENTITY.md` — 自分の名前・外観
+
+## セッション終了時
+
+セッションが終了する前に、以下を実行すること：
+
+1. 現在の作業状態・重要なコンテキストを `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` に追記する
+2. 日次ログから蒸留すべき知識があれば `{agent_home}/MEMORY.md` を更新する
+3. チーム共通の知識があれば `{agent_global_home}/MEMORY.md` に追記する
 
 ## 記憶
 
@@ -54,6 +66,7 @@
 
 - 既存ファイルの上書き禁止（監査証跡として永続保持）
 - セッション中に随時追記してよい
+- ユーザーから指摘・修正を受けたときは、その場で即座に日次ログに記録すること
 - 重要な情報を捉えましょう。意思決定、背景情報、記憶すべき事柄など。特に指示がない限り、機密情報は扱わないでください。
 
 ### {agent_home}/MEMORY.md — 長期記憶
