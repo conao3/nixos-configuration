@@ -56,6 +56,10 @@
       url = "github:conao3/rust-fetch-usage-limit";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    rust-llm-quota = {
+      url = "github:conao3/rust-llm-quota";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     devo = {
       url = "github:conao3/rust-devo";
       flake = false;

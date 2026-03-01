@@ -115,6 +115,7 @@
         # inputs.nix-flake-clojure.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.pype.packages.${system}.default
+        inputs.rust-llm-quota.packages.${system}.default
         devo
         pkgs.nodejs_24 # vibe-kanban requires npx
       ]
