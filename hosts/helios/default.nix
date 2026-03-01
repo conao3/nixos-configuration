@@ -2,8 +2,62 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
+let
+  claudeBin = "${inputs.llm-agents.packages.${pkgs.system}.claude-code}/bin/claude";
+  claudeTelegramScript = pkgs.writeShellScript "claude-telegram" ''
+    set -euxo pipefail -o posix
+
+    MATTERBRIDGE_API="http://127.0.0.1:4242"
+    session_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-session.XXXXXX)
+    fifo=$(${pkgs.coreutils}/bin/mktemp -u /tmp/matterbridge-sse.XXXXXX)
+    ${pkgs.coreutils}/bin/mkfifo "$fifo"
+    trap '${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
+
+    ${pkgs.curl}/bin/curl -N -s "${MATTERBRIDGE_API}/api/stream" > "$fifo" &
+    curl_pid=$!
+    trap 'kill "$curl_pid" 2>/dev/null; ${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
+
+    while IFS= read -r line; do
+      case "$line" in
+        data:*) ;;
+        *) continue ;;
+      esac
+
+      json="''${line#data: }"
+      protocol=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.protocol // empty')
+      case "$protocol" in
+        api|"") continue ;;
+      esac
+
+      text=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.text // empty')
+      if [ -z "$text" ]; then
+        continue
+      fi
+
+      session_id=$(${pkgs.coreutils}/bin/cat "$session_file")
+      if [ -z "$session_id" ]; then
+        result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
+      else
+        result=$(printf '%s' "$text" | ${claudeBin} -p --resume "$session_id" --output-format json) || {
+          printf '' > "$session_file"
+          result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
+        }
+      fi
+
+      printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.session_id // empty' > "$session_file"
+
+      reply=$(printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.result // empty')
+      if [ -n "$reply" ]; then
+        ${pkgs.curl}/bin/curl -s -X POST "${MATTERBRIDGE_API}/api/message" \
+          -H 'Content-Type: application/json' \
+          --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
+      fi
+    done < "$fifo"
+  '';
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -74,6 +128,21 @@
     enable = true;
     user = "conao";
     configPath = config.sops.templates."matterbridge-config".path;
+  };
+
+  systemd.services.claude-telegram = {
+    description = "Claude Telegram bot via matterbridge";
+    after = [ "matterbridge.service" "network.target" ];
+    wants = [ "matterbridge.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "simple";
+      User = "conao";
+      WorkingDirectory = "/home/conao";
+      ExecStart = claudeTelegramScript;
+      Restart = "always";
+      RestartSec = "5";
+    };
   };
 
   services.tailscale = {
