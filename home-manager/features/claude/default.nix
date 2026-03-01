@@ -225,10 +225,10 @@ in
     fi
     ${lib.concatMapStringsSep "\n" (spec: ''
       if [ ! -f "$HOME/${spec.dir}/SOUL.md" ]; then
-        cp ${soulTemplate} "$HOME/${spec.dir}/SOUL.md"
+        ${pkgs.coreutils}/bin/install -m 644 ${soulTemplate} "$HOME/${spec.dir}/SOUL.md"
       fi
       if [ ! -f "$HOME/${spec.dir}/IDENTITY.md" ]; then
-        cp ${identityTemplate} "$HOME/${spec.dir}/IDENTITY.md"
+        ${pkgs.coreutils}/bin/install -m 644 ${identityTemplate} "$HOME/${spec.dir}/IDENTITY.md"
       fi
       if [ ! -f "$HOME/${spec.dir}/MEMORY.md" ]; then
         touch "$HOME/${spec.dir}/MEMORY.md"
