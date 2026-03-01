@@ -31,7 +31,7 @@ in
 
         [telegram]
         token = "${config.sops.placeholder."matterbridge-telegram-token"}"
-        working_dir = "/home/conao"
+        working_dir = "/home/conao/ghq"
       '';
     };
     templates."helios-env" = {
