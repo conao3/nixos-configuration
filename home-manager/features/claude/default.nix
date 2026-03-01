@@ -180,7 +180,7 @@ in
 
   home.packages = wrapperPackages ++ [
     (pkgs.writeShellScriptBin "claude" ''exec claude.conao3 "$@"'')
-    (pkgs.writeShellScriptBin "codex" ''exec codex.conao3 "$@"'')
+    (pkgs.writeShellScriptBin "codex" ''exec codex.agent001 "$@"'')
   ];
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
