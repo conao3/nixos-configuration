@@ -95,17 +95,6 @@ let
     includeCoAuthoredBy = false;
     language = "japanese";
     hooks = {
-      SessionStart = [
-        {
-          hooks = [
-            {
-              command = "echo 'AGENTS.mdの「毎セッション開始時」セクションの指示に従い、必要なファイルを読み込んでください。'";
-              type = "command";
-            }
-          ];
-          matcher = "";
-        }
-      ];
       PreCompact = [
         {
           hooks = [
@@ -192,12 +181,14 @@ let
     fromJson = builtins.toJSON patch.from;
     toJson = builtins.toJSON patch.to;
   in ''
-    settingsCurrent=$(${pkgs.jq}/bin/jq -c '${patch.path}' "$settingsTarget")
-    if [ "$settingsCurrent" = '${fromJson}' ]; then
+    settingsCurrent=$(${pkgs.jq}/bin/jq -cS '${patch.path}' "$settingsTarget")
+    settingsExpectedFrom=$(echo '${fromJson}' | ${pkgs.jq}/bin/jq -cS '.')
+    settingsExpectedTo=$(echo '${toJson}' | ${pkgs.jq}/bin/jq -cS '.')
+    if [ "$settingsCurrent" = "$settingsExpectedFrom" ]; then
       ${pkgs.jq}/bin/jq --argjson to '${toJson}' '${patch.path} = $to' \
         "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
-    elif [ "$settingsCurrent" != '${toJson}' ]; then
-      printf '\033[1;33mWARN: claude settings: ${patch.path}: expected ${fromJson} or ${toJson}, got %s, skipping\033[0m\n' "$settingsCurrent" >> "$settingsWarnFile"
+    elif [ "$settingsCurrent" != "$settingsExpectedTo" ]; then
+      printf '\033[1;33mWARN: claude settings: ${patch.path}: expected %s or %s, got %s, skipping\033[0m\n' "$settingsExpectedFrom" "$settingsExpectedTo" "$settingsCurrent" >> "$settingsWarnFile"
     fi
   '';
 in
