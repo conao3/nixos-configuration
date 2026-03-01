@@ -143,6 +143,10 @@ let
         type = "http";
         url = "https://mcp.deepwiki.com/mcp";
       };
+      linear = {
+        type = "http";
+        url = "https://mcp.linear.app/mcp";
+      };
     };
   };
 
