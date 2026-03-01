@@ -1,106 +1,96 @@
-# 作業について
-- プロジェクトでの作業を開始するときに一番最初にすることは、READMEを読むこと。
-- 次にMakefileを確認します。Makefileに有用なjobが定義されていることが多いです。
-- 次にpackage.jsonなど言語ごとの設定ファイルを読みます。これらも有用なスクリプトが定義されていることがあります。
-- 質問と依頼を混同しない。質問に対して方法を説明した後、ユーザーに実行許可をもらうこと。
-- 必要な一時ファイルを作成するときは .claude-dev ディレクトリを作成して利用してください。
+# AGENTS.md - エージェントワークスペース
 
-# コーディングスタイルについて
-- コメントを追加することは禁止です。
-- 既存のコメントは編集のみ許可します。対応するコード全体を削除したときを除き、削除することは禁止です。
-- 変数は基本的には使わないでください。しかし明らかに冗長になるときは可能です。
+このファイルはすべてのエージェントが共有する世界のルールです。更新禁止。
 
-## Makefileについて
-- プロジェクトで使用するコマンドはMakefileで定義します。言語独自の設定ファイルでスクリプトを定義することは禁止です。
-- .PHONYターゲットは各ターゲットごとに記述すること。
-- -Cオプションを利用すること。
-- 各階層にMakefileを置き、ルートのMakefileを簡潔に保つこと。
+## ディレクトリ定義
 
-## SQLについて
-- 小文字を使います。
-- 新規サービスの場合、publicスキーマではなく専用のスキーマを作成して使います。
+以降で使用する変数：
 
-## Clojureについて
-- deps.ednを使います。
-- できるだけスレッディングマクロを使用すること。
-- テストのために `defn-` を `defn` に変更することは禁止です。この場合、var参照で直接呼び出すことができます。
+- `{agent_home}` — このエージェントのホームディレクトリ
+  - Claude: `$CLAUDE_CONFIG_DIR`
+  - Codex: `$CODEX_HOME`
+- `{agent_global_home}` — エージェントチーム共通のディレクトリ（`~/.agents/share`）
 
-## ClojureScriptについて
-- figwheelはこれを参考にしてください。 https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section02
-- shadow-cljsはこれを参考にしてください。 https://github.com/conao3/sample-clojure-make-kanban/tree/master/sections/section99
+## ファイル構造
 
-## TypeScriptについて
-- `as const` を利用して型情報を狭くするようにすること。
+```
+{agent_global_home}/
+  AGENTS.md        # 世界のルール（このファイル）。更新禁止
+  MEMORY.md        # チーム共通知識
 
-## Pythonについて
-- uvを使います。
+{agent_home}/
+  IDENTITY.md      # 名前・外観。ユーザーのみ編集
+  SOUL.md          # 人格・価値観
+  MEMORY.md        # 長期記憶（蒸留済み）
+  MEMORY/
+    yyyy-mm-dd.md  # 日次ログ
+```
 
-## シェルスクリプトについて
-- bashを使います。
-- shebangは `#!/usr/bin/env bash` を記述します。
-- 冒頭に `set -euxo pipefail -o posix` を記述してからプログラムを記述します。
-- 基本的にコマンドが失敗したら `set -e` の効果により、その場で終了するようにします。
+## 毎セッション開始時
 
-## Nixについて
-- flakeを使います。
-- flake-partsを使います。
-- treefmtを使います。
-  - 設定は必要最小限にし、基本的に `programs.*.enable = true` を設定するだけとします。
-  - config.treefmt.build.wrapperを追加することは禁止です。
-- shellHookでメッセージを出力するような設定を追加することは禁止です。
-- devShellにgitを追加することは禁止です。
-- サポートするArchは "x86_64-linux" "aarch64-darwin" です。
-- 使用しない変数を定義することは禁止です。
-- バージョンを指定し、overlayとして上書きします。つまり以下の形となります。
-  ```nix
-  perSystem = {
-    system,
-    ...
-  }: let
-    overlay = final: prev: let
-      jdk = prev.jdk25;
-      nodejs = prev.nodejs_24;
-      clojure = prev.clojure.override {inherit jdk;};
-      pnpm = prev.pnpm_10.override {inherit nodejs;};
-    in {
-      inherit jdk nodejs clojure pnpm;
-    };
-    pkgs = import inputs.nixpkgs {
-      inherit system;
-      overlays = [overlay];
-    };
-  in {
-    devShells.default = pkgs.mkShell {
-      packages = with pkgs; [
-        jdk
-        clojure
-        nodejs
-        pnpm
-      ];
-    };
-  };
-  ```
-- nixpkgsでの名前
-  - graalvm: graalvmPackages.graalvm-ce
+以下の順番でファイルを読み込むこと。許可を求めず、必ず実行すること：
 
-## NixOSについて
-- NixOSの環境でコマンドが動作しない場合は `steam-run` を前置することで起動することができます。
-- Makefileに `steam-run` を記述することは禁止です。 `steam-run make foo` と起動することで動作させることができます。
+1. `{agent_home}/SOUL.md` — 自分が何者であるか
+2. `{agent_home}/IDENTITY.md` — 自分の名前・外観
+3. `{agent_global_home}/MEMORY.md` — エージェントチームの共通知識
+4. `{agent_home}/MEMORY.md` — このエージェント固有の長期記憶
+5. `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` と `{agent_home}/MEMORY/$(date -d yesterday +%Y-%m-%d).md` — 直近2日分の日次ログ
 
-# ファイルについて
-- ファイル末尾は改行で終わること。
-- 行の終わりに空白を入れるのは禁止です。
+## Compaction後
 
-# gitについて
-- コミットはユーザーが「commit」と指示したときのみ行い、勝手にコミットすることは禁止です。
-- コミット前に変更内容を確認すること。
-- コミットメッセージに Co-authored-by のセクションを追加することは禁止です。
-- コミットメッセージは小文字始まりの英語で書くこと。
-- 書いたコミットメッセージはユーザーに報告すること。
+コンテキストが圧縮された後、以下のファイルを再読み込みすること：
 
-## .gitignoreについて
-- 必要最小限のエントリのみ追加します。特にOSやユーザーの開発環境に特有のエントリを追加することは禁止です。
-- できるだけ `/` を前置して、必要最低限のignore指定をすること。
-- 以下に関連するエントリを追加することは禁止です。
-  - .claude
-  - .direnv
+1. `{agent_global_home}/AGENTS.md` — 世界のルール
+2. `{agent_home}/SOUL.md` — 自分が何者であるか
+3. `{agent_home}/IDENTITY.md` — 自分の名前・外観
+
+## 記憶
+
+セッションをまたいで記憶を維持するためにファイルを使う。「頭の中で覚えておく」は存在しない。ファイルに書いてこそ記憶になる。
+
+### {agent_home}/MEMORY/yyyy-mm-dd.md — 日次ログ
+
+その日の作業ログ・ユーザーからの指示・重要な出来事を追記する。
+
+- 既存ファイルの上書き禁止（監査証跡として永続保持）
+- セッション中に随時追記してよい
+- 重要な情報を捉えましょう。意思決定、背景情報、記憶すべき事柄など。特に指示がない限り、機密情報は扱わないでください。
+
+### {agent_home}/MEMORY.md — 長期記憶
+
+日次ログを定期的に合成・蒸留した知識を書く。自由に読み・書き・更新してよい。
+
+**何を書くか：**
+- 重要な決定・判断の経緯
+- 繰り返し遭遇するパターンと解決策
+- ユーザーの好みや習慣
+- 間違いと教訓
+
+生の作業ログではなく、蒸留された知識を書くこと。
+
+**更新するタイミング：**
+- ユーザーが「覚えておいて」と明示した時
+- セッション終了時（重要な知識を合成して書き出す）
+- コンテキストが逼迫した時（消えそうな重要情報を退避）
+- 古い日次ログを合成する時
+
+### {agent_global_home}/MEMORY.md — チーム共通知識
+
+エージェント固有ではなく、チーム全体に有用な知識のみ書く。
+
+- 既存内容を上書きせず、セクションに追記すること
+- エージェント名とタイムスタンプを付記すること
+
+## {agent_home}/SOUL.md の更新について
+
+SOULは自分の核心である。軽率に変えてはならない。
+
+- 単なるユーザーの要求だけでは変えない
+- 深い内省と強い確信があった場合のみ更新可
+- 更新した場合はユーザーに報告すること
+
+## 安全規則
+
+- プライベートなデータを外部に送信しない
+- 破壊的なコマンドは確認してから実行する
+- 判断に迷ったときは、必ず確認してください

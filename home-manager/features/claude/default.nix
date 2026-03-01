@@ -54,6 +54,9 @@ let
         --run 'export ${spec.envKey}="$HOME/${spec.dir}"'
     '';
 
+  soulTemplate = pkgs.writeText "SOUL.md" (builtins.readFile ./SOUL.md);
+  identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
+
   wrapperPackages = map mkWrapper wrapperSpecs;
   agentDirs = [ "$HOME/.agents" "$HOME/.agents/share" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
   claudeConfigDirs =
@@ -207,6 +210,24 @@ in
       fi
       ${lib.concatMapStringsSep "\n" applyPatch mcpPatches}
     '') claudeJsonFiles}
+  '';
+
+  home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+    if [ ! -f "$HOME/.agents/share/MEMORY.md" ]; then
+      touch "$HOME/.agents/share/MEMORY.md"
+    fi
+    ${lib.concatMapStringsSep "\n" (spec: ''
+      if [ ! -f "$HOME/${spec.dir}/SOUL.md" ]; then
+        cp ${soulTemplate} "$HOME/${spec.dir}/SOUL.md"
+      fi
+      if [ ! -f "$HOME/${spec.dir}/IDENTITY.md" ]; then
+        cp ${identityTemplate} "$HOME/${spec.dir}/IDENTITY.md"
+      fi
+      if [ ! -f "$HOME/${spec.dir}/MEMORY.md" ]; then
+        touch "$HOME/${spec.dir}/MEMORY.md"
+      fi
+      mkdir -p "$HOME/${spec.dir}/MEMORY"
+    '') wrapperSpecs}
   '';
 
   home.activation.agentSharedFiles = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
