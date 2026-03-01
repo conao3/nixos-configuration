@@ -34,6 +34,7 @@
         ghostscript
         ghq
         git-secrets
+        git-wt
         gogcli
         imagemagick
         inetutils
