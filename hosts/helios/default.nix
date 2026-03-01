@@ -18,6 +18,28 @@
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
+    templates."matterbridge-config" = {
+      owner = "conao";
+      content = ''
+        [telegram.yui]
+        Token="${config.sops.placeholder."matterbridge-telegram-token"}"
+
+        [api.local]
+        BindAddress="127.0.0.1:4242"
+
+        [[gateway]]
+        name="main"
+        enable=true
+
+            [[gateway.inout]]
+            account="telegram.yui"
+            channel="${config.sops.placeholder."matterbridge-telegram-chat-id"}"
+
+            [[gateway.inout]]
+            account="api.local"
+            channel="api"
+      '';
+    };
     templates."helios-env" = {
       owner = "conao";
       content = ''
@@ -32,6 +54,8 @@
         exec ${config.sops.placeholder."ollama-tunnel-exec"}
       '';
     };
+    secrets.matterbridge-telegram-token = { };
+    secrets.matterbridge-telegram-chat-id = { };
     secrets.linear-api-key = { };
     secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
@@ -45,6 +69,12 @@
       config.sops.templates."helios-env".path
     }
   '';
+
+  services.matterbridge = {
+    enable = true;
+    user = "conao";
+    configPath = config.sops.templates."matterbridge-config".path;
+  };
 
   services.tailscale = {
     enable = true;
