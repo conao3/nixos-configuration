@@ -98,6 +98,8 @@ let
                 -H 'Content-Type: application/json' \
                 --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
             fi
+          else
+            : > "$session_file"
           fi
           waiting_for_reply=0
           claude_pid=""
