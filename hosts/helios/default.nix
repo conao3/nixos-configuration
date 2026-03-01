@@ -16,7 +16,7 @@ let
     ${pkgs.coreutils}/bin/mkfifo "$fifo"
     trap '${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
 
-    ${pkgs.curl}/bin/curl -N -s "${MATTERBRIDGE_API}/api/stream" > "$fifo" &
+    ${pkgs.curl}/bin/curl -N -s "''${MATTERBRIDGE_API}/api/stream" > "$fifo" &
     curl_pid=$!
     trap 'kill "$curl_pid" 2>/dev/null; ${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
 
@@ -42,7 +42,7 @@ let
         result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
       else
         result=$(printf '%s' "$text" | ${claudeBin} -p --resume "$session_id" --output-format json) || {
-          printf '' > "$session_file"
+          printf ''' > "$session_file"
           result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
         }
       fi
@@ -51,7 +51,7 @@ let
 
       reply=$(printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.result // empty')
       if [ -n "$reply" ]; then
-        ${pkgs.curl}/bin/curl -s -X POST "${MATTERBRIDGE_API}/api/message" \
+        ${pkgs.curl}/bin/curl -s -X POST "''${MATTERBRIDGE_API}/api/message" \
           -H 'Content-Type: application/json' \
           --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
       fi
