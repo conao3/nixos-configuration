@@ -21,12 +21,11 @@ let
     trap 'kill "$curl_pid" 2>/dev/null; ${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
 
     while IFS= read -r line; do
-      case "$line" in
-        data:*) ;;
-        *) continue ;;
-      esac
+      if [ -z "$line" ]; then
+        continue
+      fi
 
-      json="''${line#data: }"
+      json="$line"
       protocol=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.protocol // empty')
       case "$protocol" in
         api|"") continue ;;
