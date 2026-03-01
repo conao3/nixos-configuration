@@ -27,6 +27,7 @@ in
       path = "/home/conao/.config/cagent/config.toml";
       content = ''
         claude_command = "claude.yui"
+        claude_config_dir = "/home/conao/.agents/.claude.yui"
 
         [telegram]
         token = "${config.sops.placeholder."matterbridge-telegram-token"}"
