@@ -14,49 +14,98 @@ let
     MATTERBRIDGE_API="http://127.0.0.1:4242"
     export CLAUDE_CONFIG_DIR="${yuiConfigDir}"
     session_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-session.XXXXXX)
-    fifo=$(${pkgs.coreutils}/bin/mktemp -u /tmp/matterbridge-sse.XXXXXX)
-    ${pkgs.coreutils}/bin/mkfifo "$fifo"
-    trap '${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
+    main_fifo=$(${pkgs.coreutils}/bin/mktemp -u /tmp/matterbridge-sse.XXXXXX)
+    latest_msg_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-latest-msg.XXXXXX)
+    latest_seq_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-latest-seq.XXXXXX)
+    result_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-result.XXXXXX)
+    ${pkgs.coreutils}/bin/mkfifo "$main_fifo"
+    printf '0' > "$latest_seq_file"
+    trap '
+      kill "''${curl_pid:-}" "''${parser_pid:-}" "''${claude_pid:-}" 2>/dev/null || true
+      ${pkgs.coreutils}/bin/rm -f "$session_file" "$main_fifo" "$latest_msg_file" "$latest_seq_file" "$result_file"
+    ' EXIT
 
-    ${pkgs.curl}/bin/curl -N -s "''${MATTERBRIDGE_API}/api/stream" > "$fifo" &
+    ${pkgs.curl}/bin/curl -N -s "''${MATTERBRIDGE_API}/api/stream" > "$main_fifo" &
     curl_pid=$!
-    trap 'kill "$curl_pid" 2>/dev/null; ${pkgs.coreutils}/bin/rm -f "$session_file" "$fifo"' EXIT
 
-    while IFS= read -r line; do
-      if [ -z "$line" ]; then
-        continue
+    (
+      while IFS= read -r line; do
+        if [ -z "$line" ]; then
+          continue
+        fi
+        json="$line"
+        protocol=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.protocol // empty')
+        case "$protocol" in
+          api|"") continue ;;
+        esac
+        text=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.text // empty')
+        if [ -z "$text" ]; then
+          continue
+        fi
+        printf '%s' "$text" > "$latest_msg_file"
+        seq=$(${pkgs.coreutils}/bin/cat "$latest_seq_file")
+        printf '%d' "$((seq + 1))" > "$latest_seq_file"
+      done < "$main_fifo"
+    ) &
+    parser_pid=$!
+
+    claude_pid=""
+    last_processed_seq=0
+    was_interrupted=0
+    waiting_for_reply=0
+
+    while true; do
+      current_seq=$(${pkgs.coreutils}/bin/cat "$latest_seq_file")
+
+      if [ "$current_seq" -gt "$last_processed_seq" ]; then
+        last_processed_seq="$current_seq"
+        msg_text=$(${pkgs.coreutils}/bin/cat "$latest_msg_file")
+
+        if [ -n "''${claude_pid:-}" ] && kill -0 "''${claude_pid:-}" 2>/dev/null; then
+          kill "$claude_pid" 2>/dev/null
+          wait "$claude_pid" 2>/dev/null || true
+          was_interrupted=1
+          : > "$session_file"
+          claude_pid=""
+        fi
+
+        session_id=$(${pkgs.coreutils}/bin/cat "$session_file")
+
+        if [ "$was_interrupted" = 1 ]; then
+          was_interrupted=0
+          input=$(printf '%s\n%s' '[System: 前の応答はユーザーの新しいメッセージにより中断されました]' "$msg_text")
+        else
+          input="$msg_text"
+        fi
+
+        if [ -z "$session_id" ]; then
+          printf '%s' "$input" | ${claudeBin} -p --output-format json > "$result_file" 2>&1 &
+        else
+          printf '%s' "$input" | ${claudeBin} -p --resume "$session_id" --output-format json > "$result_file" 2>&1 &
+        fi
+        claude_pid=$!
+        waiting_for_reply=1
       fi
 
-      json="$line"
-      protocol=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.protocol // empty')
-      case "$protocol" in
-        api|"") continue ;;
-      esac
-
-      text=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.text // empty')
-      if [ -z "$text" ]; then
-        continue
+      if [ "$waiting_for_reply" = 1 ] && [ -n "''${claude_pid:-}" ]; then
+        if ! kill -0 "$claude_pid" 2>/dev/null; then
+          if wait "$claude_pid"; then
+            result=$(${pkgs.coreutils}/bin/cat "$result_file")
+            printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.session_id // empty' > "$session_file"
+            reply=$(printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.result // empty')
+            if [ -n "$reply" ]; then
+              ${pkgs.curl}/bin/curl -s -X POST "''${MATTERBRIDGE_API}/api/message" \
+                -H 'Content-Type: application/json' \
+                --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
+            fi
+          fi
+          waiting_for_reply=0
+          claude_pid=""
+        fi
       fi
 
-      session_id=$(${pkgs.coreutils}/bin/cat "$session_file")
-      if [ -z "$session_id" ]; then
-        result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
-      else
-        result=$(printf '%s' "$text" | ${claudeBin} -p --resume "$session_id" --output-format json) || {
-          printf ''' > "$session_file"
-          result=$(printf '%s' "$text" | ${claudeBin} -p --output-format json) || continue
-        }
-      fi
-
-      printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.session_id // empty' > "$session_file"
-
-      reply=$(printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.result // empty')
-      if [ -n "$reply" ]; then
-        ${pkgs.curl}/bin/curl -s -X POST "''${MATTERBRIDGE_API}/api/message" \
-          -H 'Content-Type: application/json' \
-          --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
-      fi
-    done < "$fifo"
+      ${pkgs.coreutils}/bin/sleep 0.1
+    done
   '';
 in
 {
