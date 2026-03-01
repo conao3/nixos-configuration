@@ -55,7 +55,7 @@ let
     '';
 
   wrapperPackages = map mkWrapper wrapperSpecs;
-  agentDirs = [ "$HOME/.agents" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
+  agentDirs = [ "$HOME/.agents" "$HOME/.agents/share" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
   claudeConfigDirs =
     [ "$HOME/.claude" ]
     ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
@@ -162,6 +162,7 @@ in
       source = ./dotclaude;
       recursive = true;
     };
+    ".agents/share/AGENTS.md".source = ./AGENTS.md;
     ".config/Claude/claude_desktop_config.json" = {
       text = builtins.toJSON {
         globalShortcut = "Alt+Cmd+Space";
@@ -206,6 +207,14 @@ in
       fi
       ${lib.concatMapStringsSep "\n" applyPatch mcpPatches}
     '') claudeJsonFiles}
+  '';
+
+  home.activation.agentSharedFiles = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+    ${lib.concatMapStringsSep "\n" (spec: let
+      targetFile = if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md";
+    in ''
+      ln -sf "$HOME/.agents/share/AGENTS.md" "$HOME/${spec.dir}/${targetFile}"
+    '') wrapperSpecs}
   '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
