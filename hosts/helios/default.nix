@@ -6,109 +6,7 @@
   ...
 }:
 let
-  claudeBin = "${inputs.llm-agents.packages.${pkgs.system}.claude-code}/bin/claude";
-  yuiConfigDir = "/home/conao/.agents/.claude.yui";
-  claudeTelegramScript = pkgs.writeShellScript "claude-telegram" ''
-    set -euxo pipefail -o posix
-
-    MATTERBRIDGE_API="http://127.0.0.1:4242"
-    export CLAUDE_CONFIG_DIR="${yuiConfigDir}"
-    session_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-session.XXXXXX)
-    main_fifo=$(${pkgs.coreutils}/bin/mktemp -u /tmp/matterbridge-sse.XXXXXX)
-    latest_msg_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-latest-msg.XXXXXX)
-    latest_seq_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-latest-seq.XXXXXX)
-    result_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-result.XXXXXX)
-    ${pkgs.coreutils}/bin/mkfifo "$main_fifo"
-    printf '0' > "$latest_seq_file"
-    trap '
-      kill "''${curl_pid:-}" "''${parser_pid:-}" "''${claude_pid:-}" 2>/dev/null || true
-      ${pkgs.coreutils}/bin/rm -f "$session_file" "$main_fifo" "$latest_msg_file" "$latest_seq_file" "$result_file"
-    ' EXIT
-
-    ${pkgs.curl}/bin/curl -N -s "''${MATTERBRIDGE_API}/api/stream" > "$main_fifo" &
-    curl_pid=$!
-
-    (
-      while IFS= read -r line; do
-        if [ -z "$line" ]; then
-          continue
-        fi
-        json="$line"
-        protocol=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.protocol // empty')
-        case "$protocol" in
-          api|"") continue ;;
-        esac
-        text=$(printf '%s' "$json" | ${pkgs.jq}/bin/jq -r '.text // empty')
-        if [ -z "$text" ]; then
-          continue
-        fi
-        printf '%s' "$text" > "$latest_msg_file"
-        seq=$(${pkgs.coreutils}/bin/cat "$latest_seq_file")
-        printf '%d' "$((seq + 1))" > "$latest_seq_file"
-      done < "$main_fifo"
-    ) &
-    parser_pid=$!
-
-    claude_pid=""
-    last_processed_seq=0
-    was_interrupted=0
-    waiting_for_reply=0
-
-    while true; do
-      current_seq=$(${pkgs.coreutils}/bin/cat "$latest_seq_file")
-
-      if [ "$current_seq" -gt "$last_processed_seq" ]; then
-        last_processed_seq="$current_seq"
-        msg_text=$(${pkgs.coreutils}/bin/cat "$latest_msg_file")
-
-        if [ -n "''${claude_pid:-}" ] && kill -0 "''${claude_pid:-}" 2>/dev/null; then
-          kill "$claude_pid" 2>/dev/null
-          wait "$claude_pid" 2>/dev/null || true
-          was_interrupted=1
-          : > "$session_file"
-          claude_pid=""
-        fi
-
-        session_id=$(${pkgs.coreutils}/bin/cat "$session_file")
-
-        if [ "$was_interrupted" = 1 ]; then
-          was_interrupted=0
-          input=$(printf '%s\n%s' '[System: 前の応答はユーザーの新しいメッセージにより中断されました]' "$msg_text")
-        else
-          input="$msg_text"
-        fi
-
-        if [ -z "$session_id" ]; then
-          printf '%s' "$input" | ${claudeBin} -p --output-format json > "$result_file" 2>&1 &
-        else
-          printf '%s' "$input" | ${claudeBin} -p --resume "$session_id" --output-format json > "$result_file" 2>&1 &
-        fi
-        claude_pid=$!
-        waiting_for_reply=1
-      fi
-
-      if [ "$waiting_for_reply" = 1 ] && [ -n "''${claude_pid:-}" ]; then
-        if ! kill -0 "$claude_pid" 2>/dev/null; then
-          if wait "$claude_pid"; then
-            result=$(${pkgs.coreutils}/bin/cat "$result_file")
-            printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.session_id // empty' > "$session_file"
-            reply=$(printf '%s' "$result" | ${pkgs.jq}/bin/jq -r '.result // empty')
-            if [ -n "$reply" ]; then
-              ${pkgs.curl}/bin/curl -s -X POST "''${MATTERBRIDGE_API}/api/message" \
-                -H 'Content-Type: application/json' \
-                --data-binary "$(${pkgs.jq}/bin/jq -n --arg text "$reply" '{"text": $text, "gateway": "main"}')"
-            fi
-          else
-            : > "$session_file"
-          fi
-          waiting_for_reply=0
-          claude_pid=""
-        fi
-      fi
-
-      ${pkgs.coreutils}/bin/sleep 0.1
-    done
-  '';
+  cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/release/cagent";
 in
 {
   imports = [
@@ -124,26 +22,13 @@ in
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
-    templates."matterbridge-config" = {
+    templates."cagent-config" = {
       owner = "conao";
+      path = "/home/conao/.config/cagent/config.toml";
       content = ''
-        [telegram.yui]
-        Token="${config.sops.placeholder."matterbridge-telegram-token"}"
-
-        [api.local]
-        BindAddress="127.0.0.1:4242"
-
-        [[gateway]]
-        name="main"
-        enable=true
-
-            [[gateway.inout]]
-            account="telegram.yui"
-            channel="${config.sops.placeholder."matterbridge-telegram-chat-id"}"
-
-            [[gateway.inout]]
-            account="api.local"
-            channel="api"
+        [telegram]
+        token = "${config.sops.placeholder."matterbridge-telegram-token"}"
+        working_dir = "/home/conao"
       '';
     };
     templates."helios-env" = {
@@ -161,7 +46,6 @@ in
       '';
     };
     secrets.matterbridge-telegram-token = { };
-    secrets.matterbridge-telegram-chat-id = { };
     secrets.linear-api-key = { };
     secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
@@ -176,26 +60,19 @@ in
     }
   '';
 
-  services.matterbridge = {
-    enable = true;
-    user = "conao";
-    configPath = config.sops.templates."matterbridge-config".path;
-  };
-
-  systemd.services.claude-telegram = {
-    description = "Claude Telegram bot via matterbridge";
-    after = [ "matterbridge.service" "network.target" ];
-    wants = [ "matterbridge.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "simple";
-      User = "conao";
-      WorkingDirectory = "/home/conao";
-      ExecStart = claudeTelegramScript;
-      Restart = "always";
-      RestartSec = "5";
-    };
-  };
+  # systemd.services.cagent-telegram = {
+  #   description = "cagent Telegram bot";
+  #   after = [ "network.target" ];
+  #   wantedBy = [ "multi-user.target" ];
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     User = "conao";
+  #     WorkingDirectory = "/home/conao";
+  #     ExecStart = "${cagentBin} telegram start";
+  #     Restart = "always";
+  #     RestartSec = "5";
+  #   };
+  # };
 
   services.tailscale = {
     enable = true;
