@@ -33,6 +33,13 @@ let
       dir = ".agents/.claude.agent001";
     }
     {
+      type = "claude";
+      name = "claude.yui";
+      bin = claudeBin;
+      envKey = "CLAUDE_CONFIG_DIR";
+      dir = ".agents/.claude.yui";
+    }
+    {
       type = "codex";
       name = "codex.conao3";
       bin = codexBin;

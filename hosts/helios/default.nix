@@ -7,10 +7,12 @@
 }:
 let
   claudeBin = "${inputs.llm-agents.packages.${pkgs.system}.claude-code}/bin/claude";
+  yuiConfigDir = "/home/conao/.agents/.claude.yui";
   claudeTelegramScript = pkgs.writeShellScript "claude-telegram" ''
     set -euxo pipefail -o posix
 
     MATTERBRIDGE_API="http://127.0.0.1:4242"
+    export CLAUDE_CONFIG_DIR="${yuiConfigDir}"
     session_file=$(${pkgs.coreutils}/bin/mktemp /tmp/claude-session.XXXXXX)
     fifo=$(${pkgs.coreutils}/bin/mktemp -u /tmp/matterbridge-sse.XXXXXX)
     ${pkgs.coreutils}/bin/mkfifo "$fifo"
