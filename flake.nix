@@ -153,7 +153,7 @@
           };
 
           darwinConfigurations = {
-            macos = inputs.nix-darwin.lib.darwinSystem {
+            "yamashita-naoya-con0178-3" = inputs.nix-darwin.lib.darwinSystem {
               system = macSystem;
               specialArgs = {
                 inherit inputs;
