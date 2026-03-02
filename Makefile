@@ -1,9 +1,15 @@
 all:
 
+UNAME_S := $(shell uname -s)
+
 .PHONY: switch
 switch:
+ifeq ($(UNAME_S),Darwin)
+	sudo -H nix run nix-darwin -- switch --flake .
+else
 	sudo nixos-rebuild switch --flake .
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
+endif
 
 .PHONY: lint
 lint:
