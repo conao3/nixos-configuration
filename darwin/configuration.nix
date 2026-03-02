@@ -48,6 +48,7 @@
     casks = [
       # keep-sorted start
       "1password"
+      "KeyCastr"
       "altair-graphql-client"
       "aquaskk"
       "asana"
