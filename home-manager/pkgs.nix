@@ -140,7 +140,7 @@
           claude-code-acp
           codex-acp
           copilot-language-server
-          eca
+          # eca
           # gastown
           happy-coder
           # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
