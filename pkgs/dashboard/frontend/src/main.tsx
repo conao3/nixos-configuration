@@ -63,6 +63,14 @@ const KNOWN_URL_GROUPS: Array<{ name: string; items: Array<{ label: string; port
     name: "ollama",
     items: [{ label: "api", port: "9403" }],
   },
+  {
+    name: "gitea",
+    items: [{ label: "app", port: "9404" }],
+  },
+  {
+    name: "cgit",
+    items: [{ label: "app", port: "9405" }],
+  },
 ];
 
 function DetailRow(props: { label: string; children: React.ReactNode }): React.JSX.Element {

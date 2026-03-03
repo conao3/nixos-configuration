@@ -187,6 +187,40 @@
     port = 9400;
   };
 
+  services.gitea = {
+    enable = true;
+    settings.server = {
+      HTTP_PORT = 9404;
+      ROOT_URL = "http://localhost:9404/";
+    };
+  };
+
+  services.cgit."local" = {
+    enable = true;
+    nginx.virtualHost = "cgit.local";
+    scanPath = "/home/conao/ghq";
+    gitHttpBackend.checkExportOkFiles = false;
+    settings = {
+      remove-suffix = 1;
+      enable-git-config = 1;
+      root-title = "Local Repositories";
+      section-from-path = 3;
+    };
+  };
+
+  services.nginx.virtualHosts."cgit.local" = {
+    listen = [
+      {
+        addr = "127.0.0.1";
+        port = 9405;
+      }
+    ];
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /home/conao 0711 conao users -"
+  ];
+
   systemd.services.ollama-tunnel = {
     wantedBy = [ "multi-user.target" ];
     after = [
