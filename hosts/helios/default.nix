@@ -48,6 +48,13 @@ in
         exec ${config.sops.placeholder."ollama-tunnel-exec"}
       '';
     };
+    templates."gitea-mirror-env" = {
+      owner = "conao";
+      content = ''
+        GITEA_TOKEN=${config.sops.placeholder."gitea-api-token"}
+      '';
+    };
+    secrets.gitea-api-token = { };
     secrets.matterbridge-telegram-token = { };
     secrets.linear-api-key = { };
     secrets.ollama-tunnel-exec = { };
@@ -175,4 +182,75 @@ in
   #     RandomizedDelaySec = "5min";
   #   };
   # };
+
+  systemd.services.gitea-mirror = {
+    description = "Mirror local git repositories to Gitea";
+    after = [
+      "network.target"
+      "gitea.service"
+    ];
+    wants = [ "gitea.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "conao";
+      TimeoutStartSec = "30min";
+      Environment = "GIT_SSH_COMMAND=${pkgs.openssh}/bin/ssh";
+      ExecStart = "${pkgs.writeShellScript "gitea-mirror" ''
+        set -euxo pipefail -o posix
+        source ${config.sops.templates."gitea-mirror-env".path}
+
+        for repo_dir in $(${pkgs.findutils}/bin/find "$HOME/ghq/github.com" -maxdepth 2 -mindepth 2 -type d | ${pkgs.coreutils}/bin/sort); do
+          rel_path=''${repo_dir#$HOME/ghq/github.com/}
+          org=$(${pkgs.coreutils}/bin/dirname "$rel_path")
+          repo=$(${pkgs.coreutils}/bin/basename "$rel_path")
+
+          if ! ${pkgs.git}/bin/git -C "$repo_dir" rev-parse --git-dir >/dev/null 2>&1; then
+            continue
+          fi
+
+          status=$(${pkgs.curl}/bin/curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $GITEA_TOKEN" \
+            "http://localhost:9404/api/v1/repos/$org/$repo")
+
+          if [ "$status" = "404" ]; then
+            if [ "$org" = "conao3" ]; then
+              ${pkgs.curl}/bin/curl -s -X POST \
+                -H "Authorization: token $GITEA_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"name\":\"$repo\",\"private\":false}" \
+                "http://localhost:9404/api/v1/user/repos"
+            else
+              ${pkgs.curl}/bin/curl -s -X POST \
+                -H "Authorization: token $GITEA_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"username\":\"$org\",\"visibility\":\"public\"}" \
+                "http://localhost:9404/api/v1/orgs" || true
+
+              ${pkgs.curl}/bin/curl -s -X POST \
+                -H "Authorization: token $GITEA_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"name\":\"$repo\",\"private\":false}" \
+                "http://localhost:9404/api/v1/org/$org/repos"
+            fi
+          fi
+
+          if ! ${pkgs.git}/bin/git -C "$repo_dir" remote get-url gitea >/dev/null 2>&1; then
+            ${pkgs.git}/bin/git -C "$repo_dir" remote add gitea "gitea@localhost:$org/$repo.git"
+          fi
+
+          ${pkgs.git}/bin/git -C "$repo_dir" push gitea --all || true
+          ${pkgs.git}/bin/git -C "$repo_dir" push gitea --tags || true
+        done
+      ''}";
+    };
+  };
+
+  systemd.timers.gitea-mirror = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "10min";
+      OnUnitActiveSec = "6h";
+      Persistent = true;
+    };
+  };
 }

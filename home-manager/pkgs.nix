@@ -149,8 +149,6 @@
           workmux
           # keep-sorted end
         ]
-        ++ lib.optional pkgs.stdenv.isLinux coding-agent-search
-        ++ lib.optional pkgs.stdenv.isLinux zeroclaw
       );
 
     in

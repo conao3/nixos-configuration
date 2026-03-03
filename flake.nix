@@ -140,7 +140,10 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     backupFileExtension = "backup";
-                    extraSpecialArgs = { inherit inputs; };
+                    extraSpecialArgs = {
+                      inherit inputs;
+                      system = linuxSystem;
+                    };
                     sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
                     users.conao = import ./hosts/agent-vm/home.nix;
                   };
