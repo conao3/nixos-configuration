@@ -220,7 +220,7 @@ in
   };
 
   home.packages = wrapperPackages ++ [
-    (pkgs.writeShellScriptBin "claude" ''exec claude.conao3 "$@"'')
+    (pkgs.writeShellScriptBin "claude" ''exec claude.agent001 "$@"'')
     (pkgs.writeShellScriptBin "codex" ''exec codex.agent001 "$@"'')
   ];
 
