@@ -6,7 +6,7 @@
   ...
 }:
 let
-  cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/release/cagent";
+  cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/debug/cagent";
 in
 {
   imports = [
@@ -70,19 +70,19 @@ in
     }
   '';
 
-  # systemd.services.cagent-telegram = {
-  #   description = "cagent Telegram bot";
-  #   after = [ "network.target" ];
-  #   wantedBy = [ "multi-user.target" ];
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     User = "conao";
-  #     WorkingDirectory = "/home/conao";
-  #     ExecStart = "${cagentBin} telegram start";
-  #     Restart = "always";
-  #     RestartSec = "5";
-  #   };
-  # };
+  systemd.user.services.cagent = {
+    description = "cagent server";
+    after = [ "network.target" ];
+    wantedBy = [ "default.target" ];
+    path = [ "/etc/profiles/per-user/conao" ];
+    serviceConfig = {
+      Type = "simple";
+      WorkingDirectory = "/home/conao/ghq";
+      ExecStart = "${cagentBin} server";
+      Restart = "always";
+      RestartSec = "5";
+    };
+  };
 
   services.tailscale = {
     enable = true;
