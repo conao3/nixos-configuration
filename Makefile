@@ -5,10 +5,18 @@ UNAME_S := $(shell uname -s)
 .PHONY: switch
 switch:
 ifeq ($(UNAME_S),Darwin)
-	sudo -H nix run nix-darwin -- switch --flake .
+	sudo -H nix run nix-darwin -- switch --flake . 2>&1 | nom
 else
-	sudo nixos-rebuild switch --flake .
+	sudo nixos-rebuild switch --flake . 2>&1 | nom
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
+endif
+
+.PHONY: switch-dry-run
+switch-dry-run:
+ifeq ($(UNAME_S),Darwin)
+	sudo -H nix run nix-darwin -- switch --flake . --dry-run 2>&1 | nom
+else
+	sudo nixos-rebuild switch --flake . --dry-run 2>&1 | nom
 endif
 
 .PHONY: lint
@@ -17,8 +25,8 @@ lint:
 
 .PHONY: update
 update:
-	nix flake update
-	nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/$$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev')
+	nix flake update 2>&1 | nom
+	nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/$$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev') 2>&1 | nom
 
 MEMORY ?= 4096
 CORES ?= 2
@@ -29,7 +37,7 @@ edit-secrets:
 
 .PHONY: vm-agent
 vm-agent:
-	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm
+	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm 2>&1 | nom
 	rm -f /tmp/virtiofsd-dev-repos.sock
 	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/dev/repos --sandbox none & \
 	VIRTIOFSD_PID=$$!; \
@@ -39,7 +47,7 @@ vm-agent:
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo
+	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo 2>&1 | nom
 
 .PHONY: vm-agent-fix-openclaw
 vm-agent-fix-openclaw:

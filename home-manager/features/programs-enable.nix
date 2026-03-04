@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   programs = {
     # https://nix-community.github.io/home-manager/options.xhtml
@@ -25,8 +25,8 @@
       '';
     };
     vim.enable = true;
-    vscode.enable = true;
-    zed-editor.enable = true;
+    vscode.enable = !pkgs.stdenv.isDarwin;
+    zed-editor.enable = !pkgs.stdenv.isDarwin;
     # keep-sorted end
   };
 }
