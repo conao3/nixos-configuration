@@ -70,19 +70,20 @@ in
     }
   '';
 
-  systemd.user.services.cagent = {
-    description = "cagent server";
-    after = [ "network.target" ];
-    wantedBy = [ "default.target" ];
-    path = [ "/etc/profiles/per-user/conao" ];
-    serviceConfig = {
-      Type = "simple";
-      WorkingDirectory = "/home/conao/ghq";
-      ExecStart = "${cagentBin} server";
-      Restart = "always";
-      RestartSec = "5";
-    };
-  };
+  # cagent: disabled due to high memory usage (437M+), enable when needed
+  # systemd.user.services.cagent = {
+  #   description = "cagent server";
+  #   after = [ "network.target" ];
+  #   wantedBy = [ "default.target" ];
+  #   path = [ "/etc/profiles/per-user/conao" ];
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     WorkingDirectory = "/home/conao/ghq";
+  #     ExecStart = "${cagentBin} server";
+  #     Restart = "always";
+  #     RestartSec = "5";
+  #   };
+  # };
 
   services.tailscale = {
     enable = true;

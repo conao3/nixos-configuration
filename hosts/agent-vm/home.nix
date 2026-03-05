@@ -74,6 +74,11 @@ in
           jq '.agents.defaults.heartbeat.model = "ollama/llama3.2:3b"' \
             "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
         fi
+        if [ "$(jq -r '.gateway.controlUi.allowedOrigins // [] | length' "$openclaw_json")" = "0" ]; then
+          tmp=$(mktemp)
+          jq '.gateway.controlUi.allowedOrigins = ["*"]' \
+            "$openclaw_json" > "$tmp" && mv "$tmp" "$openclaw_json"
+        fi
         slack_bot=$(cat ${config.sops.secrets.slack-bot-token.path} 2>/dev/null || true)
         slack_app=$(cat ${config.sops.secrets.slack-app-token.path} 2>/dev/null || true)
         if [ -n "$slack_bot" ] && [ -n "$slack_app" ]; then
@@ -154,9 +159,7 @@ in
         lsof
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
-        claude-code
         claude-code-acp
-        codex
         codex-acp
         openclaw
         qmd # vector search

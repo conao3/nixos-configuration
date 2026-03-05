@@ -8,7 +8,6 @@
   system.stateVersion = "24.11";
 
   networking.hostName = "conao-nixos-agent";
-
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
     fsType = "ext4";
@@ -85,8 +84,8 @@
     "d /home/conao/.config 0755 conao users -"
     "d /home/conao/.config/sops 0755 conao users -"
     "d /home/conao/.config/sops/age 0755 conao users -"
-    "d /home/conao/dev 0755 conao users -"
-    "d /home/conao/dev/repos 0755 conao users -"
+    "d /home/conao/.agents 0755 conao users -"
+    "d /home/conao/ghq 0755 conao users -"
   ];
 
   systemd.mounts = [
@@ -99,9 +98,17 @@
       after = [ "systemd-modules-load.service" ];
     }
     {
+      type = "9p";
+      options = "trans=virtio,version=9p2000.L";
+      what = "agents";
+      where = "/home/conao/.agents";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "systemd-modules-load.service" ];
+    }
+    {
       type = "virtiofs";
       what = "dev-repos";
-      where = "/home/conao/dev/repos";
+      where = "/home/conao/ghq";
       wantedBy = [ "multi-user.target" ];
     }
   ];
@@ -121,6 +128,7 @@
       "-vga virtio"
       "-display gtk,zoom-to-fit=on"
       "-virtfs local,path=/home/conao/.config/sops/age,security_model=none,mount_tag=sops-age"
+      "-virtfs local,path=/home/conao/.agents,security_model=none,mount_tag=agents"
       "-chardev socket,id=char-dev-repos,path=/tmp/virtiofsd-dev-repos.sock"
       "-device vhost-user-fs-pci,chardev=char-dev-repos,tag=dev-repos"
     ];

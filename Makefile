@@ -39,9 +39,9 @@ edit-secrets:
 vm-agent:
 	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm --log-format internal-json -v 2>&1 | nom --json
 	rm -f /tmp/virtiofsd-dev-repos.sock
-	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/dev/repos --sandbox none & \
+	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/ghq --sandbox none & \
 	VIRTIOFSD_PID=$$!; \
-	sleep 1; \
+	while [ ! -S /tmp/virtiofsd-dev-repos.sock ]; do sleep 0.1; done; \
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES) -object memory-backend-memfd,id=mem,share=on,size=$(MEMORY)M -machine memory-backend=mem" ./result/bin/run-conao-nixos-agent-vm; \
 	kill $$VIRTIOFSD_PID 2>/dev/null || true
 
