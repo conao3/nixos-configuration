@@ -16,9 +16,8 @@ Jetpack 'vim-skk/skkeleton'
 Jetpack 'kei-s16/skkeleton-azik-kanatable'
 Jetpack 'yasunori0418/statusline_skk.vim'
 Jetpack 'itchyny/lightline.vim'
-Jetpack 'prabirshrestha/vim-lsp'
-Jetpack 'mattn/vim-lsp-settings'
 Jetpack 'ctrlpvim/ctrlp.vim'
+Jetpack 'neovim/nvim-lspconfig'
 Jetpack 'nvim-lua/plenary.nvim'
 Jetpack 'nvim-telescope/telescope.nvim'
 Jetpack 'liquidz/elin'
@@ -35,7 +34,7 @@ endfor
 call skkeleton#azik#add_table('us')
 call skkeleton#config(
   \ {
-  \   'globalDictionaries': ['~/.skk/SKK-JISYO.L'],
+  \   'globalDictionaries': ['~/.emacs.d/skk/jisyo/SKK-JISYO.L'],
   \   'kanaTable': 'azik',
   \   'eggLikeNewline': v:true
   \ })
@@ -67,3 +66,6 @@ nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 
 "elin
 let g:elin_enable_default_key_mappings = v:true
+
+"lsp
+vim.lsp.enable('nixd')
