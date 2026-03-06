@@ -22,6 +22,7 @@
       keyMode = "emacs";
       extraConfig = ''
         set -s copy-command 'xsel -i --clipboard'
+        set -g mouse on
       '';
     };
     vim.enable = true;
