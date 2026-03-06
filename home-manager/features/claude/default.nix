@@ -9,6 +9,14 @@ let
   llmAgents = inputs.llm-agents.packages.${system};
   claudeBin = "${llmAgents.claude-code}/bin/claude";
   codexBin = "${llmAgents.codex}/bin/codex";
+  pencilMcpServer = "${pkgs.appimageTools.extractType2 {
+    pname = "pencil-dev";
+    version = "2025.1.0";
+    src = pkgs.fetchurl {
+      url = "https://www.pencil.dev/download/Pencil-linux-x86_64.AppImage";
+      hash = "sha256-31gqv4kU8LB2e84MQKcNYXTLNSeJLzmWQahz6+bi2jk=";
+    };
+  }}/resources/app.asar.unpacked/out/mcp-server-linux-x64";
 
   wrapperSpecs = [
     {
@@ -146,6 +154,11 @@ let
       linear = {
         type = "http";
         url = "https://mcp.linear.app/mcp";
+      };
+    } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+      pencil = {
+        command = pencilMcpServer;
+        args = [ "--app" "desktop" ];
       };
     };
   };
