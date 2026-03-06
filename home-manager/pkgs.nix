@@ -11,6 +11,7 @@
     let
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
+      pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
       gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
       devo = pkgs.rustPlatform.buildRustPackage {
         pname = "devo";
@@ -75,7 +76,7 @@
         logseq
         ollama
         pciutils
-        pencil
+        pencil-dev
         qpdfview
         steam-run
         telegram-desktop
