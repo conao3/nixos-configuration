@@ -145,7 +145,11 @@ let
     mcpServers = {
       chrome_devtools = {
         command = "npx";
-        args = [ "chrome-devtools-mcp@latest" ];
+        args = [
+          "chrome-devtools-mcp@latest"
+          "--browserUrl"
+          "http://127.0.0.1:15123"
+        ];
       };
       deepwiki = {
         type = "http";
@@ -157,8 +161,13 @@ let
       };
     } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
       pencil = {
-        command = pencilMcpServer;
-        args = [ "--app" "desktop" ];
+        command = "bash";
+        args = [
+          "-c"
+          ''
+            set -euo pipefail; pbin=/etc/profiles/per-user/conao/bin/pencil-dev; init=$(grep -o "/nix/store/[^ ]*-init" "$(readlink -f "$pbin")" | head -n1); appdir=$(grep -o "/nix/store/[^ ]*-extracted" "$init" | head -n1); exec steam-run "$appdir/resources/app.asar.unpacked/out/mcp-server-linux-x64" --app desktop
+          ''
+        ];
       };
     };
   };
@@ -170,10 +179,25 @@ let
         args = [
           "-y"
           "chrome-devtools-mcp@latest"
+          "--browserUrl"
+          "http://127.0.0.1:15123"
         ];
       };
       deepwiki = {
         url = "https://mcp.deepwiki.com/mcp";
+      };
+      linear = {
+        url = "https://mcp.linear.app/mcp";
+      };
+    } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+      pencil = {
+        command = "bash";
+        args = [
+          "-c"
+          ''
+            set -euo pipefail; pbin=/etc/profiles/per-user/conao/bin/pencil-dev; init=$(grep -o "/nix/store/[^ ]*-init" "$(readlink -f "$pbin")" | head -n1); appdir=$(grep -o "/nix/store/[^ ]*-extracted" "$init" | head -n1); exec steam-run "$appdir/resources/app.asar.unpacked/out/mcp-server-linux-x64" --app desktop
+          ''
+        ];
       };
     };
   };
