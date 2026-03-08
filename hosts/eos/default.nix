@@ -12,6 +12,8 @@
 
   networking.hostName = "conao-nixos-eos";
 
+  virtualisation.libvirtd.enable = lib.mkForce false;
+
   services.xserver.xkb.options = "ctrl:nocaps";
   console.useXkbConfig = true;
 
