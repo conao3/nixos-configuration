@@ -38,13 +38,53 @@ symphony [--logs-root <path>] [--port <port>] [path-to-WORKFLOW.md]
 | `--port <port>` | ステータスダッシュボード（Phoenix LiveView）のポート |
 | `--i-understand-that-this-will-be-running-without-the-usual-guardrails` | 必須フラグ。プロトタイプソフトウェアであることの確認 |
 
-## WORKFLOW.md
+## Initialize new project
 
-対象リポジトリのルートに `WORKFLOW.md` を作成する。symphonyリポジトリの `elixir/WORKFLOW.md` を参考にカスタマイズする。
+新しいリポジトリで symphony を使い始める手順。
+
+### 1. WORKFLOW.md を作成する
+
+`openai/symphony` の `elixir/WORKFLOW.md` をベースにコピーして編集する。
 
 ```sh
-ghq get openai/symphony
-cat $(ghq root)/github.com/openai/symphony/elixir/WORKFLOW.md
+cp $(ghq root)/github.com/openai/symphony/elixir/WORKFLOW.md ./WORKFLOW.md
+```
+
+以下の箇所をプロジェクトに合わせて変更する。
+
+| 項目 | 変更内容 |
+|------|----------|
+| `tracker.project_slug` | Linear プロジェクトの slug（後述） |
+| `workspace.root` | `~/.symphony-workspaces` |
+| `hooks.after_create` | 対象リポジトリをクローン + 言語に応じた依存取得コマンド |
+| `hooks.before_remove` | 不要なら削除（Rust など特別なクリーンアップが不要な場合） |
+
+Rust プロジェクトの場合の `hooks` 例:
+
+```yaml
+hooks:
+  after_create: |
+    git clone --depth 1 https://github.com/<owner>/<repo> .
+    cargo fetch
+```
+
+### 2. Linear プロジェクトを作成する
+
+Linear で新しいプロジェクトを作成し、slug を取得する。
+
+slug は作成後の URL から確認できる:
+
+```
+https://linear.app/<team>/project/<slug>
+```
+
+取得した slug を `WORKFLOW.md` の `tracker.project_slug` に設定する。
+
+### 3. symphony を起動する
+
+```sh
+cd ~/ghq/github.com/<owner>/<repo>
+symphony ./WORKFLOW.md --i-understand-that-this-will-be-running-without-the-usual-guardrails
 ```
 
 ## 参考
