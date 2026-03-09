@@ -85,9 +85,24 @@ in
   #   };
   # };
 
-  services.tailscale = {
-    enable = true;
-    extraSetFlags = [ "--ssh" ];
+  systemd.services.ollama-tunnel = {
+    wantedBy = [ "multi-user.target" ];
+    after = [
+      "network-online.target"
+      "tailscaled.service"
+    ];
+    wants = [
+      "network-online.target"
+      "tailscaled.service"
+    ];
+    serviceConfig = {
+      Type = "simple";
+      User = "conao";
+      WorkingDirectory = "/home/conao";
+      ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
+      Restart = "always";
+      RestartSec = 3;
+    };
   };
 
   security.pki.certificateFiles = [ ../../secrets/dev-rootCA.pem ];

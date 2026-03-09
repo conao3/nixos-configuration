@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   inputs,
@@ -171,15 +170,19 @@
         { addr = "::1"; }
       ];
     };
-    open-webui = {
+    tailscale = {
       enable = true;
-      port = 9402;
-      # https://docs.openwebui.com/reference/env-configuration
-      environment = {
-        WEBUI_AUTH = "False";
-        OLLAMA_API_BASE_URL = "http://127.0.0.1:9403";
-      };
+      extraSetFlags = [ "--ssh" ];
     };
+    # open-webui = {
+    #   enable = true;
+    #   port = 9402;
+    #   # https://docs.openwebui.com/reference/env-configuration
+    #   environment = {
+    #     WEBUI_AUTH = "False";
+    #     OLLAMA_API_BASE_URL = "http://127.0.0.1:9403";
+    #   };
+    # };
   };
 
   services.dashboard = {
@@ -220,26 +223,6 @@
   systemd.tmpfiles.rules = [
     "d /home/conao 0711 conao users -"
   ];
-
-  systemd.services.ollama-tunnel = {
-    wantedBy = [ "multi-user.target" ];
-    after = [
-      "network-online.target"
-      "tailscaled.service"
-    ];
-    wants = [
-      "network-online.target"
-      "tailscaled.service"
-    ];
-    serviceConfig = {
-      Type = "simple";
-      User = "conao";
-      WorkingDirectory = "/home/conao";
-      ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
-      Restart = "always";
-      RestartSec = 3;
-    };
-  };
 
   users.users.conao = {
     isNormalUser = true;
