@@ -68,7 +68,17 @@ hooks:
     cargo fetch
 ```
 
-### 2. Linear プロジェクトを作成する
+### 2. Linear のカスタムステータスを追加する
+
+symphony のワークフローは以下の非標準ステータスに依存する。Linear の Team Settings → Workflow で追加すること。
+
+| ステータス名 | タイプ |
+|-------------|--------|
+| `Human Review` | started |
+| `Merging` | started |
+| `Rework` | started |
+
+### 3. Linear プロジェクトを作成する
 
 Linear で新しいプロジェクトを作成し、slug を取得する。
 
@@ -80,7 +90,19 @@ https://linear.app/<team>/project/<slug>
 
 取得した slug を `WORKFLOW.md` の `tracker.project_slug` に設定する。
 
-### 3. symphony を起動する
+### 4. スキルをリポジトリにコピーする
+
+スキルはオプションだが、`land`（PR マージ）や `linear`（Linear 操作）などが WORKFLOW.md のプロンプトから参照される。
+
+```sh
+cp -r $(ghq root)/github.com/openai/symphony/.codex ./
+```
+
+スキル一覧: `commit`, `push`, `pull`, `land`, `linear`, `debug`
+
+`linear` スキルは symphony が app-server セッション中に注入する `linear_graphql` ツールに依存する。
+
+### 5. symphony を起動する
 
 ```sh
 cd ~/ghq/github.com/<owner>/<repo>
