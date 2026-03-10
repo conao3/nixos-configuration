@@ -8,7 +8,10 @@
     bat.enable = true;
     eza.enable = true;
     fzf.enable = true;
-    gh.enable = true;
+    gh = {
+      enable = true;
+      extensions = [ pkgs.gh-poi ];
+    };
     go.enable = true;
     gpg.enable = true;
     htop.enable = true;
