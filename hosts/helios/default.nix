@@ -17,7 +17,7 @@ let
       enabled = true;
       schedule = "*:0/30";
       target = "electrobunmacs-orchestrator:0.0";
-      input = "heartbeat";
+      input = "Orchestrator: heartbeat";
       description = "Send heartbeat to Codex pane";
       guard = "codex";
     };
