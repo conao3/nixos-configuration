@@ -10,7 +10,7 @@
     fzf.enable = true;
     gh = {
       enable = true;
-      extensions = [ pkgs.gh-poi ];
+      extensions = [ (pkgs.callPackage ../../pkgs/gh-poi.nix { }) ];
     };
     go.enable = true;
     gpg.enable = true;
