@@ -30,7 +30,7 @@
         diffutils
         dig
         duckdb
-        # eask-cli
+        eask-cli
         ffmpeg
         file
         ghostscript
