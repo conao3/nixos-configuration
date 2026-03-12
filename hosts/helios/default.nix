@@ -7,6 +7,54 @@
 }:
 let
   cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/debug/cagent";
+  codingAgentJobs = {
+    codex-heartbeat = {
+      enabled = true;
+      # systemd timerConfig.OnCalendar format, not cron syntax.
+      # Examples:
+      # - "*:0/5" = every 5 minutes
+      # - "hourly" = every hour
+      # - "*-*-* 03:00:00" = every day at 03:00
+      schedule = "*:0/5";
+      target = "electrobunmacs-orchestrator:0.0";
+      input = "heartbeat";
+      description = "Send heartbeat to Codex pane";
+      guard = "codex";
+    };
+  };
+  mkCodingAgentService =
+    name: job:
+    let
+      escapedInput = lib.escapeShellArg job.input;
+      escapedTarget = lib.escapeShellArg job.target;
+      escapedGuard = lib.escapeShellArg job.guard;
+      jobDescription = job.description or "Send input to tmux pane";
+    in
+    {
+      description = jobDescription;
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.writeShellScript "coding-agent-${name}" ''
+          set -euo pipefail
+
+          target=${escapedTarget}
+          current_command=$(${pkgs.tmux}/bin/tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
+          if [ -z "$current_command" ]; then
+            exit 0
+          fi
+
+          if ! ${pkgs.gnugrep}/bin/grep -Fq -- ${escapedGuard} <<EOF
+$current_command
+EOF
+          then
+            exit 0
+          fi
+
+          ${pkgs.tmux}/bin/tmux send-keys -t "$target" -l ${escapedInput}
+          ${pkgs.tmux}/bin/tmux send-keys -t "$target" Enter
+        ''}";
+      };
+    };
 in
 {
   imports = [
@@ -198,6 +246,16 @@ in
   #     RandomizedDelaySec = "5min";
   #   };
   # };
+
+  systemd.user.services.codex-heartbeat = mkCodingAgentService "codex-heartbeat" codingAgentJobs.codex-heartbeat;
+
+  systemd.user.timers.codex-heartbeat = lib.mkIf codingAgentJobs.codex-heartbeat.enabled {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = codingAgentJobs.codex-heartbeat.schedule;
+      Persistent = true;
+    };
+  };
 
   systemd.services.gitea-mirror = {
     description = "Mirror local git repositories to Gitea";
