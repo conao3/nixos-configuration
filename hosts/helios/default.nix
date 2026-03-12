@@ -21,6 +21,14 @@ let
       description = "Send heartbeat to Codex pane";
       guard = "codex";
     };
+    qa-heartbeat = {
+      enabled = true;
+      schedule = "*:10/30";
+      target = "electrobunmacs-qa:0.0";
+      input = "QA: heartbeat";
+      description = "Send heartbeat to QA Codex pane";
+      guard = "codex";
+    };
   };
   mkCodingAgentService =
     name: job:
