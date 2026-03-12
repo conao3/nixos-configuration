@@ -8,14 +8,14 @@
 let
   cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/debug/cagent";
   codingAgentJobs = {
+    # systemd timerConfig.OnCalendar format, not cron syntax.
+    # Examples:
+    # - "*:0/5" = every 5 minutes
+    # - "hourly" = every hour
+    # - "*-*-* 03:00:00" = every day at 03:00
     agent-heartbeat = {
       enabled = true;
-      # systemd timerConfig.OnCalendar format, not cron syntax.
-      # Examples:
-      # - "*:0/5" = every 5 minutes
-      # - "hourly" = every hour
-      # - "*-*-* 03:00:00" = every day at 03:00
-      schedule = "*:0/5";
+      schedule = "*:0/30";
       target = "electrobunmacs-orchestrator:0.0";
       input = "heartbeat";
       description = "Send heartbeat to Codex pane";
@@ -38,6 +38,7 @@ let
           set -euo pipefail
 
           target=${escapedTarget}
+          input=${escapedInput}
           current_command=$(${pkgs.tmux}/bin/tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
           if [ -z "$current_command" ]; then
             exit 0
@@ -50,7 +51,18 @@ EOF
             exit 0
           fi
 
-          ${pkgs.tmux}/bin/tmux send-keys -t "$target" -l ${escapedInput}
+          for ((i = 0; i < ''${#input}; i++)); do
+            ch="''${input:i:1}"
+            case "$ch" in
+              ' ')
+                ${pkgs.tmux}/bin/tmux send-keys -t "$target" Space
+                ;;
+              *)
+                ${pkgs.tmux}/bin/tmux send-keys -t "$target" "$ch"
+                ;;
+            esac
+            sleep 0.02
+          done
           ${pkgs.tmux}/bin/tmux send-keys -t "$target" Enter
         ''}";
       };
