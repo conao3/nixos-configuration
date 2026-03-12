@@ -12,8 +12,8 @@
 - `HOME` 配下のファイルや通知、ユーザー用ジョブなら user timer
 
 このリポジトリの実例:
-- user timer: [hosts/helios/default.nix](/home/conao/ghq/github.com/conao3/nixos-configuration/hosts/helios/default.nix#L137)
-- system timer: [hosts/helios/default.nix](/home/conao/ghq/github.com/conao3/nixos-configuration/hosts/helios/default.nix#L202)
+- user timer: `hosts/helios/default.nix`
+- system timer: `hosts/helios/default.nix`
 
 ## 最小構成
 
