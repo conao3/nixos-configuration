@@ -10,7 +10,9 @@ let
   codingAgentJobs = {
     # systemd timerConfig.OnCalendar format, not cron syntax.
     # Examples:
-    # - "*:0/5" = every 5 minutes
+    # - "*:0/5" = every 5 minutes (:00, :05, :10, ...)
+    # - "*:0/30" = every 30 minutes starting at :00 (:00, :30)
+    # - "*:10/30" = every 30 minutes starting at :10 (:10, :40)
     # - "hourly" = every hour
     # - "*-*-* 03:00:00" = every day at 03:00
     agent-heartbeat = {
