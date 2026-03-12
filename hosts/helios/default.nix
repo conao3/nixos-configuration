@@ -16,7 +16,7 @@ let
     # - "hourly" = every hour
     # - "*-*-* 03:00:00" = every day at 03:00
     agent-heartbeat = {
-      enabled = false;
+      enabled = true;
       schedule = "*:0/30";
       target = "electrobunmacs-orchestrator:0.0";
       input = "Orchestrator: heartbeat";
