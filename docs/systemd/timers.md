@@ -174,6 +174,42 @@ systemctl start example-job.service
 systemctl --user start example-job.service
 ```
 
+## 検索
+
+`systemd timer` 自体にタグ機能はない。検索は unit 名や `Description` ベースで行う。
+
+実行中の timer を探す:
+
+```sh
+systemctl list-timers --all | grep codex
+systemctl --user list-timers --all | grep codex
+systemctl list-units --type=timer | grep heartbeat
+systemctl --user list-units --type=timer | grep heartbeat
+```
+
+service も含めて探す:
+
+```sh
+systemctl list-units | grep codex
+systemctl --user list-units | grep codex
+```
+
+unit 定義を確認する:
+
+```sh
+systemctl cat codex-heartbeat.timer
+systemctl --user cat codex-heartbeat.timer
+```
+
+このリポジトリの Nix 設定を検索する:
+
+```sh
+rg -n 'systemd\\.(user\\.)?(services|timers)\\.' .
+rg -n 'codex|heartbeat|timerConfig|OnCalendar|OnUnitActiveSec' .
+```
+
+検索しやすくしたい場合は、unit 名に `codex-` のような接頭辞を付ける。
+
 ## よくある注意点
 
 - 長時間走るジョブは `TimeoutStartSec` を明示する
