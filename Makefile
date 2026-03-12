@@ -9,7 +9,7 @@ ifeq ($(UNAME_S),Darwin)
 else
 	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | nom --json
 	systemctl --user daemon-reload || true
-	systemctl --user start agent-heartbeat.timer qa-heartbeat.timer || true
+	systemctl --user restart timers.target || true
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
 endif
 
