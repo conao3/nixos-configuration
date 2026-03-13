@@ -16,7 +16,7 @@ let
     # - "hourly" = every hour
     # - "*-*-* 03:00:00" = every day at 03:00
     agent-heartbeat = {
-      enabled = true;
+      enabled = false;
       schedule = "*:0/30";
       target = "electrobunmacs-orchestrator:0.0";
       input = "Orchestrator: heartbeat";
@@ -32,7 +32,7 @@ let
       guard = "codex";
     };
     qa-claude-heartbeat = {
-      enabled = true;
+      enabled = false;
       schedule = "*:20/30";
       target = "electrobunmacs-qa-claude:0.0";
       input = "QA: heartbeat";
