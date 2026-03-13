@@ -68,6 +68,7 @@
       "slack"
       "thunderbird"
       "visual-studio-code"
+      "zed"
       # keep-sorted end
     ];
   };

@@ -5,7 +5,7 @@ UNAME_S := $(shell uname -s)
 .PHONY: switch
 switch:
 ifeq ($(UNAME_S),Darwin)
-	sudo -H nix run nix-darwin -- switch --flake . --log-format internal-json -v 2>&1 | nom --json
+	sudo -H nix run nix-darwin -- switch --flake . --show-trace |& nom
 else
 	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | nom --json
 	systemctl --user daemon-reload || true
@@ -16,7 +16,7 @@ endif
 .PHONY: switch-dry-run
 switch-dry-run:
 ifeq ($(UNAME_S),Darwin)
-	sudo -H nix run nix-darwin -- switch --flake . --dry-run --log-format internal-json -v 2>&1 | nom --json
+	sudo -H nix run nix-darwin -- switch --flake . --dry-run --show-trace |& nom
 else
 	sudo nixos-rebuild switch --flake . --dry-run --log-format internal-json -v 2>&1 | nom --json
 endif
