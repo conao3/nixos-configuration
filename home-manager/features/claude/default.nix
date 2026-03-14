@@ -61,6 +61,13 @@ let
       envKey = "CODEX_HOME";
       dir = ".agents/.codex.agent001";
     }
+    {
+      type = "codex";
+      name = "codex.agent002";
+      bin = codexBin;
+      envKey = "CODEX_HOME";
+      dir = ".agents/.codex.agent002";
+    }
   ];
 
   mkWrapper = spec:
