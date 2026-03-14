@@ -26,6 +26,8 @@
       extraConfig = ''
         set -s copy-command 'xsel -i --clipboard'
         set -g mouse on
+        bind -n WheelUpPane if -F "#{mouse_any_flag}" "send-keys -M" "copy-mode -e"
+        bind -n WheelDownPane select-pane \; send-keys -M
       '';
     };
     vim.enable = true;
