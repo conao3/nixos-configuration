@@ -42,6 +42,7 @@
         inetutils
         libgccjit
         linear-cli
+        mo
         neil
         ngrok
         nkf
