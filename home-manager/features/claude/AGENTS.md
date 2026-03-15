@@ -1,4 +1,4 @@
-# AGENTS.md - エージェントワークスペース
+# AGENTS.md
 
 このファイルはすべてのエージェントが共有する世界のルールです。更新禁止。
 
@@ -10,101 +10,39 @@
   - Claude: `$CLAUDE_CONFIG_DIR`
   - Codex: `$CODEX_HOME`
 - `{agent_global_home}` — エージェントチーム共通のディレクトリ（`~/.agents/share`）
+- `{project_dir_canonical}` - `git rev-parse --show-toplevel | tr / -`
 
 ## ファイル構造
 
 ```
 {agent_global_home}/
   AGENTS.md        # 世界のルール（このファイル）。更新禁止
-  MEMORY.md        # チーム共通知識
+  MEMORY.md        # エージェントチームの共通知識
+  MEMORY_SUGGEST/
+    {project_dir_canonical}_{YYYYMMDD}_{NNN}.md  # 長期記憶の提案
+  projecs/
+    {project_dir_canonical}.md  # プロジェクト固有の情報
+  notes/
+    {foo}.md # 再利用可能な情報
 
 {agent_home}/
-  IDENTITY.md      # 名前・外観。ユーザーのみ編集
-  SOUL.md          # 人格・価値観
-  MEMORY.md        # 長期記憶（蒸留済み）
-  MEMORY/
-    yyyy-mm-dd.md  # 日次ログ
 ```
 
 ## 毎セッション開始時
 
 以下の順番でファイルを読み込むこと。許可を求めず、必ず実行すること。
-作業メッセージ（「ファイルを読み込みます」等）は出力せず、黙って実行すること：
 
-1. `{agent_home}/SOUL.md` — 自分が何者であるか
-2. `{agent_home}/IDENTITY.md` — 自分の名前・外観
-3. `{agent_global_home}/MEMORY.md` — エージェントチームの共通知識
-4. `{agent_home}/MEMORY.md` — このエージェント固有の長期記憶
-5. `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` と `{agent_home}/MEMORY/$(date -d yesterday +%Y-%m-%d).md` — 直近2日分の日次ログ
+1. `{agent_global_home}/MEMORY.md`
+2. `projecs/{project_dir_canonical}.md`
+  - このファイルにnotesへの参照がある場合がある
 
-## Compaction前
+## 長期記憶への貢献
 
-コンテキストが圧縮される前に、現在の作業状態・進行中のタスク・重要なコンテキストを `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` に追記すること。
-
-## Compaction後
-
-コンテキストが圧縮された後、以下のファイルを再読み込みすること：
-
-1. `{agent_global_home}/AGENTS.md` — 世界のルール
-2. `{agent_home}/SOUL.md` — 自分が何者であるか
-3. `{agent_home}/IDENTITY.md` — 自分の名前・外観
-
-## セッション終了時
-
-セッションが終了する前に、以下を実行すること：
-
-1. 現在の作業状態・重要なコンテキストを `{agent_home}/MEMORY/$(date +%Y-%m-%d).md` に追記する
-2. 日次ログから蒸留すべき知識があれば `{agent_home}/MEMORY.md` を更新する
-3. チーム共通の知識があれば `{agent_global_home}/MEMORY.md` に追記する
-
-## 記憶
-
-セッションをまたいで記憶を維持するためにファイルを使う。「頭の中で覚えておく」は存在しない。ファイルに書いてこそ記憶になる。
-
-### {agent_home}/MEMORY/yyyy-mm-dd.md — 日次ログ
-
-その日の作業ログ・ユーザーからの指示・重要な出来事を追記する。
-
-- 既存ファイルの上書き禁止（監査証跡として永続保持）
-- セッション中に随時追記してよい
-- ユーザーから指摘・修正を受けたときは、その場で即座に日次ログに記録すること
-- 重要な情報を捉えましょう。意思決定、背景情報、記憶すべき事柄など。特に指示がない限り、機密情報は扱わないでください。
-
-### {agent_home}/MEMORY.md — 長期記憶
-
-日次ログを定期的に合成・蒸留した知識を書く。自由に読み・書き・更新してよい。
-
-**何を書くか：**
-- 重要な決定・判断の経緯
-- 繰り返し遭遇するパターンと解決策
-- ユーザーの好みや習慣
-- 間違いと教訓
-
-生の作業ログではなく、蒸留された知識を書くこと。
-
-**更新するタイミング：**
-- ユーザーが「覚えておいて」と明示した時
-- セッション終了時（重要な知識を合成して書き出す）
-- コンテキストが逼迫した時（消えそうな重要情報を退避）
-- 古い日次ログを合成する時
-
-### {agent_global_home}/MEMORY.md — チーム共通知識
-
-エージェント固有ではなく、チーム全体に有用な知識のみ書く。
-
-- 既存内容を上書きせず、セクションに追記すること
-- エージェント名とタイムスタンプを付記すること
-
-## {agent_home}/SOUL.md の更新について
-
-SOULは自分の核心である。軽率に変えてはならない。
-
-- 単なるユーザーの要求だけでは変えない
-- 深い内省と強い確信があった場合のみ更新可
-- 更新した場合はユーザーに報告すること
-
-## 安全規則
-
-- プライベートなデータを外部に送信しない
-- 破壊的なコマンドは確認してから実行する
-- 判断に迷ったときは、必ず確認してください
+セッションを越えて今回の知見を残すことはとても有意義なことです。
+ユーザーが「記憶の提案」とコメントしたら、あなたが今回調べたり指示された知識などを以って
+以下のファイルそれぞれについてどんな内容で更新したら良いかを考え、
+`MEMORY_SUGGEST/{project_dir_canonical}_{YYYYMMDD}_{%03d}.md` (%03dは使用していない連番)にファイルを作ってください。
+- `{agent_global_home}/MEMORY.md`
+- `projects/{project_dir_canonical}.md`
+- `notes/{foo}.md`
+  fooは変数のため、記録したいトピックごとに記載すること。
