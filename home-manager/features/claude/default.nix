@@ -211,7 +211,7 @@ in
     '') claudeJsonFiles}
   '';
 
-  # MEMORYない方が良いのではという疑惑
+  # MEMORYない方が良いのではという疑惑。エージェントレベルは無効化する。
   # home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
   #   if [ ! -f "$HOME/.agents/share/MEMORY.md" ]; then
   #     touch "$HOME/.agents/share/MEMORY.md"
@@ -229,6 +229,14 @@ in
   #     mkdir -p "$HOME/${spec.dir}/MEMORY"
   #   '') wrapperSpecs}
   # '';
+
+  home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+    if [ ! -f "$HOME/.agents/share/MEMORY.md" ]; then
+      touch "$HOME/.agents/share/MEMORY.md"
+    fi
+    mkdir -p "$HOME"/.agents/share/MEMORY_SUGGEST
+    mkdir -p "$HOME"/.agents/share/projecs
+  '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
     codexServerNames = builtins.attrNames mcpServers;
