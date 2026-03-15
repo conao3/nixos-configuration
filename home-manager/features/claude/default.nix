@@ -18,56 +18,34 @@ let
     };
   }}/resources/app.asar.unpacked/out/mcp-server-linux-x64";
 
-  wrapperSpecs = [
+  aliasSpecs = [
     {
-      type = "claude";
-      name = "claude.conao3";
-      bin = claudeBin;
-      envKey = "CLAUDE_CONFIG_DIR";
-      dir = ".agents/.claude.conao3";
+      executableName = "claude";
+      target = "claude.agent001";
     }
     {
-      type = "claude";
-      name = "claude.toyokumo";
-      bin = claudeBin;
-      envKey = "CLAUDE_CONFIG_DIR";
-      dir = ".agents/.claude.toyokumo";
+      executableName = "codex";
+      target = "codex.agent001";
     }
-    {
-      type = "claude";
-      name = "claude.agent001";
-      bin = claudeBin;
-      envKey = "CLAUDE_CONFIG_DIR";
-      dir = ".agents/.claude.agent001";
-    }
-    {
-      type = "claude";
-      name = "claude.yui";
-      bin = claudeBin;
-      envKey = "CLAUDE_CONFIG_DIR";
-      dir = ".agents/.claude.yui";
-    }
-    {
-      type = "codex";
-      name = "codex.conao3";
-      bin = codexBin;
-      envKey = "CODEX_HOME";
-      dir = ".agents/.codex.conao3";
-    }
-    {
-      type = "codex";
-      name = "codex.agent001";
-      bin = codexBin;
-      envKey = "CODEX_HOME";
-      dir = ".agents/.codex.agent001";
-    }
-    {
-      type = "codex";
-      name = "codex.agent002";
-      bin = codexBin;
-      envKey = "CODEX_HOME";
-      dir = ".agents/.codex.agent002";
-    }
+  ];
+ 
+  mkSpec = name: let
+    type = builtins.head (lib.splitString "." name);
+  in {
+    inherit name type;
+    bin = if type == "claude" then claudeBin else codexBin;
+    envKey = if type == "claude" then "CLAUDE_CONFIG_DIR" else "CODEX_HOME";
+    dir = ".agents/.${name}";
+  };
+
+  wrapperSpecs = map mkSpec [
+    "claude.conao3"
+    "claude.toyokumo"
+    "claude.agent001"
+    "claude.yui"
+    "codex.conao3"
+    "codex.agent001"
+    "codex.agent002"
   ];
 
   mkWrapper = spec:
@@ -261,12 +239,14 @@ in
         };
       };
     };
-  };
+  } // lib.listToAttrs (map (spec: {
+    name = "${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}";
+    value.source = ./AGENTS.md;
+  }) wrapperSpecs);
 
-  home.packages = wrapperPackages ++ [
-    (pkgs.writeShellScriptBin "claude" ''exec claude.agent001 "$@"'')
-    (pkgs.writeShellScriptBin "codex" ''exec codex.agent001 "$@"'')
-  ];
+  home.packages = wrapperPackages ++ map (spec:
+    pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"''
+  ) aliasSpecs;
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
@@ -312,13 +292,6 @@ in
   #   '') wrapperSpecs}
   # '';
 
-  home.activation.agentSharedFiles = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
-    ${lib.concatMapStringsSep "\n" (spec: let
-      targetFile = if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md";
-    in ''
-      ln -sf "$HOME/.agents/share/AGENTS.md" "$HOME/${spec.dir}/${targetFile}"
-    '') wrapperSpecs}
-  '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
     ${lib.concatMapStringsSep "\n" (dir: ''
