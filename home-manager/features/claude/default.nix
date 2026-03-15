@@ -132,29 +132,7 @@ let
     };
   };
 
-  claudeMcpServers = {
-    mcpServers = mcpServers;
-  };
-
-  codexConfig = {
-    mcp_servers = mcpServers;
-  };
-
   settingsPatches = flattenSettings "" claudeSettings;
-  mcpPatches = flattenSettings "" claudeMcpServers;
-  codexServerNames = builtins.attrNames codexConfig.mcp_servers;
-  flattenCodexConfig = prefix: attrs:
-    lib.concatLists (lib.mapAttrsToList (
-      name: value:
-      let
-        path = if prefix == "" then name else "${prefix}.${name}";
-      in
-      if builtins.isAttrs value then
-        flattenCodexConfig path value
-      else
-        [ { inherit path value; } ]
-    ) attrs);
-  codexPatches = flattenCodexConfig "" codexConfig;
 
   applyPatch = patch: let
     fromJson = builtins.toJSON patch.from;
@@ -167,8 +145,15 @@ let
       ${pkgs.jq}/bin/jq --argjson to '${toJson}' '${patch.path} = $to' \
         "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
     elif [ "$settingsCurrent" != "$settingsExpectedTo" ]; then
-      printf '\033[1;33mWARN: claude settings: ${patch.path}: expected %s or %s, got %s, skipping\033[0m\n' "$settingsExpectedFrom" "$settingsExpectedTo" "$settingsCurrent" >> "$settingsWarnFile"
+      printf '\033[1;33mWARN: claude settings: %s: ${patch.path}: expected %s or %s, got %s, skipping\033[0m\n' "$settingsTarget" "$settingsExpectedFrom" "$settingsExpectedTo" "$settingsCurrent" >> "$settingsWarnFile"
     fi
+  '';
+
+  applyMcpServer = name: server: let
+    serverJson = builtins.toJSON server;
+  in ''
+    ${pkgs.jq}/bin/jq --argjson server '${serverJson}' '.mcpServers.${name} = $server' \
+      "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
   '';
 in
 {
@@ -222,7 +207,7 @@ in
         rm -f "$settingsTarget"
         echo '{}' > "$settingsTarget"
       fi
-      ${lib.concatMapStringsSep "\n" applyPatch mcpPatches}
+      ${lib.concatStringsSep "\n" (lib.mapAttrsToList applyMcpServer mcpServers)}
     '') claudeJsonFiles}
   '';
 
@@ -245,8 +230,21 @@ in
   #   '') wrapperSpecs}
   # '';
 
-
-  home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+  home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
+    codexServerNames = builtins.attrNames mcpServers;
+    flattenCodexConfig = prefix: attrs:
+      lib.concatLists (lib.mapAttrsToList (
+        name: value:
+        let
+          path = if prefix == "" then name else "${prefix}.${name}";
+        in
+        if builtins.isAttrs value then
+          flattenCodexConfig path value
+        else
+          [ { inherit path value; } ]
+      ) attrs);
+    codexPatches = flattenCodexConfig "" { mcp_servers = mcpServers; };
+  in ''
     ${lib.concatMapStringsSep "\n" (dir: ''
       mkdir -p "${dir}"
       configTarget="${dir}/config.toml"
@@ -255,7 +253,6 @@ in
         touch "$configTarget"
       fi
 
-      # Update MCP entries directly in TOML.
       ${lib.concatMapStringsSep "\n" (serverName:
         "${pkgs.dasel}/bin/dasel delete -f \"$configTarget\" -r toml -w toml ${lib.escapeShellArg "mcp_servers.${serverName}"} >/dev/null 2>&1 || true"
       ) codexServerNames}
@@ -263,7 +260,7 @@ in
         "${pkgs.dasel}/bin/dasel put -f \"$configTarget\" -r toml -w toml -t json -v ${lib.escapeShellArg (builtins.toJSON patch.value)} ${lib.escapeShellArg patch.path}"
       ) codexPatches}
     '') codexConfigDirs}
-  '';
+  '');
 
   programs.git.ignores = [
     ".claude"
