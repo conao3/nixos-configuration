@@ -293,23 +293,24 @@ in
     '') claudeJsonFiles}
   '';
 
-  home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
-    if [ ! -f "$HOME/.agents/share/MEMORY.md" ]; then
-      touch "$HOME/.agents/share/MEMORY.md"
-    fi
-    ${lib.concatMapStringsSep "\n" (spec: ''
-      if [ ! -f "$HOME/${spec.dir}/SOUL.md" ]; then
-        ${pkgs.coreutils}/bin/install -m 644 ${soulTemplate} "$HOME/${spec.dir}/SOUL.md"
-      fi
-      if [ ! -f "$HOME/${spec.dir}/IDENTITY.md" ]; then
-        ${pkgs.coreutils}/bin/install -m 644 ${identityTemplate} "$HOME/${spec.dir}/IDENTITY.md"
-      fi
-      if [ ! -f "$HOME/${spec.dir}/MEMORY.md" ]; then
-        touch "$HOME/${spec.dir}/MEMORY.md"
-      fi
-      mkdir -p "$HOME/${spec.dir}/MEMORY"
-    '') wrapperSpecs}
-  '';
+  # MEMORYない方が良いのではという疑惑
+  # home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+  #   if [ ! -f "$HOME/.agents/share/MEMORY.md" ]; then
+  #     touch "$HOME/.agents/share/MEMORY.md"
+  #   fi
+  #   ${lib.concatMapStringsSep "\n" (spec: ''
+  #     if [ ! -f "$HOME/${spec.dir}/SOUL.md" ]; then
+  #       ${pkgs.coreutils}/bin/install -m 644 ${soulTemplate} "$HOME/${spec.dir}/SOUL.md"
+  #     fi
+  #     if [ ! -f "$HOME/${spec.dir}/IDENTITY.md" ]; then
+  #       ${pkgs.coreutils}/bin/install -m 644 ${identityTemplate} "$HOME/${spec.dir}/IDENTITY.md"
+  #     fi
+  #     if [ ! -f "$HOME/${spec.dir}/MEMORY.md" ]; then
+  #       touch "$HOME/${spec.dir}/MEMORY.md"
+  #     fi
+  #     mkdir -p "$HOME/${spec.dir}/MEMORY"
+  #   '') wrapperSpecs}
+  # '';
 
   home.activation.agentSharedFiles = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
     ${lib.concatMapStringsSep "\n" (spec: let
