@@ -10,7 +10,7 @@
   - Claude: `$CLAUDE_CONFIG_DIR`
   - Codex: `$CODEX_HOME`
 - `{agent_global_home}` — エージェントチーム共通のディレクトリ（`~/.agents/share`）
-- `{project_dir_canonical}` - `git rev-parse --show-toplevel | tr / -`
+- `{project_dir_canonical}` - `git rev-parse --show-toplevel | sed "s|^$HOME/||" | tr / -`
 
 ## ファイル構造
 
@@ -19,11 +19,14 @@
   AGENTS.md        # 世界のルール（このファイル）。更新禁止
   MEMORY.md        # エージェントチームの共通知識
   MEMORY_SUGGEST/
-    {project_dir_canonical}_{YYYYMMDD}_{NNN}.md  # 長期記憶の提案
+    {project_dir_canonical}_{YYYYMMDD}_{%03d}.md  # 長期記憶の提案
   projecs/
     {project_dir_canonical}.md  # プロジェクト固有の情報
   notes/
     {foo}.md # 再利用可能な情報
+  specs/  # 設計文書
+    {project_dir_canonical}/
+      {%03d}-{bar}.md
 
 {agent_home}/
 ```
@@ -37,7 +40,7 @@
   - このファイルにnotesへの参照がある場合がある
 3. 以下のnotesを読む
   - ghq
-  - spec-doc
+  - specs
 
 ## 長期記憶への貢献
 
