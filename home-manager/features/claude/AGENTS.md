@@ -35,6 +35,9 @@
 1. `{agent_global_home}/MEMORY.md`
 2. `projecs/{project_dir_canonical}.md`
   - このファイルにnotesへの参照がある場合がある
+3. 以下のnotesを読む
+  - ghq
+  - spec-doc
 
 ## 長期記憶への貢献
 
