@@ -43,7 +43,8 @@
         inetutils
         libgccjit
         linear-cli
-        mo
+        # TODO: mo is linux-only, fix meta.platforms to support darwin
+        # mo
         neil
         ngrok
         nkf
@@ -67,6 +68,7 @@
       linuxPackages = with pkgs; [
         # keep-sorted start
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
+        mo
         burpsuite
         chromium
         dbeaver-bin
