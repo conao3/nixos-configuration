@@ -235,7 +235,8 @@ in
       touch "$HOME/.agents/share/MEMORY.md"
     fi
     mkdir -p "$HOME"/.agents/share/MEMORY_SUGGEST
-    mkdir -p "$HOME"/.agents/share/projecs
+    mkdir -p "$HOME"/.agents/share/projects
+    mkdir -p "$HOME"/.agents/share/notes
   '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
