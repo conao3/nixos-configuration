@@ -60,6 +60,10 @@
       url = "github:conao3/rust-llm-quota";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    arto = {
+      url = "github:arto-app/Arto";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     devo = {
       url = "github:conao3/rust-devo";
       flake = false;

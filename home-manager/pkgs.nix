@@ -128,12 +128,14 @@
         pkgs.nodejs_24 # vibe-kanban requires npx
       ]
       ++ (
-        if !pkgs.stdenv.isDarwin then
+        if pkgs.stdenv.isDarwin then
+          [
+            inputs.arto.packages.${system}.default
+          ]
+        else
           [
             inputs.claude-desktop.packages.${system}.claude-desktop-with-fhs
           ]
-        else
-          [ ]
       )
       ++ (
         with inputs.llm-agents.packages.${system};

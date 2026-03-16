@@ -1,5 +1,26 @@
 {
   "nodes": {
+    "arto": {
+      "inputs": {
+        "crane": "crane",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1773198573,
+        "narHash": "sha256-7f1b9eoKvVkIi8jdsS9UbjDDtb+AWdiLLTwI+IqGozY=",
+        "owner": "arto-app",
+        "repo": "Arto",
+        "rev": "f88759a3d182e5029c47217d5f1798149620e417",
+        "type": "github"
+      },
+      "original": {
+        "owner": "arto-app",
+        "repo": "Arto",
+        "type": "github"
+      }
+    },
     "blueprint": {
       "inputs": {
         "nixpkgs": [
@@ -166,6 +187,21 @@
       "original": {
         "owner": "conao3",
         "repo": "clojure-cljgen",
+        "type": "github"
+      }
+    },
+    "crane": {
+      "locked": {
+        "lastModified": 1770419512,
+        "narHash": "sha256-o8Vcdz6B6bkiGUYkZqFwH3Pv1JwZyXht3dMtS7RchIo=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "2510f2cbc3ccd237f700bb213756a8f35c32d8d7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
         "type": "github"
       }
     },
@@ -983,6 +1019,7 @@
     },
     "root": {
       "inputs": {
+        "arto": "arto",
         "claude-desktop": "claude-desktop",
         "cljgen": "cljgen",
         "devo": "devo",
