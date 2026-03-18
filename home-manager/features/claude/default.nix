@@ -108,8 +108,9 @@ let
       args = [
         "-y"
         "chrome-devtools-mcp@latest"
-        "--browserUrl"
-        "http://127.0.0.1:15123"
+        # "--browserUrl"
+        # "http://127.0.0.1:15123"
+        "--autoConnect"
       ];
     };
     deepwiki = {
