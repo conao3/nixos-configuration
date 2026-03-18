@@ -45,6 +45,9 @@
       upgrade = true;
       # cleanup = "uninstall";  # clojure/mkcert issue
     };
+    taps = [
+      "manaflow-ai/cmux"
+    ];
     casks = [
       # keep-sorted start
       "1password"
@@ -53,6 +56,7 @@
       "aquaskk"
       "asana"
       "claude"
+      "cmux"
       "corretto@11"
       "coteditor"
       "dbeaver-community"
@@ -60,6 +64,7 @@
       "figma"
       "firefox"
       "gimp"
+      "google-chrome@beta"
       "google-japanese-ime"
       "karabiner-elements"
       "obsidian"
