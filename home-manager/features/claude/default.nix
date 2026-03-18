@@ -241,34 +241,20 @@ in
   '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
-    codexServerNames = builtins.attrNames mcpServers;
-    flattenCodexConfig = prefix: attrs:
-      lib.concatLists (lib.mapAttrsToList (
-        name: value:
-        let
-          path = if prefix == "" then name else "${prefix}.${name}";
-        in
-        if builtins.isAttrs value then
-          flattenCodexConfig path value
-        else
-          [ { inherit path value; } ]
-      ) attrs);
-    codexPatches = flattenCodexConfig "" { mcp_servers = mcpServers; };
+    mcpServersJson = builtins.toJSON { mcp_servers = mcpServers; };
   in ''
     ${lib.concatMapStringsSep "\n" (dir: ''
       mkdir -p "${dir}"
       configTarget="${dir}/config.toml"
-      if [ ! -f "$configTarget" ] || [ -L "$configTarget" ]; then
+      if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
         rm -f "$configTarget"
-        touch "$configTarget"
+        echo '${mcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
+      else
+        ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
+          | ${pkgs.jq}/bin/jq -s '.[0] * .[1]' - <(echo '${mcpServersJson}') \
+          | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
+          && mv "$configTarget.tmp" "$configTarget"
       fi
-
-      ${lib.concatMapStringsSep "\n" (serverName:
-        "${pkgs.dasel}/bin/dasel delete -f \"$configTarget\" -r toml -w toml ${lib.escapeShellArg "mcp_servers.${serverName}"} >/dev/null 2>&1 || true"
-      ) codexServerNames}
-      ${lib.concatMapStringsSep "\n" (patch:
-        "${pkgs.dasel}/bin/dasel put -f \"$configTarget\" -r toml -w toml -t json -v ${lib.escapeShellArg (builtins.toJSON patch.value)} ${lib.escapeShellArg patch.path}"
-      ) codexPatches}
     '') codexConfigDirs}
   '');
 

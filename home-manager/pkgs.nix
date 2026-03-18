@@ -102,7 +102,7 @@
         # keep-sorted start
         apery
         gnushogi
-        shogihome
+        # shogihome # electron build broken: 39-angle-patchdir.patch fails to apply
         yaneuraou
         # keep-sorted end
       ];
