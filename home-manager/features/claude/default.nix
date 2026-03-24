@@ -150,6 +150,58 @@ let
     fi
   '';
 
+  hooks = {
+    SessionStart = [
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
+            command = "echo AGENTS.mdの「毎セッション開始時」セクションの指示に従い、必要なファイルを読み込んでください。";
+          }
+        ];
+      }
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
+            command = ''CANONICAL=$(git rev-parse --show-toplevel 2>/dev/null | sed "s|^$HOME/||" | tr /. -) && echo "project_dir_canonical: $CANONICAL"'';
+          }
+        ];
+      }
+    ];
+    PreCompact = [
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
+            command = "echo AGENTS.mdの「Compaction前」セクションの指示に従い、日次ログに作業状態を書き出してください。";
+          }
+        ];
+      }
+    ];
+    SessionEnd = [
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
+            command = "echo AGENTS.mdの「セッション終了時」セクションの指示に従い、個人記憶とチーム共通知識を見直してください。";
+          }
+        ];
+      }
+    ];
+  };
+
+  hooksJson = builtins.toJSON hooks;
+
+  applyHooks = ''
+    ${pkgs.jq}/bin/jq --argjson hooks '${hooksJson}' '.hooks = $hooks' \
+      "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
+  '';
+
   applyMcpServer = name: server: let
     serverJson = builtins.toJSON server;
   in ''
@@ -201,6 +253,7 @@ in
         echo '{}' > "$settingsTarget"
       fi
       ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
+      ${applyHooks}
     '') claudeConfigDirs}
     ${lib.concatMapStringsSep "\n" (file: ''
       settingsTarget="${file}"
