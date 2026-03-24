@@ -26,7 +26,7 @@
     gc = {
       automatic = true;
       dates = "weekly";
-      options = "--delete-order-than 7d";
+      options = "--delete-older-than +5";
     };
     settings = {
       experimental-features = [
