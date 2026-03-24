@@ -87,6 +87,7 @@ let
     preferredNotifChannel = "terminal_bell";
     includeCoAuthoredBy = false;
     language = "japanese";
+    autoMemoryDirectory = "~/.agents/share/auto-memory";
   };
 
   flattenSettings = prefix: attrs:
