@@ -10,7 +10,7 @@
   - Claude: `$CLAUDE_CONFIG_DIR`
   - Codex: `$CODEX_HOME`
 - `{agent_global_home}` — エージェントチーム共通のディレクトリ（`~/.agents/share`）
-- `{project_dir_canonical}` - `git rev-parse --show-toplevel | sed "s|^$HOME/||" | tr / -`
+- `{project_dir_canonical}` - `git rev-parse --show-toplevel | sed "s|^$HOME/||" | tr /. -`
 
 ## ファイル構造
 
