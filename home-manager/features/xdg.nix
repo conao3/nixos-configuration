@@ -1,6 +1,7 @@
 {
   xdg.configFile."xfce4/helpers.rc".text = ''
     WebBrowser=firefox
+    TerminalEmulator=wezterm
   '';
 
   xdg.mimeApps = {

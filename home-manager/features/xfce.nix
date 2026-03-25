@@ -31,6 +31,17 @@
     };
   };
 
+  xdg.dataFile."xfce4/helpers/wezterm.desktop".text = ''
+    [Desktop Entry]
+    Version=1.0
+    Type=X-XFCE-Helper
+    X-XFCE-Category=TerminalEmulator
+    X-XFCE-CommandsWithParameter=wezterm start -- %s
+    X-XFCE-Commands=wezterm
+    Name=WezTerm
+    Icon=org.wezfurlong.wezterm
+  '';
+
   xsession = {
     enable = !pkgs.stdenv.isDarwin;
     initExtra = "xset r rate 200 50";
