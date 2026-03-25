@@ -172,6 +172,20 @@ let
     };
   };
 
+  # Cursor mcp.json: https://cursor.com/docs/context/mcp — stdio needs type + command + args; remote uses url only.
+  cursorMcpServers = lib.mapAttrs (
+    _: srv:
+      if srv ? url then
+        { inherit (srv) url; }
+      else
+        {
+          type = "stdio";
+          command = srv.command;
+          args = srv.args or [ ];
+        }
+        // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
+  ) mcpServers;
+
   settingsPatches = flattenSettings "" claudeSettings;
 
   applyPatch = patch: let
@@ -255,6 +269,10 @@ in
       recursive = true;
     };
     ".agents/share/AGENTS.md".source = ./AGENTS.md;
+    # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).
+    ".agents/.cursor-agent.agent001/mcp.json" = {
+      text = builtins.toJSON { mcpServers = cursorMcpServers; };
+    };
     ".config/Claude/claude_desktop_config.json" = {
       text = builtins.toJSON {
         globalShortcut = "Alt+Cmd+Space";
