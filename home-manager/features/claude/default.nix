@@ -9,6 +9,10 @@ let
   llmAgents = inputs.llm-agents.packages.${system};
   claudeBin = "${llmAgents.claude-code}/bin/claude";
   codexBin = "${llmAgents.codex}/bin/codex";
+  cursorAgentPkg = llmAgents.cursor-agent;
+  cursorExe = lib.getExe pkgs.code-cursor-fhs;
+  agentExe = lib.getExe cursorAgentPkg;
+
   pencilMcpServer = "${pkgs.appimageTools.extractType2 {
     pname = "pencil-dev";
     version = "2025.1.0";
@@ -27,14 +31,38 @@ let
       executableName = "codex";
       target = "codex.agent001";
     }
+    {
+      executableName = "cursor";
+      target = "cursor.agent001";
+    }
+    {
+      executableName = "cursor-agent";
+      target = "cursor-agent.agent001";
+    }
   ];
- 
+
   mkSpec = name: let
     type = builtins.head (lib.splitString "." name);
   in {
     inherit name type;
-    bin = if type == "claude" then claudeBin else codexBin;
-    envKey = if type == "claude" then "CLAUDE_CONFIG_DIR" else "CODEX_HOME";
+    bin =
+      if type == "claude" then
+        claudeBin
+      else if type == "codex" then
+        codexBin
+      else if type == "cursor-agent" then
+        agentExe
+      else
+        throw "claude/default.nix mkSpec: unknown agent type '${type}' in '${name}'";
+    envKey =
+      if type == "claude" then
+        "CLAUDE_CONFIG_DIR"
+      else if type == "codex" then
+        "CODEX_HOME"
+      else if type == "cursor-agent" then
+        "CURSOR_HOME"
+      else
+        throw "claude/default.nix mkSpec: unknown agent type '${type}'";
     dir = ".agents/.${name}";
   };
 
@@ -46,6 +74,7 @@ let
     "codex.conao3"
     "codex.agent001"
     "codex.agent002"
+    "cursor-agent.agent001"
   ];
 
   mkWrapper = spec:
@@ -53,6 +82,15 @@ let
       makeWrapper ${spec.bin} $out/bin/${spec.name} \
         --run 'export ${spec.envKey}="$HOME/${spec.dir}"'
     '';
+
+  # Cursor GUI still needs --user-data-dir (same profile dir as cursor-agent.agent001).
+  cursorProfileBody = ''
+    export CURSOR_HOME="$HOME/.agents/.cursor-agent.agent001"
+    exec ${cursorExe} --user-data-dir "$HOME/.agents/.cursor-agent.agent001" "$@"
+  '';
+  cursorProfilePackages = [
+    (pkgs.writeShellScriptBin "cursor.agent001" cursorProfileBody)
+  ];
 
   soulTemplate = pkgs.writeText "SOUL.md" (builtins.readFile ./SOUL.md);
   identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
@@ -236,9 +274,10 @@ in
     value.source = ./AGENTS.md;
   }) wrapperSpecs);
 
-  home.packages = wrapperPackages ++ map (spec:
-    pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"''
-  ) aliasSpecs;
+  home.packages =
+    wrapperPackages
+    ++ cursorProfilePackages
+    ++ map (spec: pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"'') aliasSpecs;
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
