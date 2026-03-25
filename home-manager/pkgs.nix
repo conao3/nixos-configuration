@@ -27,6 +27,7 @@
         # keep-sorted start
         binutils
         clj-kondo
+        code-cursor-fhs
         coreutils
         diffutils
         dig
@@ -147,6 +148,7 @@
           claude-code-acp
           codex-acp
           copilot-language-server
+          cursor-agent
           # eca
           # gastown
           happy-coder
