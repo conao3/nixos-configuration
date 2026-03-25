@@ -201,6 +201,13 @@ in
 
   zramSwap.enable = true;
 
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = 128 * 1024;
+    }
+  ];
+
   systemd.user.services = {
     vm-agent-tunnel = {
       description = "SSH tunnel to agent-vm";
