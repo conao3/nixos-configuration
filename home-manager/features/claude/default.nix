@@ -219,7 +219,11 @@ let
         hooks = [
           {
             type = "command";
-            command = ''CANONICAL=$(git rev-parse --show-toplevel 2>/dev/null | sed "s|^$HOME/||" | tr /. -) && echo "project_dir_canonical: $CANONICAL"'';
+            command = ''
+              MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)" 2>/dev/null)"
+              CANONICAL=$(printf '%s\n' "$MAIN" | sed "s|^$HOME/||" | tr /. -)
+              echo "project_dir_canonical: $CANONICAL"
+            '';
           }
         ];
       }
@@ -269,10 +273,6 @@ in
       recursive = true;
     };
     ".agents/share/AGENTS.md".source = ./AGENTS.md;
-    # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).
-    ".agents/.cursor-agent.agent001/mcp.json" = {
-      text = builtins.toJSON { mcpServers = cursorMcpServers; };
-    };
     ".config/Claude/claude_desktop_config.json" = {
       text = builtins.toJSON {
         globalShortcut = "Alt+Cmd+Space";
@@ -367,6 +367,21 @@ in
           && mv "$configTarget.tmp" "$configTarget"
       fi
     '') codexConfigDirs}
+  '');
+
+  # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).
+  # Use activation (not home.file) so cursor-agent cannot replace the symlink with an empty file.
+  home.activation.cursorMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
+    cursorMcpJson = builtins.toJSON { mcpServers = cursorMcpServers; };
+  in ''
+    configTarget="$HOME/.agents/.cursor-agent.agent001/mcp.json"
+    if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
+      rm -f "$configTarget"
+      echo '${cursorMcpJson}' > "$configTarget"
+    else
+      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$configTarget" <(echo '${cursorMcpJson}') > "$configTarget.tmp" \
+        && mv "$configTarget.tmp" "$configTarget"
+    fi
   '');
 
   programs.git.ignores = [

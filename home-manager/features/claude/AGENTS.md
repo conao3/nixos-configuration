@@ -6,11 +6,19 @@
 
 以降で使用する変数：
 
-- `{agent_home}` — このエージェントのホームディレクトリ
+- `{agent_home}` — 当該エージェントのホームディレクトリ
   - Claude: `$CLAUDE_CONFIG_DIR`
   - Codex: `$CODEX_HOME`
-- `{agent_global_home}` — エージェントチーム共通のディレクトリ（`~/.agents/share`）
-- `{project_dir_canonical}` - `git rev-parse --show-toplevel | sed "s|^$HOME/||" | tr /. -`
+  - Cursor（cursor-agent プロファイル）: `$CURSOR_HOME`
+- `{agent_global_home}` — エージェント間で共有するディレクトリ。常に **`$HOME/.agents/share`** とする。`{agent_home}` とは別物。
+- `{project_dir_canonical}` — リポジトリのメイン作業ツリー（共有 `.git` を含むディレクトリの親）を、ホームからの相対パスにしたうえで `/` と `.` を `-` に置換した識別子。
+
+  ```bash
+  MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+  echo "$MAIN" | sed "s|^$HOME/||" | tr /. -
+  ```
+
+  `git rev-parse --show-toplevel` は `{project_dir_canonical}` の算出に使わない。
 
 ## ファイル構造
 
@@ -20,7 +28,7 @@
   MEMORY.md        # エージェントチームの共通知識
   MEMORY_SUGGEST/
     {project_dir_canonical}_{YYYYMMDD}_{%03d}.md  # 長期記憶の提案
-  projecs/
+  projects/
     {project_dir_canonical}.md  # プロジェクト固有の情報
   notes/
     {foo}.md # 再利用可能な情報
@@ -33,22 +41,18 @@
 
 ## 毎セッション開始時
 
-以下の順番でファイルを読み込むこと。許可を求めず、必ず実行すること。
+以下の順で読み込む。許可を求めず実行する。
 
 1. `{agent_global_home}/MEMORY.md`
-2. `projecs/{project_dir_canonical}.md`
-  - このファイルにnotesへの参照がある場合がある
-3. 以下のnotesを読む
-  - ghq
-  - specs
+2. `projects/{project_dir_canonical}.md`
+   - 当該パスにファイルが無い場合、`projects/ghq-github-com-OWNER-REPO.md`（`git remote get-url origin` に対応する名前）を読む。
+   - 本ファイルに `notes/` への参照があれば従う。
+3. `notes/ghq.md` と `notes/specs.md` を読む。
 
 ## 長期記憶への貢献
 
-セッションを越えて今回の知見を残すことはとても有意義なことです。
-ユーザーが「記憶の提案」とコメントしたら、あなたが今回調べたり指示された知識などを以って
-以下のファイルそれぞれについてどんな内容で更新したら良いかを考え、
-`MEMORY_SUGGEST/{project_dir_canonical}_{YYYYMMDD}_{%03d}.md` (%03dは使用していない連番)にファイルを作ってください。
+ユーザーが「記憶の提案」と指示したとき、次の各ファイルに対する更新案を `MEMORY_SUGGEST/{project_dir_canonical}_{YYYYMMDD}_{%03d}.md` にまとめる（`%03d` は未使用の連番）。
+
 - `{agent_global_home}/MEMORY.md`
 - `projects/{project_dir_canonical}.md`
-- `notes/{foo}.md`
-  fooは変数のため、記録したいトピックごとに記載すること。
+- `notes/{foo}.md`（トピックごとに `{foo}` を定める）
