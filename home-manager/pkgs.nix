@@ -54,6 +54,7 @@
         rlwrap
         sqldef
         sqlite
+        symphony
         tig
         tokei
         tree
@@ -82,7 +83,6 @@
         pencil-dev
         qpdfview
         steam-run
-        symphony
         telegram-desktop
         vlc
         xclip
