@@ -57,6 +57,7 @@
       "asana"
       "claude"
       "cmux"
+      "codex"
       "corretto@11"
       "coteditor"
       "dbeaver-community"

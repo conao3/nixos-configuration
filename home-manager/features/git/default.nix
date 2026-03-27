@@ -15,6 +15,13 @@
 
     ignores = import ./ignore.nix;
 
+    includes = [
+      {
+        condition = "gitdir:~/ghq/github.com/toyokumo/";
+        contents.user.email = "naoya.yamashita@toyokumo.co.jp";
+      }
+    ];
+
     settings = {
       user = {
         name = "conao3";

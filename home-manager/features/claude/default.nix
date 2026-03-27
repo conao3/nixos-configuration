@@ -88,7 +88,7 @@ let
     export CURSOR_HOME="$HOME/.agents/.cursor-agent.agent001"
     exec ${cursorExe} --user-data-dir "$HOME/.agents/.cursor-agent.agent001" "$@"
   '';
-  cursorProfilePackages = [
+  cursorProfilePackages = lib.optionals pkgs.stdenv.isLinux [
     (pkgs.writeShellScriptBin "cursor.agent001" cursorProfileBody)
   ];
 

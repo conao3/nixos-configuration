@@ -105,6 +105,7 @@
             overlays = [
               inputs.emacs-overlay.overlays.default
               (import ./overlays/go.nix)
+              (import ./overlays/direnv.nix)
             ];
             config.permittedInsecurePackages = [
               "googleearth-pro-7.3.6.10201"
@@ -170,6 +171,7 @@
                 {
                   nixpkgs.overlays = [
                     (import ./overlays/go.nix)
+                    (import ./overlays/direnv.nix)
                   ];
                 }
               ];

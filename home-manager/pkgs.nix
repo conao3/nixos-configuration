@@ -25,9 +25,9 @@
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
         # keep-sorted start
-        binutils
         clj-kondo
         coreutils
+        devenv
         diffutils
         dig
         duckdb
@@ -67,6 +67,7 @@
 
       linuxPackages = with pkgs; [
         # keep-sorted start
+        binutils
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
         burpsuite
         chromium
