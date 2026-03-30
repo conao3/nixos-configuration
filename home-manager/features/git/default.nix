@@ -18,6 +18,7 @@
     includes = [
       {
         condition = "gitdir:~/ghq/github.com/toyokumo/";
+        contents.user.name = "Naoya Yamashita";
         contents.user.email = "naoya.yamashita@toyokumo.co.jp";
       }
     ];
