@@ -44,7 +44,7 @@
 
   xsession = {
     enable = !pkgs.stdenv.isDarwin;
-    initExtra = "xset r rate 200 50";
+    initExtra = "xset r rate 200 50 && xset s off -dpms";
   };
 
   xfconf = {
@@ -161,6 +161,20 @@
         "/xfwm4/default/<Super>KP_Up" = null;
         "/xfwm4/default/<Super>Tab" = null;
         "/xfwm4/default/Up" = null;
+      };
+
+      xfce4-power-manager = {
+        "/xfce4-power-manager/dpms-enabled" = false;
+        "/xfce4-power-manager/blank-on-ac" = 0;
+        "/xfce4-power-manager/dpms-on-ac-off" = 0;
+        "/xfce4-power-manager/dpms-on-ac-sleep" = 0;
+        "/xfce4-power-manager/inactivity-on-ac" = 14;
+        "/xfce4-power-manager/inactivity-sleep-mode-on-ac" = 1;
+        "/xfce4-power-manager/blank-on-battery" = 0;
+        "/xfce4-power-manager/dpms-on-battery-off" = 0;
+        "/xfce4-power-manager/dpms-on-battery-sleep" = 0;
+        "/xfce4-power-manager/inactivity-on-battery" = 14;
+        "/xfce4-power-manager/inactivity-sleep-mode-on-battery" = 1;
       };
 
       keyboards = {
