@@ -12,6 +12,11 @@
 
   networking.hostName = "conao-nixos-eos";
 
+  sops = {
+    defaultSopsFile = ../../secrets/secrets.yaml;
+    age.keyFile = "/home/conao/.config/sops/age/keys.txt";
+  };
+
   virtualisation.libvirtd.enable = lib.mkForce false;
 
   services.xserver.xkb.options = "ctrl:nocaps";
