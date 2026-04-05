@@ -144,13 +144,13 @@ let
 
   mcpServers = {
     chrome_devtools = {
-      command = "npx";
+      command = "bash";
       args = [
-        "-y"
-        "chrome-devtools-mcp@latest"
-        # "--browserUrl"
-        # "http://127.0.0.1:15123"
-        "--autoConnect"
+        "-lc"
+        ''
+          cd "$HOME"
+          exec npx -y chrome-devtools-mcp@latest --autoConnect
+        ''
       ];
     };
     linear = {
