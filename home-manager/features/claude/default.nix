@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   inputs,
@@ -152,15 +153,21 @@ let
         "--autoConnect"
       ];
     };
-    deepwiki = {
-      type = "http";
-      url = "https://mcp.deepwiki.com/mcp";
-    };
     linear = {
       type = "http";
       url = "https://mcp.linear.app/mcp";
     };
-  } // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+  }
+  // {
+    devin = {
+      type = "http";
+      url = "https://mcp.devin.ai/mcp";
+      headers = {
+        Authorization = "Bearer \${DEVIN_API_KEY}";
+      };
+    };
+  }
+  // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
     pencil = {
       command = "bash";
       args = [
@@ -176,10 +183,35 @@ let
   cursorMcpServers = lib.mapAttrs (
     _: srv:
       if srv ? url then
-        { inherit (srv) url; }
+        {
+          inherit (srv) url;
+        }
+        // lib.optionalAttrs (srv ? headers) { inherit (srv) headers; }
       else
         {
           type = "stdio";
+          command = srv.command;
+          args = srv.args or [ ];
+        }
+        // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
+  ) mcpServers;
+
+  codexMcpServers = lib.mapAttrs (
+    _: srv: let
+      usesDevinEnvBearer =
+        lib.hasAttrByPath [ "headers" "Authorization" ] srv
+        && srv.headers.Authorization == "Bearer \${DEVIN_API_KEY}";
+    in
+      if srv ? url then
+        {
+          type = "http";
+          inherit (srv) url;
+        }
+        // lib.optionalAttrs usesDevinEnvBearer {
+          bearer_token_env_var = "DEVIN_API_KEY";
+        }
+      else
+        {
           command = srv.command;
           args = srv.args or [ ];
         }
@@ -259,10 +291,9 @@ let
       "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
   '';
 
-  applyMcpServer = name: server: let
-    serverJson = builtins.toJSON server;
-  in ''
-    ${pkgs.jq}/bin/jq --argjson server '${serverJson}' '.mcpServers.${name} = $server' \
+  mcpServersJson = builtins.toJSON mcpServers;
+  applyMcpServers = ''
+    ${pkgs.jq}/bin/jq --argjson servers '${mcpServersJson}' '.mcpServers = $servers' \
       "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
   '';
 in
@@ -310,6 +341,7 @@ in
         rm -f "$settingsTarget"
         echo '{}' > "$settingsTarget"
       fi
+      ${applyMcpServers}
       ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
       ${applyHooks}
     '') claudeConfigDirs}
@@ -319,7 +351,7 @@ in
         rm -f "$settingsTarget"
         echo '{}' > "$settingsTarget"
       fi
-      ${lib.concatStringsSep "\n" (lib.mapAttrsToList applyMcpServer mcpServers)}
+      ${applyMcpServers}
     '') claudeJsonFiles}
   '';
 
@@ -352,17 +384,17 @@ in
   '';
 
   home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
-    mcpServersJson = builtins.toJSON { mcp_servers = mcpServers; };
+    codexMcpServersJson = builtins.toJSON { mcp_servers = codexMcpServers; };
   in ''
     ${lib.concatMapStringsSep "\n" (dir: ''
       mkdir -p "${dir}"
       configTarget="${dir}/config.toml"
       if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
         rm -f "$configTarget"
-        echo '${mcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
+        echo '${codexMcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
       else
         ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
-          | ${pkgs.jq}/bin/jq -s '.[0] * .[1]' - <(echo '${mcpServersJson}') \
+          | ${pkgs.jq}/bin/jq --argjson servers '${builtins.toJSON codexMcpServers}' '.mcp_servers = $servers' \
           | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
           && mv "$configTarget.tmp" "$configTarget"
       fi
@@ -375,13 +407,8 @@ in
     cursorMcpJson = builtins.toJSON { mcpServers = cursorMcpServers; };
   in ''
     configTarget="$HOME/.agents/.cursor-agent.agent001/mcp.json"
-    if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
-      rm -f "$configTarget"
-      echo '${cursorMcpJson}' > "$configTarget"
-    else
-      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$configTarget" <(echo '${cursorMcpJson}') > "$configTarget.tmp" \
-        && mv "$configTarget.tmp" "$configTarget"
-    fi
+    rm -f "$configTarget"
+    echo '${cursorMcpJson}' > "$configTarget"
   '');
 
   programs.git.ignores = [

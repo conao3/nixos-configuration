@@ -177,11 +177,13 @@ in
       content = ''
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
         LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
+        DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
       '';
     };
     secrets = {
       siliconflow-api-key = { };
       linear-api-key = { };
+      devin-api-key = { };
       openclaw-dot-env = {
         path = "${homeDir}/.openclaw/.env";
       };

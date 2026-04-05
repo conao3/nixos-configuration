@@ -130,6 +130,7 @@ in
       owner = "conao";
       content = ''
         export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
+        export DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
       '';
     };
     templates."ollama-tunnel-script" = {
@@ -149,6 +150,7 @@ in
     secrets.gitea-api-token = { };
     secrets.matterbridge-telegram-token = { };
     secrets.linear-api-key = { };
+    secrets.devin-api-key = { };
     secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
       owner = "conao";
