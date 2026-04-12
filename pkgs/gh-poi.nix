@@ -4,7 +4,7 @@
   fetchFromGitHub,
 }:
 let
-  version = "0.15.3";
+  version = "0.16.3";
 in
 buildGoModule {
   pname = "gh-poi";
@@ -14,7 +14,7 @@ buildGoModule {
     owner = "seachicken";
     repo = "gh-poi";
     rev = "v${version}";
-    hash = "sha256-Ycq5uEp+Slae1G4DXiZnjk4UvbnXoTMmpPq0Kx5AHow=";
+    hash = "sha256-oRSvd5O/izfvs+sf8RW3b2aUoMG7FRJ1pWxjCMegKp8=";
   };
 
   vendorHash = "sha256-UHkNSTRH9m6H8Wh7S7uUy5SHuGe0uAmmYuoeR76C7m0=";
