@@ -10,6 +10,7 @@ let
   llmAgents = inputs.llm-agents.packages.${system};
   claudeBin = "${llmAgents.claude-code}/bin/claude";
   codexBin = "${llmAgents.codex}/bin/codex";
+  piBin = "${llmAgents.pi}/bin/pi";
   cursorAgentPkg = llmAgents.cursor-agent;
   cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
   agentExe = lib.getExe cursorAgentPkg;
@@ -40,6 +41,10 @@ let
       executableName = "cursor-agent";
       target = "cursor-agent.agent001";
     }
+    {
+      executableName = "pi";
+      target = "pi.agent001";
+    }
   ];
 
   mkSpec = name: let
@@ -51,6 +56,8 @@ let
         claudeBin
       else if type == "codex" then
         codexBin
+      else if type == "pi" then
+        piBin
       else if type == "cursor-agent" then
         agentExe
       else
@@ -60,6 +67,8 @@ let
         "CLAUDE_CONFIG_DIR"
       else if type == "codex" then
         "CODEX_HOME"
+      else if type == "pi" then
+        "PI_CODING_AGENT_DIR"
       else if type == "cursor-agent" then
         "CURSOR_HOME"
       else
@@ -75,6 +84,8 @@ let
     "codex.conao3"
     "codex.agent001"
     "codex.agent002"
+    "pi.agent001"
+    "pi.agent002"
     "cursor-agent.agent001"
   ];
 
