@@ -12,7 +12,7 @@ appimageTools.wrapType2 {
 
   src = fetchurl {
     url = "https://www.pencil.dev/download/Pencil-linux-x86_64.AppImage";
-    hash = "sha256-D+s2k1lS0jXGRgivS/VHLRg2ZNU+gZx+lr7OUPcFqJU=";
+    hash = "sha256-cPmfmwZlDPXfpgYseKxRvRWU30dkRhaF8B3ew0MCwvM=";
   };
 
   meta = {
