@@ -13,16 +13,6 @@
   system.stateVersion = "24.11";
 
   nix = {
-    registry = {
-      toyokumo-kmailer.to = {
-        type = "path";
-        path = "/home/conao/ghq/github.com/conao3/nix-flakes/repos/toyokumo/kmailer";
-      };
-      toyokumo-account-kintoneapp.to = {
-        type = "path";
-        path = "/home/conao/ghq/github.com/conao3/nix-flakes/repos/toyokumo/account-kintoneapp";
-      };
-    };
     gc = {
       automatic = true;
       dates = "weekly";

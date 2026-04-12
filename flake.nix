@@ -68,6 +68,10 @@
       url = "github:conao3/rust-devo";
       flake = false;
     };
+    nix-flakes = {
+      url = "git+ssh://git@github.com/conao3/nix-flakes";
+      flake = false;
+    };
   };
 
   outputs =
@@ -106,6 +110,8 @@
               inputs.emacs-overlay.overlays.default
               (import ./overlays/go.nix)
               (import ./overlays/direnv.nix)
+              (import ./overlays/node-packages.nix)
+              (import ./overlays/cursor.nix)
             ];
             config.permittedInsecurePackages = [
               "googleearth-pro-7.3.6.10201"
@@ -126,6 +132,7 @@
                 ./hosts/${hostname}
                 { nixpkgs = commonNixpkgsConfig; }
                 inputs.sops-nix.nixosModules.sops
+                (import "${inputs.nix-flakes}/nix-flakes-registry.nix")
               ];
             };
         in
