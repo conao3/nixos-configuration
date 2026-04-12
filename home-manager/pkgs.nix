@@ -144,6 +144,22 @@
         # keep-sorted end
       ];
 
+      claude-desktop-patchy-cnb = pkgs.callPackage "${inputs.claude-desktop}/pkgs/patchy-cnb.nix" {};
+      claude-desktop-pkg = pkgs.callPackage "${inputs.claude-desktop}/pkgs/claude-desktop.nix" {
+        patchy-cnb = claude-desktop-patchy-cnb;
+      };
+      claude-desktop-with-fhs = pkgs.buildFHSEnv {
+        name = "claude-desktop";
+        targetPkgs = pkgs: with pkgs; [docker glibc openssl nodejs uv];
+        runScript = "${claude-desktop-pkg}/bin/claude-desktop";
+        extraInstallCommands = ''
+          mkdir -p $out/share/applications
+          cp ${claude-desktop-pkg}/share/applications/claude.desktop $out/share/applications/
+          mkdir -p $out/share/icons
+          cp -r ${claude-desktop-pkg}/share/icons/* $out/share/icons/
+        '';
+      };
+
       inputPackages = [
         # inputs.cljgen.packages.${system}.default
         # inputs.nix-flake-clojure.packages.${system}.default
