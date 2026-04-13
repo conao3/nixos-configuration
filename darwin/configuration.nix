@@ -7,8 +7,14 @@
     settings = {
       experimental-features = "nix-command flakes";
       max-jobs = 8;
-      extra-substituters = [ "https://numtide.cachix.org" ];
-      extra-trusted-public-keys = [ "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ik6cQjb41X0iXVXeHigGmycPPE=" ];
+      extra-substituters = [
+        "https://numtide.cachix.org"
+        "https://claude-code.cachix.org"
+      ];
+      extra-trusted-public-keys = [
+        "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ik6cQjb41X0iXVXeHigGmycPPE="
+        "claude-code.cachix.org-1:YeXf2aNu7UTX8Vwrze0za1WEDS+4DuI2kVeWEE4fsRk="
+      ];
     };
   };
 
@@ -35,7 +41,10 @@
   };
 
   security = {
-    pam.services.sudo_local.touchIdAuth = true;
+    pam.services.sudo_local = {
+      touchIdAuth = true;
+      reattach = true;
+    };
   };
 
   homebrew = {

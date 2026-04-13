@@ -251,6 +251,17 @@ let
   '';
 
   hooks = {
+    PreToolUse = [
+      {
+        matcher = "Write|Edit";
+        hooks = [
+          {
+            type = "command";
+            command = "clj-paren-repair-claude-hook --cljfmt";
+          }
+        ];
+      }
+    ];
     SessionStart = [
       {
         matcher = "";

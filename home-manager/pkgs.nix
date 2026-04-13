@@ -37,6 +37,7 @@
         '';
       };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
+      clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix { src = inputs.clojure-mcp-light; };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
       pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
@@ -52,7 +53,10 @@
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
         # keep-sorted start
+        babashka
+        bottom
         clj-kondo
+        clojure-mcp-light
         coreutils
         devenv
         diffutils

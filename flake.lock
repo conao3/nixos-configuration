@@ -191,6 +191,23 @@
         "type": "github"
       }
     },
+    "clojure-mcp-light": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773510090,
+        "narHash": "sha256-PzYQ6WBlApjGbiAy+FS7QC+Mriqr9Jq6d5cr0LZ2Unk=",
+        "owner": "bhauman",
+        "repo": "clojure-mcp-light",
+        "rev": "cf48cc6ab1d79809a97a74355492d44ee3bbc4ba",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bhauman",
+        "ref": "v0.2.2",
+        "repo": "clojure-mcp-light",
+        "type": "github"
+      }
+    },
     "crane": {
       "locked": {
         "lastModified": 1770419512,
@@ -1059,6 +1076,7 @@
         "arto": "arto",
         "claude-desktop": "claude-desktop",
         "cljgen": "cljgen",
+        "clojure-mcp-light": "clojure-mcp-light",
         "devo": "devo",
         "emacs-overlay": "emacs-overlay",
         "flake-parts": "flake-parts_2",
