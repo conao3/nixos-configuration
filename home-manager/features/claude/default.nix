@@ -11,7 +11,7 @@ let
   claudeBin = "${llmAgents.claude-code}/bin/claude";
   codexBin = "${llmAgents.codex}/bin/codex";
   cursorAgentPkg = llmAgents.cursor-agent;
-  cursorExe = lib.getExe pkgs.code-cursor-fhs;
+  cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
   agentExe = lib.getExe cursorAgentPkg;
 
   pencilMcpServer = "${pkgs.appimageTools.extractType2 {
