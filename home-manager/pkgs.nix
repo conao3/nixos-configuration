@@ -125,6 +125,7 @@
         inputs.rust-llm-quota.packages.${system}.default
         devo
         pkgs.nodejs_24 # vibe-kanban requires npx
+        pkgs.pnpm_10
       ]
       ++ (
         if pkgs.stdenv.isDarwin then

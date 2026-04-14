@@ -157,6 +157,10 @@ let
       type = "http";
       url = "https://mcp.linear.app/mcp";
     };
+    penpot = {
+      type = "http";
+      url = "http://localhost:4401/mcp";
+    };
   }
   // {
     devin = {
