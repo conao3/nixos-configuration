@@ -24,6 +24,10 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents-staging = {
+      url = "github:bgamari-positron/llm-agents.nix/619f510cfca7b1661105c548916c106c865148c4";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     cljgen = {
       url = "github:conao3/clojure-cljgen";
       inputs.nixpkgs.follows = "nixpkgs";
