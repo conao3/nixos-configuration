@@ -8,8 +8,7 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
-  llmAgentsStaging = inputs.llm-agents-staging.packages.${system};
-  claudeBin = "${llmAgentsStaging.claude-code}/bin/claude";
+  claudeBin = "${inputs.nix-claude-code.packages.${system}.default}/bin/claude";
   codexBin = "${llmAgents.codex}/bin/codex";
   piBin = "${llmAgents.pi}/bin/pi";
   cursorAgentPkg = llmAgents.cursor-agent;

@@ -24,8 +24,8 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    llm-agents-staging = {
-      url = "github:bgamari-positron/llm-agents.nix/619f510cfca7b1661105c548916c106c865148c4";
+    nix-claude-code = {
+      url = "github:ryoppippi/nix-claude-code";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     cljgen = {
