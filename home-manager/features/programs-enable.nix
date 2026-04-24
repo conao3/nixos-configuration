@@ -24,7 +24,7 @@
       prefix = "C-q";
       keyMode = "emacs";
       extraConfig = ''
-        set -s copy-command 'xsel -i --clipboard'
+        set -s copy-command '${if pkgs.stdenv.isDarwin then "pbcopy" else "xsel -i --clipboard"}'
         set -g mouse on
         bind -n WheelUpPane if -F "#{mouse_any_flag}" "send-keys -M" "copy-mode -e"
         bind -n WheelDownPane select-pane \; send-keys -M
