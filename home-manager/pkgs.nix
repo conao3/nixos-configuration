@@ -161,7 +161,7 @@
       ++ (
         if pkgs.stdenv.isDarwin then
           [
-            inputs.arto.packages.${system}.default
+            # inputs.arto.packages.${system}.default  # arto build broken (e0663d4)
           ]
         else
           [
