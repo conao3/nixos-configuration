@@ -14,4 +14,13 @@ config.colors = {
     }
 }
 
+config.keys = {
+    { key = 'w', mods = 'CMD', action = act.DisableDefaultAssignment },
+    { key = 'w', mods = 'ALT', action = act.DisableDefaultAssignment },
+    { key = '0', mods = 'CTRL', action = act.DisableDefaultAssignment },
+    { key = '-', mods = 'CTRL', action = act.DisableDefaultAssignment },
+    { key = '+', mods = 'CTRL', action = act.DisableDefaultAssignment },
+    { key = '=', mods = 'CTRL', action = act.DisableDefaultAssignment },
+}
+
 return config
