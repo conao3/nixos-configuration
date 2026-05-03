@@ -17,6 +17,7 @@
 
   # Misc
   ".env*"
+  "!.env*.example"
   "*.conao3"
   "*.orig"
 
