@@ -16,7 +16,7 @@
   "GR?TAGS"
 
   # Misc
-  ".env"
+  ".env*"
   "*.conao3"
   "*.orig"
 
