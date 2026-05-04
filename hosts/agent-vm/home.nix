@@ -161,6 +161,7 @@ in
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-agent-acp
         codex-acp
+        hermes-agent
         openclaw
         qmd # vector search
       ])
@@ -178,6 +179,8 @@ in
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
         LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
+        SLACK_BOT_TOKEN=${config.sops.placeholder."slack-bot-token"}
+        SLACK_APP_TOKEN=${config.sops.placeholder."slack-app-token"}
       '';
     };
     secrets = {
@@ -224,6 +227,12 @@ in
           printf '[openclaw] OpenAI Codex not configured. Run: openclaw onboard --auth-choice openai-codex\n'
         fi
         unset _openclaw_auth_profiles
+
+        _hermes_config="$HOME/.hermes/config.yaml"
+        if [ ! -f "$_hermes_config" ]; then
+          printf '[hermes] Not configured. Run: hermes setup\n'
+        fi
+        unset _hermes_config
       '';
     };
     wezterm.enable = true;
@@ -258,6 +267,41 @@ in
         }"
         "NODE_LLAMA_CPP_SKIP_DOWNLOAD=true"
         "NODE_OPTIONS=--no-network-family-autoselection --dns-result-order=ipv4first"
+      ];
+      EnvironmentFile = config.sops.templates."agent-vm-env".path;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  systemd.user.services.hermes-gateway = {
+    Unit = {
+      Description = "Hermes Gateway";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${inputs.llm-agents.packages.${system}.hermes-agent}/bin/hermes gateway run";
+      Restart = "always";
+      RestartSec = "5";
+      TimeoutStopSec = "75";
+      Environment = [
+        "HERMES_HOME=${homeDir}/.hermes"
+        "PATH=${
+          lib.concatStringsSep ":" [
+            "/run/wrappers/bin"
+            "${homeDir}/.nix-profile/bin"
+            "/nix/profile/bin"
+            "${homeDir}/.local/state/nix/profile/bin"
+            "/etc/profiles/per-user/${username}/bin"
+            "/nix/var/nix/profiles/default/bin"
+            "/run/current-system/sw/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+          ]
+        }"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
