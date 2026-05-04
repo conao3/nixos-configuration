@@ -91,6 +91,7 @@
         tree
         unixtools.watch
         unzip
+        worktrunk
         zip
         zlib
         # keep-sorted end
