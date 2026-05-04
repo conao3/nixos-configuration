@@ -14,6 +14,7 @@
   ../home-manager/features/programs-enable.nix
   ../home-manager/features/pure.nix
   ../home-manager/features/wezterm
+  ../home-manager/features/worktrunk.nix
   ../home-manager/features/zellij
   ../home-manager/features/zsh.nix
   # keep-sorted end

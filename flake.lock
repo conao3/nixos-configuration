@@ -601,6 +601,23 @@
         "type": "github"
       }
     },
+    "home-manager-worktrunk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777913370,
+        "narHash": "sha256-UXEYVEyX9g120c2i+ov5RdEEW5hO9VFGbpSiHTNspz4=",
+        "owner": "conao3",
+        "repo": "home-manager",
+        "rev": "225fd36d989ad8ebddbefafa20b301c4171fa711",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "ref": "feature/add-program-worktrunk",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "blueprint": "blueprint",
@@ -1066,6 +1083,7 @@
         "flake-parts": "flake-parts_2",
         "gitm": "gitm",
         "home-manager": "home-manager",
+        "home-manager-worktrunk": "home-manager-worktrunk",
         "llm-agents": "llm-agents",
         "mac-app-util": "mac-app-util",
         "nix-claude-code": "nix-claude-code",
