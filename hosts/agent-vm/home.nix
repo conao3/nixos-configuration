@@ -159,7 +159,7 @@ in
         lsof
       ])
       ++ (with inputs.llm-agents.packages.${system}; [
-        claude-code-acp
+        claude-agent-acp
         codex-acp
         openclaw
         qmd # vector search

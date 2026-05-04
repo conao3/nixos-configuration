@@ -177,7 +177,7 @@
           auto-claude
           catnip
           ck
-          claude-code-acp
+          claude-agent-acp
           codex-acp
           copilot-language-server
           # eca

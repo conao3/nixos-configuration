@@ -51,15 +51,15 @@
         enableScreensaver = false;
       };
       displayManager.sessionCommands = ''
-        ${pkgs.xorg.xset}/bin/xset -dpms
-        ${pkgs.xorg.xset}/bin/xset s off
-        ${pkgs.xorg.xset}/bin/xset s noblank
+        ${pkgs.xset}/bin/xset -dpms
+        ${pkgs.xset}/bin/xset s off
+        ${pkgs.xset}/bin/xset s noblank
         (
           prev_mode=""
           while true; do
             mode=$(head -1 /sys/class/drm/card0-Virtual-1/modes 2>/dev/null)
             if [ -n "$mode" ] && [ "$mode" != "$prev_mode" ]; then
-              ${pkgs.xorg.xrandr}/bin/xrandr --output Virtual-1 --mode "$mode"
+              ${pkgs.xrandr}/bin/xrandr --output Virtual-1 --mode "$mode"
               prev_mode="$mode"
             fi
             sleep 1

@@ -122,7 +122,7 @@
         # default: 173 100
         # 250 25
         sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 400 25
+          ${pkgs.xset}/bin/xset r rate 400 25
         '';
       };
       desktopManager = {
