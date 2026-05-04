@@ -102,6 +102,9 @@
   };
 
   services = {
+    # Keep the classic dbus daemon so `nixos-rebuild switch` does not hit the
+    # dbus -> broker switch inhibitor during ordinary updates.
+    dbus.implementation = "dbus";
     displayManager.defaultSession = "xfce";
     # displayManager.defaultSession = "none+i3";
     spice-vdagentd.enable = true;
@@ -232,6 +235,10 @@
 
   environment.systemPackages = with pkgs; [
     git # required by home-manager
+  ];
+
+  environment.xfce.excludePackages = with pkgs; [
+    xfce4-notifyd
   ];
 
   programs = {
