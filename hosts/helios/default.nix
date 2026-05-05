@@ -7,6 +7,7 @@
 }:
 let
   cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/debug/cagent";
+  cliProxyApiManagementCenterPackage = pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix { };
   codingAgentJobs = {
     # systemd timerConfig.OnCalendar format, not cron syntax.
     # Examples:
@@ -282,6 +283,21 @@ in
           ${pkgs.git}/bin/git commit --no-verify -m "chore(memory): hourly sync"
           ${pkgs.git}/bin/git push origin master
         ''}";
+      };
+    };
+
+    cli-proxy-api-management-center = {
+      description = "CLIProxyAPI Management Center";
+      after = [ "network.target" ];
+      wantedBy = [ "default.target" ];
+      serviceConfig = {
+        ExecStart = "${cliProxyApiManagementCenterPackage}/bin/cli-proxy-api-management-center";
+        Restart = "always";
+        RestartSec = "5";
+        Environment = [
+          "CLIPROXY_MGMT_CENTER_HOST=127.0.0.1"
+          "CLIPROXY_MGMT_CENTER_PORT=8788"
+        ];
       };
     };
   }
