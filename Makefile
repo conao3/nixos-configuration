@@ -1,13 +1,14 @@
 all:
 
 UNAME_S := $(shell uname -s)
+NOM := nix run nixpkgs#nix-output-monitor --
 
 .PHONY: switch
 switch:
 ifeq ($(UNAME_S),Darwin)
-	sudo -H nix run nix-darwin -- switch --flake . --show-trace |& nom
+	sudo -H nix run nix-darwin -- switch --flake . --show-trace |& $(NOM)
 else
-	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | nom --json
+	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | $(NOM) --json
 	systemctl --user daemon-reload || true
 	systemctl --user restart timers.target || true
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
@@ -16,7 +17,7 @@ endif
 .PHONY: switch-dry-run
 switch-dry-run:
 ifeq ($(UNAME_S),Darwin)
-	sudo -H nix run nix-darwin -- switch --flake . --dry-run --show-trace |& nom
+	sudo -H nix run nix-darwin -- switch --flake . --dry-run --show-trace |& $(NOM)
 else
 	sudo nixos-rebuild switch --flake . --dry-run --log-format internal-json -v 2>&1 | nom --json
 endif
