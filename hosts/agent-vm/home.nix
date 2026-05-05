@@ -414,6 +414,22 @@ in
     };
   };
 
+  systemd.user.services.chrome-devtools = {
+    Unit = {
+      Description = "Google Chrome for DevTools MCP";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.google-chrome}/bin/google-chrome-stable --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --user-data-dir=${homeDir}/.config/google-chrome-devtools-mcp --no-first-run --no-default-browser-check --disable-gpu https://x.com/";
+      Restart = "on-failure";
+      RestartSec = "5";
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+
   xdg.configFile."mimeapps.list".force = true;
 
   xdg.configFile."xfce4/helpers.rc" = {
