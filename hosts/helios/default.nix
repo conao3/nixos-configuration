@@ -53,35 +53,35 @@ let
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.writeShellScript "coding-agent-${name}" ''
-          set -euo pipefail
+                    set -euo pipefail
 
-          target=${escapedTarget}
-          input=${escapedInput}
-          current_command=$(${pkgs.tmux}/bin/tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
-          if [ -z "$current_command" ]; then
-            exit 0
-          fi
+                    target=${escapedTarget}
+                    input=${escapedInput}
+                    current_command=$(${pkgs.tmux}/bin/tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
+                    if [ -z "$current_command" ]; then
+                      exit 0
+                    fi
 
-          if ! ${pkgs.gnugrep}/bin/grep -Fq -- ${escapedGuard} <<EOF
-$current_command
-EOF
-          then
-            exit 0
-          fi
+                    if ! ${pkgs.gnugrep}/bin/grep -Fq -- ${escapedGuard} <<EOF
+          $current_command
+          EOF
+                    then
+                      exit 0
+                    fi
 
-          for ((i = 0; i < ''${#input}; i++)); do
-            ch="''${input:i:1}"
-            case "$ch" in
-              ' ')
-                ${pkgs.tmux}/bin/tmux send-keys -t "$target" Space
-                ;;
-              *)
-                ${pkgs.tmux}/bin/tmux send-keys -t "$target" "$ch"
-                ;;
-            esac
-            sleep 0.02
-          done
-          ${pkgs.tmux}/bin/tmux send-keys -t "$target" Enter
+                    for ((i = 0; i < ''${#input}; i++)); do
+                      ch="''${input:i:1}"
+                      case "$ch" in
+                        ' ')
+                          ${pkgs.tmux}/bin/tmux send-keys -t "$target" Space
+                          ;;
+                        *)
+                          ${pkgs.tmux}/bin/tmux send-keys -t "$target" "$ch"
+                          ;;
+                      esac
+                      sleep 0.02
+                    done
+                    ${pkgs.tmux}/bin/tmux send-keys -t "$target" Enter
         ''}";
       };
     };
@@ -226,6 +226,7 @@ in
           "-o ExitOnForwardFailure=yes"
           "-o StrictHostKeyChecking=no"
           "-L 9119:127.0.0.1:9119"
+          "-L 8787:127.0.0.1:8787"
           "-L 18789:127.0.0.1:18789"
           "-L 18792:127.0.0.1:18792"
           "-L 18701:127.0.0.1:18701"
@@ -283,7 +284,8 @@ in
         ''}";
       };
     };
-  } // codingAgentServices;
+  }
+  // codingAgentServices;
 
   systemd.user.timers = {
     memory-alert = {
@@ -293,7 +295,8 @@ in
         OnUnitActiveSec = "1min";
       };
     };
-  } // codingAgentTimers;
+  }
+  // codingAgentTimers;
 
   # systemd.user.timers.agent-memory-sync = {
   #   wantedBy = [ "timers.target" ];

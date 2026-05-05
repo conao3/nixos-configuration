@@ -12,6 +12,9 @@ let
   homeDir = config.home.homeDirectory;
   commonHomeDir = ../../home-manager;
   hermesAgentPackage = inputs.llm-agents-conao3.packages.${system}.hermes-agent;
+  hermesWebuiPackage = pkgs.callPackage ../../pkgs/hermes-webui.nix {
+    hermes-agent = hermesAgentPackage;
+  };
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
 {
@@ -167,6 +170,7 @@ in
       ])
       ++ [
         hermesAgentPackage
+        hermesWebuiPackage
       ]
       ++ [
         inputs.rust-fetch-usage-limit.packages.${system}.default
@@ -328,6 +332,49 @@ in
         "HERMES_HOME=${homeDir}/.hermes"
         "PATH=${
           lib.concatStringsSep ":" [
+            "/run/wrappers/bin"
+            "${homeDir}/.nix-profile/bin"
+            "/nix/profile/bin"
+            "${homeDir}/.local/state/nix/profile/bin"
+            "/etc/profiles/per-user/${username}/bin"
+            "/nix/var/nix/profiles/default/bin"
+            "/run/current-system/sw/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+          ]
+        }"
+      ];
+      EnvironmentFile = config.sops.templates."agent-vm-env".path;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  systemd.user.services.hermes-webui = {
+    Unit = {
+      Description = "Hermes Web UI";
+      After = [
+        "network-online.target"
+        "hermes-gateway.service"
+      ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${hermesWebuiPackage}/bin/hermes-webui";
+      Restart = "always";
+      RestartSec = "5";
+      TimeoutStopSec = "75";
+      Environment = [
+        "HERMES_HOME=${homeDir}/.hermes"
+        "HERMES_WEBUI_HOST=127.0.0.1"
+        "HERMES_WEBUI_PORT=8787"
+        "HERMES_WEBUI_STATE_DIR=${homeDir}/.hermes/webui"
+        "HERMES_WEBUI_AUTO_INSTALL=0"
+        "PATH=${
+          lib.concatStringsSep ":" [
+            "${hermesAgentPackage}/bin"
             "/run/wrappers/bin"
             "${homeDir}/.nix-profile/bin"
             "/nix/profile/bin"
