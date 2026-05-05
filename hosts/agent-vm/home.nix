@@ -11,6 +11,7 @@ let
   username = config.home.username;
   homeDir = config.home.homeDirectory;
   commonHomeDir = ../../home-manager;
+  hermesAgentPackage = inputs.llm-agents-conao3.packages.${system}.hermes-agent;
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
 {
@@ -161,10 +162,12 @@ in
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-agent-acp
         codex-acp
-        hermes-agent
         openclaw
         qmd # vector search
       ])
+      ++ [
+        hermesAgentPackage
+      ]
       ++ [
         inputs.rust-fetch-usage-limit.packages.${system}.default
         (pkgs.callPackage ../../pkgs/linear-cli.nix { })
@@ -282,7 +285,42 @@ in
       Wants = [ "network-online.target" ];
     };
     Service = {
-      ExecStart = "${inputs.llm-agents.packages.${system}.hermes-agent}/bin/hermes gateway run";
+      ExecStart = "${hermesAgentPackage}/bin/hermes gateway run";
+      Restart = "always";
+      RestartSec = "5";
+      TimeoutStopSec = "75";
+      Environment = [
+        "HERMES_HOME=${homeDir}/.hermes"
+        "PATH=${
+          lib.concatStringsSep ":" [
+            "/run/wrappers/bin"
+            "${homeDir}/.nix-profile/bin"
+            "/nix/profile/bin"
+            "${homeDir}/.local/state/nix/profile/bin"
+            "/etc/profiles/per-user/${username}/bin"
+            "/nix/var/nix/profiles/default/bin"
+            "/run/current-system/sw/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+          ]
+        }"
+      ];
+      EnvironmentFile = config.sops.templates."agent-vm-env".path;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  systemd.user.services.hermes-dashboard = {
+    Unit = {
+      Description = "Hermes Dashboard";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${hermesAgentPackage}/bin/hermes dashboard --host 127.0.0.1 --port 9119 --no-open";
       Restart = "always";
       RestartSec = "5";
       TimeoutStopSec = "75";

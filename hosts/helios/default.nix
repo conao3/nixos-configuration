@@ -225,6 +225,7 @@ in
           "-o ServerAliveCountMax=3"
           "-o ExitOnForwardFailure=yes"
           "-o StrictHostKeyChecking=no"
+          "-L 9119:127.0.0.1:9119"
           "-L 18789:127.0.0.1:18789"
           "-L 18792:127.0.0.1:18792"
           "-L 18701:127.0.0.1:18701"

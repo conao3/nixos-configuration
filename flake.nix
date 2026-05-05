@@ -28,6 +28,10 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents-conao3 = {
+      url = "github:conao3/llm-agents.nix?ref=fix/hermes-dashboard-web-dist";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-claude-code = {
       url = "github:ryoppippi/nix-claude-code";
       inputs.nixpkgs.follows = "nixpkgs";
