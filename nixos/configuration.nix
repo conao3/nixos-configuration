@@ -233,9 +233,14 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  environment.systemPackages = with pkgs; [
-    git # required by home-manager
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      git # required by home-manager
+      # Keep the xfce4-panel notification plugin available even though the
+      # xfce4-notifyd daemon itself is hidden by Home Manager in favor of dunst.
+      xfce4-notifyd
+    ];
 
   environment.xfce.excludePackages = with pkgs; [
     xfce4-notifyd
