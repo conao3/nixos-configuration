@@ -1,7 +1,7 @@
 all:
 
 UNAME_S := $(shell uname -s)
-NOM := nix run nixpkgs#nix-output-monitor --
+NOM := nix run nixpkgs\#nix-output-monitor --
 
 .PHONY: switch
 switch:

@@ -36,6 +36,7 @@
           cp -r ${claude-desktop}/share/icons/* $out/share/icons/
         '';
       };
+      cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix { src = inputs.clojure-mcp-light; };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
@@ -56,6 +57,7 @@
         babashka
         bottom
         clj-kondo
+        cli-proxy-api-management-center
         clojure-mcp-light
         coreutils
         devenv

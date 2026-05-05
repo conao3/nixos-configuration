@@ -11,6 +11,7 @@ let
   username = config.home.username;
   homeDir = config.home.homeDirectory;
   commonHomeDir = ../../home-manager;
+  cliProxyApiManagementCenterPackage = pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix { };
   hermesAgentPackage = inputs.llm-agents-conao3.packages.${system}.hermes-agent;
   hermesWebuiPackage = pkgs.callPackage ../../pkgs/hermes-webui.nix {
     hermes-agent = hermesAgentPackage;
@@ -169,6 +170,7 @@ in
         qmd # vector search
       ])
       ++ [
+        cliProxyApiManagementCenterPackage
         hermesAgentPackage
         hermesWebuiPackage
       ]
@@ -389,6 +391,26 @@ in
         }"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  systemd.user.services.cli-proxy-api-management-center = {
+    Unit = {
+      Description = "CLIProxyAPI Management Center";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${cliProxyApiManagementCenterPackage}/bin/cli-proxy-api-management-center";
+      Restart = "always";
+      RestartSec = "5";
+      Environment = [
+        "CLIPROXY_MGMT_CENTER_HOST=127.0.0.1"
+        "CLIPROXY_MGMT_CENTER_PORT=8788"
+      ];
     };
     Install = {
       WantedBy = [ "default.target" ];
