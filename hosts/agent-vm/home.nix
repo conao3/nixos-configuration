@@ -15,6 +15,7 @@ let
   hermesWebuiPackage = pkgs.callPackage ../../pkgs/hermes-webui.nix {
     hermes-agent = hermesAgentPackage;
   };
+  chromeDevtoolsPackage = pkgs.callPackage ../../pkgs/chrome-devtools.nix { };
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
 {
@@ -170,6 +171,7 @@ in
         qmd # vector search
       ])
       ++ [
+        chromeDevtoolsPackage
         hermesAgentPackage
         hermesWebuiPackage
       ]
