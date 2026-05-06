@@ -22,9 +22,19 @@ let
   # Hermes Agent main but not in the currently packaged v2026.4.30 build.
   # Keep the packaged Hermes Agent as-is and expose only the missing module to
   # the WebUI through a small symlink overlay.
+  hermesAgentRev = "601e5f1d57cfd4ceefee50a6df05a860a1a602e8";
+
   kanbanDb = fetchurl {
-    url = "https://raw.githubusercontent.com/NousResearch/hermes-agent/601e5f1d57cfd4ceefee50a6df05a860a1a602e8/hermes_cli/kanban_db.py";
+    url = "https://raw.githubusercontent.com/NousResearch/hermes-agent/${hermesAgentRev}/hermes_cli/kanban_db.py";
     sha256 = "0jv2b020sf9ag3yshf11gaj3xfqzb9hc7cjzcp3d0slc507s6iaq";
+  };
+
+  # kanban_db.py from Hermes Agent main imports normalize_profile_name from
+  # hermes_cli.profiles, which does not exist in packaged v2026.4.30. Overlay
+  # the matching profiles.py as well so Kanban writes do not fail at runtime.
+  profilesPy = fetchurl {
+    url = "https://raw.githubusercontent.com/NousResearch/hermes-agent/${hermesAgentRev}/hermes_cli/profiles.py";
+    sha256 = "1402mlrw8m990xvy5xl0zp7zcphg58zcjzkj7crmz0nvvaii8y61";
   };
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
@@ -59,6 +69,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ln -s "$path" "$agentOverlay/hermes_cli/$(basename "$path")"
     done
     ln -sf ${kanbanDb} "$agentOverlay/hermes_cli/kanban_db.py"
+    ln -sf ${profilesPy} "$agentOverlay/hermes_cli/profiles.py"
 
     makeWrapper ${pythonEnv.interpreter} "$out/bin/hermes-webui" \
       --add-flags "$out/share/hermes-webui/server.py" \
