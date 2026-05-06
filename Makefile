@@ -1,3 +1,6 @@
+SHELL := bash
+.SHELLFLAGS := -o pipefail -c
+
 all:
 
 UNAME_S := $(shell uname -s)
