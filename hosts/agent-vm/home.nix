@@ -152,6 +152,7 @@ in
       # utils
       ++ (with pkgs; [
         _1password-gui
+        docker-compose
         file
         gh
         git

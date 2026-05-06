@@ -33,7 +33,10 @@
   users.users.conao = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" ];
+    extraGroups = [
+      "docker"
+      "wheel"
+    ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFC6/Nfy2RrRM4oRtUw8U0JHq5CyDPXxpGGgBsnWku48 conao@nixos"
     ];
@@ -135,4 +138,6 @@
   };
 
   services.tailscale.enable = true;
+
+  virtualisation.docker.enable = true;
 }
