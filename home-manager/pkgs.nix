@@ -36,6 +36,7 @@
           cp -r ${claude-desktop}/share/icons/* $out/share/icons/
         '';
       };
+      chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix { src = inputs.clojure-mcp-light; };
@@ -56,6 +57,7 @@
         # keep-sorted start
         babashka
         bottom
+        chrome-devtools
         clj-kondo
         cli-proxy-api-management-center
         clojure-mcp-light
