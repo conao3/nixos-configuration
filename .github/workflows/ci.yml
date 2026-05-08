@@ -28,5 +28,7 @@ jobs:
 
       - name: Check NixOS configurations
         run: |
-          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace
-          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace
+          mkdir -p /tmp/nix-flakes-ci
+          printf '{ }\n' > /tmp/nix-flakes-ci/nix-flakes-registry.nix
+          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace --override-input nix-flakes path:/tmp/nix-flakes-ci
+          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace --override-input nix-flakes path:/tmp/nix-flakes-ci
