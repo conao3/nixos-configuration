@@ -83,6 +83,16 @@
     };
   };
 
+  systemd.services.grow-root-filesystem = {
+    description = "Grow root filesystem to fill the VM disk";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.e2fsprogs}/bin/resize2fs /dev/disk/by-label/nixos";
+    };
+  };
+
   systemd.tmpfiles.rules = [
     "d /home/conao/.config 0755 conao users -"
     "d /home/conao/.config/sops 0755 conao users -"
@@ -118,7 +128,7 @@
 
   virtualisation.vmVariant.virtualisation = {
     memorySize = 4096;
-    diskSize = 20 * 1024;
+    diskSize = 100 * 1024;
     writableStoreUseTmpfs = false;
     forwardPorts = [
       {

@@ -41,6 +41,7 @@
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix { src = inputs.clojure-mcp-light; };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
+      lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
       pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
@@ -113,6 +114,7 @@
         google-chrome
         googleearth-pro
         gparted
+        lightpanda
         logseq
         ollama
         pciutils

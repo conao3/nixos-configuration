@@ -16,6 +16,7 @@ let
     hermes-agent = hermesAgentPackage;
   };
   chromeDevtoolsPackage = pkgs.callPackage ../../pkgs/chrome-devtools.nix { };
+  lightpandaPackage = pkgs.callPackage ../../pkgs/lightpanda.nix { };
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
 {
@@ -160,6 +161,7 @@ in
         gnumake
         google-chrome
         jq
+        lightpandaPackage
         tmux
         tree
         lsof

@@ -36,6 +36,7 @@ update:
 
 MEMORY ?= 4096
 CORES ?= 2
+DISK_SIZE ?= 100G
 
 .PHONY: edit-secrets
 edit-secrets:
@@ -44,6 +45,10 @@ edit-secrets:
 .PHONY: vm-agent
 vm-agent:
 	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm --log-format internal-json -v 2>&1 | nom --json
+	@if [ -e conao-nixos-agent.qcow2 ]; then \
+		QEMU_IMG=$$(nix build --no-link --print-out-paths nixpkgs#qemu-utils)/bin/qemu-img; \
+		$$QEMU_IMG resize conao-nixos-agent.qcow2 $(DISK_SIZE); \
+	fi
 	rm -f /tmp/virtiofsd-dev-repos.sock
 	nix run nixpkgs#virtiofsd -- --socket-path=/tmp/virtiofsd-dev-repos.sock --shared-dir=$(HOME)/ghq --sandbox none & \
 	VIRTIOFSD_PID=$$!; \
