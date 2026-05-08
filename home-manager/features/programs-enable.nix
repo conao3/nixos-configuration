@@ -2,7 +2,6 @@
 {
   programs = {
     # https://nix-community.github.io/home-manager/options.xhtml
-    # keep-sorted start
     alacritty.enable = true;
     awscli.enable = true;
     bat.enable = true;
@@ -33,6 +32,5 @@
     vim.enable = true;
     vscode.enable = !pkgs.stdenv.isDarwin;
     zed-editor.enable = !pkgs.stdenv.isDarwin;
-    # keep-sorted end
   };
 }

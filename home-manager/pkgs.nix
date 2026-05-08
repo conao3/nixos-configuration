@@ -19,8 +19,8 @@
       };
       claude-desktop-with-fhs = pkgs.buildFHSEnv {
         name = "claude-desktop";
-        targetPkgs = pkgs':
-          with pkgs'; [
+        targetPkgs =
+          pkgs': with pkgs'; [
             docker
             glibc
             openssl
@@ -39,7 +39,9 @@
       chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
-      clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix { src = inputs.clojure-mcp-light; };
+      clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
+        src = inputs.clojure-mcp-light;
+      };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
@@ -59,8 +61,8 @@
         babashka
         bottom
         chrome-devtools
-        clj-kondo
         cli-proxy-api-management-center
+        clj-kondo
         clojure-mcp-light
         coreutils
         devenv
@@ -103,8 +105,8 @@
 
       linuxPackages = with pkgs; [
         # keep-sorted start
-        binutils
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
+        binutils
         burpsuite
         chromium
         dbeaver-bin
@@ -174,28 +176,25 @@
             claude-desktop-with-fhs
           ]
       )
-      ++ (
-        with inputs.llm-agents.packages.${system};
-        [
-          # keep-sorted start
-          agent-browser
-          agent-deck
-          auto-claude
-          catnip
-          ck
-          claude-agent-acp
-          codex-acp
-          copilot-language-server
-          # eca
-          # gastown
-          happy-coder
-          # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
-          # TODO: https://github.com/steveyegge/efrit
-          vibe-kanban
-          workmux
-          # keep-sorted end
-        ]
-      );
+      ++ (with inputs.llm-agents.packages.${system}; [
+        # keep-sorted start
+        agent-browser
+        agent-deck
+        auto-claude
+        catnip
+        ck
+        claude-agent-acp
+        codex-acp
+        copilot-language-server
+        # eca
+        # gastown
+        happy-coder
+        # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
+        # TODO: https://github.com/steveyegge/efrit
+        vibe-kanban
+        workmux
+        # keep-sorted end
+      ]);
 
     in
     commonPackages

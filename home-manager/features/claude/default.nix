@@ -15,14 +15,16 @@ let
   cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
   agentExe = lib.getExe cursorAgentPkg;
 
-  pencilMcpServer = "${pkgs.appimageTools.extractType2 {
-    pname = "pencil-dev";
-    version = "2025.1.0";
-    src = pkgs.fetchurl {
-      url = "https://www.pencil.dev/download/Pencil-linux-x86_64.AppImage";
-      hash = "sha256-31gqv4kU8LB2e84MQKcNYXTLNSeJLzmWQahz6+bi2jk=";
-    };
-  }}/resources/app.asar.unpacked/out/mcp-server-linux-x64";
+  pencilMcpServer = "${
+    pkgs.appimageTools.extractType2 {
+      pname = "pencil-dev";
+      version = "2025.1.0";
+      src = pkgs.fetchurl {
+        url = "https://www.pencil.dev/download/Pencil-linux-x86_64.AppImage";
+        hash = "sha256-31gqv4kU8LB2e84MQKcNYXTLNSeJLzmWQahz6+bi2jk=";
+      };
+    }
+  }/resources/app.asar.unpacked/out/mcp-server-linux-x64";
 
   aliasSpecs = [
     {
@@ -47,34 +49,37 @@ let
     }
   ];
 
-  mkSpec = name: let
-    type = builtins.head (lib.splitString "." name);
-  in {
-    inherit name type;
-    bin =
-      if type == "claude" then
-        claudeBin
-      else if type == "codex" then
-        codexBin
-      else if type == "pi" then
-        piBin
-      else if type == "cursor-agent" then
-        agentExe
-      else
-        throw "claude/default.nix mkSpec: unknown agent type '${type}' in '${name}'";
-    envKey =
-      if type == "claude" then
-        "CLAUDE_CONFIG_DIR"
-      else if type == "codex" then
-        "CODEX_HOME"
-      else if type == "pi" then
-        "PI_CODING_AGENT_DIR"
-      else if type == "cursor-agent" then
-        "CURSOR_HOME"
-      else
-        throw "claude/default.nix mkSpec: unknown agent type '${type}'";
-    dir = ".agents/.${name}";
-  };
+  mkSpec =
+    name:
+    let
+      type = builtins.head (lib.splitString "." name);
+    in
+    {
+      inherit name type;
+      bin =
+        if type == "claude" then
+          claudeBin
+        else if type == "codex" then
+          codexBin
+        else if type == "pi" then
+          piBin
+        else if type == "cursor-agent" then
+          agentExe
+        else
+          throw "claude/default.nix mkSpec: unknown agent type '${type}' in '${name}'";
+      envKey =
+        if type == "claude" then
+          "CLAUDE_CONFIG_DIR"
+        else if type == "codex" then
+          "CODEX_HOME"
+        else if type == "pi" then
+          "PI_CODING_AGENT_DIR"
+        else if type == "cursor-agent" then
+          "CURSOR_HOME"
+        else
+          throw "claude/default.nix mkSpec: unknown agent type '${type}'";
+      dir = ".agents/.${name}";
+    };
 
   wrapperSpecs = map mkSpec [
     "claude.conao3"
@@ -89,7 +94,8 @@ let
     "cursor-agent.agent001"
   ];
 
-  mkWrapper = spec:
+  mkWrapper =
+    spec:
     pkgs.runCommand spec.name { buildInputs = [ pkgs.makeWrapper ]; } ''
       makeWrapper ${spec.bin} $out/bin/${spec.name} \
         --run 'export ${spec.envKey}="$HOME/${spec.dir}"'
@@ -108,16 +114,25 @@ let
   identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
 
   wrapperPackages = map mkWrapper wrapperSpecs;
-  agentDirs = [ "$HOME/.agents" "$HOME/.agents/share" ] ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
-  claudeConfigDirs =
-    [ "$HOME/.claude" ]
-    ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
-  codexConfigDirs =
-    [ "$HOME/.codex" ]
-    ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "codex") wrapperSpecs);
-  claudeJsonFiles =
-    [ "$HOME/.claude.json" ]
-    ++ map (spec: "$HOME/${spec.dir}/.claude.json") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
+  agentDirs = [
+    "$HOME/.agents"
+    "$HOME/.agents/share"
+  ]
+  ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
+  claudeConfigDirs = [
+    "$HOME/.claude"
+  ]
+  ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
+  codexConfigDirs = [
+    "$HOME/.codex"
+  ]
+  ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "codex") wrapperSpecs);
+  claudeJsonFiles = [
+    "$HOME/.claude.json"
+  ]
+  ++ map (spec: "$HOME/${spec.dir}/.claude.json") (
+    builtins.filter (spec: spec.type == "claude") wrapperSpecs
+  );
 
   claudeSettings = {
     theme = "dark";
@@ -140,18 +155,33 @@ let
     autoMemoryDirectory = "~/.agents/share/auto-memory";
   };
 
-  flattenSettings = prefix: attrs:
-    lib.concatLists (lib.mapAttrsToList (
-      name: value: let
-        path = "${prefix}.${name}";
-      in
+  flattenSettings =
+    prefix: attrs:
+    lib.concatLists (
+      lib.mapAttrsToList (
+        name: value:
+        let
+          path = "${prefix}.${name}";
+        in
         if builtins.isAttrs value && value ? from && value ? to then
-          [ { inherit path; inherit (value) from to; } ]
+          [
+            {
+              inherit path;
+              inherit (value) from to;
+            }
+          ]
         else if builtins.isAttrs value then
           flattenSettings path value
         else
-          [ { inherit path; from = null; to = value; } ]
-    ) attrs);
+          [
+            {
+              inherit path;
+              from = null;
+              to = value;
+            }
+          ]
+      ) attrs
+    );
 
   mcpServers = {
     chrome_devtools = {
@@ -197,58 +227,62 @@ let
   # Cursor mcp.json: https://cursor.com/docs/context/mcp — stdio needs type + command + args; remote uses url only.
   cursorMcpServers = lib.mapAttrs (
     _: srv:
-      if srv ? url then
-        {
-          inherit (srv) url;
-        }
-        // lib.optionalAttrs (srv ? headers) { inherit (srv) headers; }
-      else
-        {
-          type = "stdio";
-          command = srv.command;
-          args = srv.args or [ ];
-        }
-        // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
+    if srv ? url then
+      {
+        inherit (srv) url;
+      }
+      // lib.optionalAttrs (srv ? headers) { inherit (srv) headers; }
+    else
+      {
+        type = "stdio";
+        command = srv.command;
+        args = srv.args or [ ];
+      }
+      // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
   ) mcpServers;
 
   codexMcpServers = lib.mapAttrs (
-    _: srv: let
+    _: srv:
+    let
       usesDevinEnvBearer =
         lib.hasAttrByPath [ "headers" "Authorization" ] srv
         && srv.headers.Authorization == "Bearer \${DEVIN_API_KEY}";
     in
-      if srv ? url then
-        {
-          type = "http";
-          inherit (srv) url;
-        }
-        // lib.optionalAttrs usesDevinEnvBearer {
-          bearer_token_env_var = "DEVIN_API_KEY";
-        }
-      else
-        {
-          command = srv.command;
-          args = srv.args or [ ];
-        }
-        // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
+    if srv ? url then
+      {
+        type = "http";
+        inherit (srv) url;
+      }
+      // lib.optionalAttrs usesDevinEnvBearer {
+        bearer_token_env_var = "DEVIN_API_KEY";
+      }
+    else
+      {
+        command = srv.command;
+        args = srv.args or [ ];
+      }
+      // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
   ) mcpServers;
 
   settingsPatches = flattenSettings "" claudeSettings;
 
-  applyPatch = patch: let
-    fromJson = builtins.toJSON patch.from;
-    toJson = builtins.toJSON patch.to;
-  in ''
-    settingsCurrent=$(${pkgs.jq}/bin/jq -cS '${patch.path}' "$settingsTarget")
-    settingsExpectedFrom=$(echo '${fromJson}' | ${pkgs.jq}/bin/jq -cS '.')
-    settingsExpectedTo=$(echo '${toJson}' | ${pkgs.jq}/bin/jq -cS '.')
-    if [ "$settingsCurrent" = "$settingsExpectedFrom" ]; then
-      ${pkgs.jq}/bin/jq --argjson to '${toJson}' '${patch.path} = $to' \
-        "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
-    elif [ "$settingsCurrent" != "$settingsExpectedTo" ]; then
-      printf '\033[1;33mWARN: claude settings: %s: ${patch.path}: expected %s or %s, got %s, skipping\033[0m\n' "$settingsTarget" "$settingsExpectedFrom" "$settingsExpectedTo" "$settingsCurrent" >> "$settingsWarnFile"
-    fi
-  '';
+  applyPatch =
+    patch:
+    let
+      fromJson = builtins.toJSON patch.from;
+      toJson = builtins.toJSON patch.to;
+    in
+    ''
+      settingsCurrent=$(${pkgs.jq}/bin/jq -cS '${patch.path}' "$settingsTarget")
+      settingsExpectedFrom=$(echo '${fromJson}' | ${pkgs.jq}/bin/jq -cS '.')
+      settingsExpectedTo=$(echo '${toJson}' | ${pkgs.jq}/bin/jq -cS '.')
+      if [ "$settingsCurrent" = "$settingsExpectedFrom" ]; then
+        ${pkgs.jq}/bin/jq --argjson to '${toJson}' '${patch.path} = $to' \
+          "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
+      elif [ "$settingsCurrent" != "$settingsExpectedTo" ]; then
+        printf '\033[1;33mWARN: claude settings: %s: ${patch.path}: expected %s or %s, got %s, skipping\033[0m\n' "$settingsTarget" "$settingsExpectedFrom" "$settingsExpectedTo" "$settingsCurrent" >> "$settingsWarnFile"
+      fi
+    '';
 
   hooks = {
     PreToolUse = [
@@ -344,10 +378,13 @@ in
         };
       };
     };
-  } // lib.listToAttrs (map (spec: {
-    name = "${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}";
-    value.source = ./AGENTS.md;
-  }) wrapperSpecs);
+  }
+  // lib.listToAttrs (
+    map (spec: {
+      name = "${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}";
+      value.source = ./AGENTS.md;
+    }) wrapperSpecs
+  );
 
   home.packages =
     wrapperPackages
@@ -409,33 +446,39 @@ in
     mkdir -p "$HOME"/.agents/share/notes
   '';
 
-  home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
-    codexMcpServersJson = builtins.toJSON { mcp_servers = codexMcpServers; };
-  in ''
-    ${lib.concatMapStringsSep "\n" (dir: ''
-      mkdir -p "${dir}"
-      configTarget="${dir}/config.toml"
-      if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
-        rm -f "$configTarget"
-        echo '${codexMcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
-      else
-        ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
-          | ${pkgs.jq}/bin/jq --argjson servers '${builtins.toJSON codexMcpServers}' '.mcp_servers = $servers' \
-          | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
-          && mv "$configTarget.tmp" "$configTarget"
-      fi
-    '') codexConfigDirs}
-  '');
+  home.activation.codexMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (
+    let
+      codexMcpServersJson = builtins.toJSON { mcp_servers = codexMcpServers; };
+    in
+    ''
+      ${lib.concatMapStringsSep "\n" (dir: ''
+        mkdir -p "${dir}"
+        configTarget="${dir}/config.toml"
+        if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
+          rm -f "$configTarget"
+          echo '${codexMcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
+        else
+          ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
+            | ${pkgs.jq}/bin/jq --argjson servers '${builtins.toJSON codexMcpServers}' '.mcp_servers = $servers' \
+            | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
+            && mv "$configTarget.tmp" "$configTarget"
+        fi
+      '') codexConfigDirs}
+    ''
+  );
 
   # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).
   # Use activation (not home.file) so cursor-agent cannot replace the symlink with an empty file.
-  home.activation.cursorMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (let
-    cursorMcpJson = builtins.toJSON { mcpServers = cursorMcpServers; };
-  in ''
-    configTarget="$HOME/.agents/.cursor-agent.agent001/mcp.json"
-    rm -f "$configTarget"
-    echo '${cursorMcpJson}' > "$configTarget"
-  '');
+  home.activation.cursorMcpSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] (
+    let
+      cursorMcpJson = builtins.toJSON { mcpServers = cursorMcpServers; };
+    in
+    ''
+      configTarget="$HOME/.agents/.cursor-agent.agent001/mcp.json"
+      rm -f "$configTarget"
+      echo '${cursorMcpJson}' > "$configTarget"
+    ''
+  );
 
   programs.git.ignores = [
     ".claude"

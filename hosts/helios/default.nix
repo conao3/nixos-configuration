@@ -7,7 +7,9 @@
 }:
 let
   cagentBin = "/home/conao/ghq/github.com/conao3/rust-cagent/target/debug/cagent";
-  cliProxyApiManagementCenterPackage = pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix { };
+  cliProxyApiManagementCenterPackage =
+    pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix
+      { };
   codingAgentJobs = {
     # systemd timerConfig.OnCalendar format, not cron syntax.
     # Examples:

@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   xfconfSettings = {
     xfce4-keyboard-shortcuts = {
@@ -134,7 +139,8 @@ let
     };
   };
 
-  xfconfNormalizedSettings = lib.mapAttrs (_: properties:
+  xfconfNormalizedSettings = lib.mapAttrs (
+    _: properties:
     lib.mapAttrs' (property: value: {
       name = lib.removePrefix "/" property;
       inherit value;
@@ -150,9 +156,9 @@ let
     ) xfconfNormalizedSettings
   );
 
-  xfconfNonNullSettings =
-    lib.mapAttrs (_: properties: lib.filterAttrs (_: value: value != null) properties)
-      xfconfNormalizedSettings;
+  xfconfNonNullSettings = lib.mapAttrs (
+    _: properties: lib.filterAttrs (_: value: value != null) properties
+  ) xfconfNormalizedSettings;
 in
 {
   xdg.configFile."autostart/xfce4-notifyd.desktop".text = ''
