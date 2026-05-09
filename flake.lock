@@ -885,11 +885,11 @@
     "nix-flakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1778303113,
-        "narHash": "sha256-EAvdF+1pi1h9NzAsagfbNH02dHYrkvcm7fTDK3eIS3g=",
+        "lastModified": 1778303996,
+        "narHash": "sha256-vmbacqkuVMXmkyx65Ldcwd2U70aPBmJ/9rFOPr2RHEk=",
         "ref": "refs/heads/master",
-        "rev": "9035ec1d9723d6aa617f209688c213ab5d6174ef",
-        "revCount": 48,
+        "rev": "d6c733755a122b698ac2348f353f035373085d50",
+        "revCount": 49,
         "type": "git",
         "url": "ssh://git@github.com/conao3/nix-flakes"
       },
