@@ -81,6 +81,23 @@
           exit 1
         fi
 
+        top="$(${pkgs.git}/bin/git rev-parse --show-toplevel)"
+        root_env_name="$(printf '%s_ROOT\n' "$repo" | ${pkgs.gnused}/bin/sed -E 's/[^a-zA-Z0-9]+/_/g' | ${pkgs.coreutils}/bin/tr '[:lower:]' '[:upper:]')"
+        if [ -z "$(${pkgs.coreutils}/bin/printenv "$root_env_name" 2>/dev/null || true)" ]; then
+          export "$root_env_name=$top"
+        fi
+
+        if [ -z "''${SESSION_NAME:-}" ]; then
+          canonical="$HOME/ghq/github.com/$owner/$repo"
+          if [ "$top" = "$canonical" ]; then
+            SESSION_NAME="$repo"
+          else
+            top_hash="$(printf '%s\n' "$top" | ${pkgs.coreutils}/bin/cksum | ${pkgs.gawk}/bin/awk '{ print $1 }')"
+            SESSION_NAME="$repo-$top_hash"
+          fi
+          export SESSION_NAME
+        fi
+
         registry_name="$owner-$repo"
         exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
       '';
