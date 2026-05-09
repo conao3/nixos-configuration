@@ -54,6 +54,36 @@
         src = inputs.devo;
         cargoLock.lockFile = inputs.devo + "/Cargo.lock";
       };
+      dev = pkgs.writeShellScriptBin "dev" ''
+        set -euo pipefail
+
+        app="dev"
+        if [ "''${1:-}" = "stop" ] || [ "''${1:-}" = "dev-stop" ]; then
+          app="dev-stop"
+          shift
+        fi
+
+        remote="$(${pkgs.git}/bin/git remote get-url origin 2>/dev/null || true)"
+        if [ -z "$remote" ]; then
+          echo "dev: git remote 'origin' was not found from $(pwd)" >&2
+          exit 1
+        fi
+
+        repo_path="$(printf '%s\n' "$remote" | ${pkgs.gnused}/bin/sed -E \
+          -e 's#^git@[^:]+:##' \
+          -e 's#^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+/##' \
+          -e 's#\.git$##')"
+        owner="$(printf '%s\n' "$repo_path" | ${pkgs.gawk}/bin/awk -F/ '{ print tolower($(NF-1)) }')"
+        repo="$(printf '%s\n' "$repo_path" | ${pkgs.gawk}/bin/awk -F/ '{ print tolower($NF) }')"
+
+        if [ -z "$owner" ] || [ -z "$repo" ] || [ "$owner" = "." ]; then
+          echo "dev: failed to infer registry name from origin: $remote" >&2
+          exit 1
+        fi
+
+        registry_name="$owner-$repo"
+        exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
+      '';
 
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
@@ -65,6 +95,7 @@
         clj-kondo
         clojure-mcp-light
         coreutils
+        dev
         devenv
         diffutils
         dig
