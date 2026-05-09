@@ -282,9 +282,6 @@ in
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
-    Install = {
-      WantedBy = [ "default.target" ];
-    };
   };
 
   systemd.user.services.hermes-gateway = {
