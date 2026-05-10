@@ -184,16 +184,6 @@ let
     );
 
   mcpServers = {
-    chrome_devtools = {
-      command = "bash";
-      args = [
-        "-lc"
-        ''
-          cd "$HOME"
-          exec npx -y chrome-devtools-mcp@latest --autoConnect
-        ''
-      ];
-    };
     linear = {
       type = "http";
       url = "https://mcp.linear.app/mcp";
