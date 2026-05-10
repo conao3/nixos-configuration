@@ -885,11 +885,11 @@
     "nix-flakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1778380015,
-        "narHash": "sha256-Ld9UOW0MtLKW+bEgBf3HwFrTYOG6QX8vpez5Ch4VN3U=",
+        "lastModified": 1778381442,
+        "narHash": "sha256-sTb2rjiKD5bXmKsP4T9snVkVWuhGVE5AdkCx3+zgARQ=",
         "ref": "refs/heads/master",
-        "rev": "9459c4d049a03bc63e5dc3d1a9d0d8e76990c065",
-        "revCount": 52,
+        "rev": "23152dc93b3e973f9f82baf551241d0165939da2",
+        "revCount": 53,
         "type": "git",
         "url": "file:../nix-flakes"
       },
