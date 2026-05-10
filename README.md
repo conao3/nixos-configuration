@@ -30,6 +30,20 @@ This repository contains declarative system configurations for:
 - [Nix](https://nixos.org/download.html) with flakes enabled
 - For macOS: [nix-darwin](https://github.com/LnL7/nix-darwin)
 
+### Private `nix-flakes` Input
+
+This flake expects a sibling Git repository at `../nix-flakes`. The author's checkout uses the
+private `conao3/nix-flakes` repository there. Public users can satisfy the same interface with the
+public stub repository:
+
+```sh
+git clone https://github.com/conao3/nix-flakes-public ../nix-flakes
+nix flake lock --update-input nix-flakes
+```
+
+The public stub only needs to provide files imported by this repository, such as
+`nix-flakes-registry.nix`.
+
 ## Usage
 
 ### NixOS

@@ -81,7 +81,7 @@
       flake = false;
     };
     nix-flakes = {
-      url = "git+ssh://git@github.com/conao3/nix-flakes";
+      url = "git+file:../nix-flakes";
       flake = false;
     };
     clojure-mcp-light = {
@@ -148,7 +148,7 @@
                 ./hosts/${hostname}
                 { nixpkgs = commonNixpkgsConfig; }
                 inputs.sops-nix.nixosModules.sops
-                (import "${inputs.nix-flakes}/nix-flakes-registry.nix")
+                (import (inputs.nix-flakes + "/nix-flakes-registry.nix"))
               ];
             };
         in
