@@ -191,6 +191,7 @@ in
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
         LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
+        N8N_API_KEY=${config.sops.placeholder."n8n-api-key"}
         SLACK_BOT_TOKEN=${config.sops.placeholder."slack-bot-token"}
         SLACK_APP_TOKEN=${config.sops.placeholder."slack-app-token"}
       '';
@@ -199,6 +200,7 @@ in
       siliconflow-api-key = { };
       linear-api-key = { };
       devin-api-key = { };
+      n8n-api-key = { };
       openclaw-dot-env = {
         path = "${homeDir}/.openclaw/.env";
       };

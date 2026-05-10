@@ -134,6 +134,7 @@ in
       content = ''
         export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         export DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
+        export N8N_API_KEY=${config.sops.placeholder."n8n-api-key"}
       '';
     };
     templates."ollama-tunnel-script" = {
@@ -154,6 +155,7 @@ in
     secrets.matterbridge-telegram-token = { };
     secrets.linear-api-key = { };
     secrets.devin-api-key = { };
+    secrets.n8n-api-key = { };
     secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
       owner = "conao";
