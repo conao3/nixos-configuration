@@ -39,6 +39,6 @@ rustPlatform.buildRustPackage rec {
     homepage = "https://github.com/conao3/rust-chrome-devtools";
     license = lib.licenses.asl20;
     mainProgram = "chrome-devtools";
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.unix;
   };
 }
