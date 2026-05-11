@@ -129,28 +129,6 @@ in
       fi
     '';
 
-    activation.hermesSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      hermes_config="$HOME/.hermes/config.yaml"
-      if [ -f "$hermes_config" ]; then
-        ${pkgs.yq-go}/bin/yq -i '
-          .custom_providers = [
-            {
-              "name": "cli-proxy-api",
-              "base_url": "https://cli-proxy-api.sancode.dev/v1",
-              "key_env": "CLI_PROXY_API_KEY",
-              "api_mode": "anthropic_messages"
-            }
-          ] |
-          .fallback_providers = [
-            {
-              "provider": "cli-proxy-api",
-              "model": "claude-sonnet-4-6"
-            }
-          ]
-        ' "$hermes_config"
-      fi
-    '';
-
     sessionVariables = {
       OLLAMA_BASE_URL = "http://${ollamaTailnetHost}:11434";
     };
