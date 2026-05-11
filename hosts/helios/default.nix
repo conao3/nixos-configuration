@@ -204,7 +204,10 @@ in
     };
   };
 
-  security.pki.certificateFiles = [ ../../secrets/dev-rootCA.pem ];
+  security.pki.certificateFiles = [
+    ../../secrets/dev-rootCA.pem
+    ../../secrets/portless-ca.crt
+  ];
 
   zramSwap.enable = true;
 
