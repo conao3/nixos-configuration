@@ -85,6 +85,7 @@ let
     "claude.conao3"
     "claude.toyokumo"
     "claude.agent001"
+    "claude.agent002"
     "claude.yui"
     "codex.conao3"
     "codex.agent001"
