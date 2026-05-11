@@ -100,7 +100,15 @@
         fi
 
         registry_name="$owner-$repo"
-        exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
+        if [ "$app" = "dev-stop" ]; then
+          ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@" || true
+          ${pkgs.tmux}/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
+        else
+          exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
+        fi
+      '';
+      dev-stop = pkgs.writeShellScriptBin "dev-stop" ''
+        exec ${dev}/bin/dev dev-stop "$@"
       '';
 
       # https://search.nixos.org/packages
@@ -114,6 +122,7 @@
         clojure-mcp-light
         coreutils
         dev
+        dev-stop
         devenv
         diffutils
         dig
