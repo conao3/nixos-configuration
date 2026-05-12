@@ -1,0 +1,8 @@
+{
+  "name": "nixos-configuration-bird-wrapper",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@steipete/bird": "0.8.0"
+  }
+}

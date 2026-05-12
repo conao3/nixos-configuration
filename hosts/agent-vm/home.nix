@@ -16,6 +16,16 @@ let
     hermes-agent = hermesAgentPackage;
   };
   chromeDevtoolsPackage = pkgs.callPackage ../../pkgs/chrome-devtools.nix { };
+  birdPackage = pkgs.callPackage ../../pkgs/bird.nix { };
+  birdclawPackage = pkgs.callPackage ../../pkgs/birdclaw.nix { };
+  birdConao3Package = pkgs.writeShellApplication {
+    name = "bird-conao3";
+    runtimeInputs = [ pkgs.nodejs_25 ];
+    text = ''
+      export BIRD_BIN=${birdPackage}/bin/bird
+      exec node ${./bird-conao3.mjs} "$@"
+    '';
+  };
   lightpandaPackage = pkgs.callPackage ../../pkgs/lightpanda.nix { };
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
 in
@@ -27,6 +37,17 @@ in
       ".config" = {
         source = ./ext/.config;
         recursive = true;
+      };
+      ".birdclaw/config.json".text = builtins.toJSON {
+        mentions = {
+          dataSource = "bird";
+          birdCommand = "${birdConao3Package}/bin/bird-conao3";
+        };
+        actions.transport = "bird";
+        backup = {
+          autoSync = false;
+          staleAfterSeconds = 3600;
+        };
       };
     };
 
@@ -173,6 +194,9 @@ in
         qmd # vector search
       ])
       ++ [
+        birdConao3Package
+        birdPackage
+        birdclawPackage
         chromeDevtoolsPackage
         hermesAgentPackage
         hermesWebuiPackage
