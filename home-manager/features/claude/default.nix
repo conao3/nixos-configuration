@@ -113,6 +113,7 @@ let
 
   soulTemplate = pkgs.writeText "SOUL.md" (builtins.readFile ./SOUL.md);
   identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
+  agentsTemplate = ./AGENTS.md;
 
   wrapperPackages = map mkWrapper wrapperSpecs;
   agentDirs = [
@@ -134,6 +135,12 @@ let
   ++ map (spec: "$HOME/${spec.dir}/.claude.json") (
     builtins.filter (spec: spec.type == "claude") wrapperSpecs
   );
+  agentInstructionFiles = [
+    "$HOME/.agents/share/AGENTS.md"
+  ]
+  ++ map (
+    spec: "$HOME/${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}"
+  ) wrapperSpecs;
 
   claudeSettings = {
     theme = "dark";
@@ -354,7 +361,6 @@ in
       source = ./dotclaude;
       recursive = true;
     };
-    ".agents/share/AGENTS.md".source = ./AGENTS.md;
     ".config/Claude/claude_desktop_config.json" = {
       text = builtins.toJSON {
         globalShortcut = "Alt+Cmd+Space";
@@ -369,13 +375,7 @@ in
         };
       };
     };
-  }
-  // lib.listToAttrs (
-    map (spec: {
-      name = "${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}";
-      value.source = ./AGENTS.md;
-    }) wrapperSpecs
-  );
+  };
 
   home.packages =
     wrapperPackages
@@ -384,6 +384,13 @@ in
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
+  '';
+
+  home.activation.agentInstructions = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
+    ${lib.concatMapStringsSep "\n" (file: ''
+      rm -f "${file}"
+      ${pkgs.coreutils}/bin/install -m 644 ${agentsTemplate} "${file}"
+    '') agentInstructionFiles}
   '';
 
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
