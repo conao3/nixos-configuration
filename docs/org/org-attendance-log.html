@@ -547,6 +547,11 @@
     ];
 
     const attendanceShortcuts = [
+      { key: "C-x C-f", title: "attendance.org を開く", body: "~/org/attendance.org を開く。出勤時に最初に触るファイルとして固定する。" },
+      { key: "M->", title: "ファイル末尾へ移動", body: "今日の見出しを末尾に追加する場合に使う。既存の日付がある場合は検索で移動してもよい。" },
+      { key: "M-RET", title: "同じ階層の見出しを作る", body: "日付見出しや WORK / BREAK 見出しを追加する。階層を変える場合は M-LEFT / M-RIGHT。" },
+      { key: "C-c .", title: "日付を挿入", body: "日付プロンプトから今日の日付を入れる。見出し名に使う場合は * の後ろで押す。" },
+      { key: "C-c C-q", title: "タグを編集", body: "現在の見出しに company_a:work のようなタグを付ける。TAB で補完、RET で確定。" },
       { key: "C-c C-x C-i", title: "Clock in", body: "現在の見出しで作業開始。出勤、休憩終了、作業再開のタイミングで使う。" },
       { key: "C-c C-x C-o", title: "Clock out", body: "現在の clock を終了。休憩開始、退勤、作業区切りで使う。" },
       { key: "C-c C-x C-j", title: "Clock 先へ移動", body: "現在 clock 中の見出しへジャンプする。別バッファで作業していて打刻状態を確認したいときに使う。" },
@@ -558,19 +563,22 @@
     ];
 
     const attendanceWorkflow = [
-      { time: "出勤", title: "今日の見出しを作って WORK で clock in", body: "attendance.org に日付見出しを作り、** WORK 勤務 の上で C-c C-x C-i。これを勤務開始の基準にする。" },
-      { time: "休憩", title: "WORK を clock out して BREAK を clock in", body: "休憩開始時に C-c C-x C-o。BREAK 昼休憩の見出しへ移動して C-c C-x C-i。休憩を勤務と混ぜない。" },
-      { time: "再開", title: "BREAK を閉じて WORK / ADMIN に戻る", body: "休憩終了時に C-c C-x C-o。午後の作業見出しで C-c C-x C-i。日報や会議は ADMIN に分けると集計しやすい。" },
+      { time: "準備", title: "attendance.org に今日の日付見出しを作る", body: "C-x C-f でファイルを開き、M-> で末尾へ移動。M-RET または手入力で * 2026-05-14 Thu を作る。日付入力は C-c . を使う。" },
+      { time: "出勤", title: "会社タグ付き WORK で clock in", body: "** WORK 勤務 を作り、C-c C-q で company_a:work を付ける。その見出し上で C-c C-x C-i。複数社勤務では会社タグを必ず付ける。" },
+      { time: "休憩", title: "WORK を clock out して BREAK を clock in", body: "休憩開始時に C-c C-x C-o。BREAK 昼休憩の見出しへ移動し、C-c C-q で company_a:break を付けて C-c C-x C-i。" },
+      { time: "再開", title: "BREAK を閉じて WORK / ADMIN に戻る", body: "休憩終了時に C-c C-x C-o。午後の作業見出しで C-c C-x C-i。日報や会議は company_a:admin のように分ける。" },
       { time: "退勤", title: "最後の clock を閉じて補正メモを確認", body: "退勤時に C-c C-x C-o。打刻忘れや実時刻との差があれば NOTE 補正に短く理由を書く。" },
-      { time: "日次", title: "clocktable を更新して合計を見る", body: "clocktable 上で C-c C-c。WORK と ADMIN の合計、BREAK の控除、未終了 clock がないことを確認する。" },
-      { time: "月末", title: "提出用に期間集計を作る", body: "月次 clocktable を C-c C-x C-r で作り、必要なら Org の表をコピーまたは export する。個人用詳細は archive してよい。" }
+      { time: "日次", title: "clocktable を更新して会社別に見る", body: "clocktable 上で C-c C-c。company_a と company_b の集計、BREAK の扱い、未終了 clock がないことを確認する。" },
+      { time: "月末", title: "会社ごとの提出用集計を作る", body: "月次 clocktable を C-c C-x C-r で作り、:tags \"company_a\" のように会社別ブロックを分ける。必要なら Org の表を export する。" }
     ];
 
     const checklist = [
       "出勤・退勤・休憩の境界が clock として残っている",
       "休憩は勤務時間と別の区分で集計できる",
+      "複数社勤務では各 clock 見出しに会社タグが付いている",
       "打刻忘れの修正理由を短く残している",
       "日次と週次の clocktable を同じ情報源から出せる",
+      "会社ごとの月次 clocktable を別々に更新できる",
       "提出用の勤怠と、個人用の詳細作業ログを混ぜすぎていない",
       "月末に archive しても過去の集計を追える"
     ];
@@ -795,19 +803,35 @@
             ),
             React.createElement(AttendanceWorkflow)
           ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "複数社勤務のタグ設計"),
+              React.createElement("p", null, "会社ごとに最終集計したい場合は、各 clock 見出しに会社タグを付ける。C-c C-q で company_a:work のように入力し、clocktable の :tags で会社ごとの集計ブロックを分ける。")
+            ),
+            React.createElement("div", { className: "two-col" },
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "会社タグ付き日次ログ"),
+                React.createElement("pre", null, "* 2026-05-14 Thu\n** WORK 開発 :company_a:work:\n   CLOCK: [2026-05-14 Thu 09:30]--[2026-05-14 Thu 12:00]\n** BREAK 昼休憩 :company_a:break:\n   CLOCK: [2026-05-14 Thu 12:00]--[2026-05-14 Thu 13:00]\n** WORK レビュー :company_b:work:\n   CLOCK: [2026-05-14 Thu 14:00]--[2026-05-14 Thu 17:00]\n** ADMIN 日報 :company_b:admin:\n   CLOCK: [2026-05-14 Thu 17:00]--[2026-05-14 Thu 17:30]")
+              ),
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "会社別集計"),
+                React.createElement("pre", null, "#+BEGIN: clocktable :scope file :block thismonth :tags \"company_a\" :maxlevel 3\n#+END:\n\n#+BEGIN: clocktable :scope file :block thismonth :tags \"company_b\" :maxlevel 3\n#+END:\n\n#+BEGIN: clocktable :scope file :block thismonth :tags \"company_a+work\" :maxlevel 3\n#+END:")
+              )
+            )
+          ),
           React.createElement("section", { className: "section", id: "template" },
             React.createElement("div", { className: "section-header" },
               React.createElement("h2", null, "最小テンプレート"),
-              React.createElement("p", null, "提出用の勤怠に使うなら、日ごとの見出し、区分、clock、修正メモを優先する。個人用の詳細作業ログはタグや下位見出しで分ける。")
+              React.createElement("p", null, "提出用の勤怠に使うなら、日ごとの見出し、区分、会社タグ、clock、修正メモを優先する。個人用の詳細作業ログはタグや下位見出しで分ける。")
             ),
             React.createElement("div", { className: "two-col" },
               React.createElement("div", { className: "card" },
                 React.createElement("h3", null, "日次ログ"),
-                React.createElement("pre", null, "* 2026-05-14 Thu\n** WORK 勤務\n   CLOCK: [2026-05-14 Thu 09:30]--[2026-05-14 Thu 12:00]\n** BREAK 昼休憩\n   CLOCK: [2026-05-14 Thu 12:00]--[2026-05-14 Thu 13:00]\n** WORK 勤務\n   CLOCK: [2026-05-14 Thu 13:00]--[2026-05-14 Thu 18:30]\n** NOTE 補正\n   - 退勤打刻を 18:35 に記録、実退勤は 18:30。")
+                React.createElement("pre", null, "* 2026-05-14 Thu\n** WORK 勤務 :company_a:work:\n   CLOCK: [2026-05-14 Thu 09:30]--[2026-05-14 Thu 12:00]\n** BREAK 昼休憩 :company_a:break:\n   CLOCK: [2026-05-14 Thu 12:00]--[2026-05-14 Thu 13:00]\n** WORK 勤務 :company_a:work:\n   CLOCK: [2026-05-14 Thu 13:00]--[2026-05-14 Thu 18:30]\n** NOTE 補正\n   - 退勤打刻を 18:35 に記録、実退勤は 18:30。")
               ),
               React.createElement("div", { className: "card" },
                 React.createElement("h3", null, "集計ブロック"),
-                React.createElement("pre", null, "#+BEGIN: clocktable :scope file :block today :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :block thisweek :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :tstart \"<2026-05-01>\" :tend \"<2026-06-01>\"\n#+END:")
+                React.createElement("pre", null, "#+BEGIN: clocktable :scope file :block today :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :block thisweek :tags \"company_a\" :maxlevel 3\n#+END:\n\n#+BEGIN: clocktable :scope file :tstart \"<2026-05-01>\" :tend \"<2026-06-01>\" :tags \"company_a\"\n#+END:")
               )
             )
           ),
