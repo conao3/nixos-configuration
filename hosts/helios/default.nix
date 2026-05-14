@@ -10,6 +10,7 @@ let
   cliProxyApiManagementCenterPackage =
     pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix
       { };
+  portlessPackage = pkgs.callPackage ../../pkgs/portless.nix { };
   codingAgentJobs = {
     # systemd timerConfig.OnCalendar format, not cron syntax.
     # Examples:
@@ -161,7 +162,21 @@ in
       owner = "conao";
       path = "/home/conao/.local/share/dev-ca/rootCA-key.pem";
     };
+    secrets.portless-ca-key = {
+      owner = "root";
+      group = "root";
+      mode = "0600";
+      path = "/home/conao/.portless/ca-key.pem";
+    };
   };
+
+  system.activationScripts.portless-state = ''
+    mkdir -p /home/conao/.portless
+    chown conao:users /home/conao/.portless
+    chmod 755 /home/conao/.portless
+    cp -f ${../../secrets/portless-ca.crt} /home/conao/.portless/ca.pem
+    chmod 644 /home/conao/.portless/ca.pem
+  '';
 
   programs.zsh.interactiveShellInit = ''
     [ -f ${config.sops.templates."helios-env".path} ] && source ${
@@ -199,6 +214,19 @@ in
       User = "conao";
       WorkingDirectory = "/home/conao";
       ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
+      Restart = "always";
+      RestartSec = 3;
+    };
+  };
+
+  systemd.services.portless-proxy = {
+    description = "Portless HTTPS proxy (port 443)";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    environment.PORTLESS_STATE_DIR = "/home/conao/.portless";
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${portlessPackage}/bin/portless proxy start --foreground --port 443 --https --skip-trust";
       Restart = "always";
       RestartSec = 3;
     };
