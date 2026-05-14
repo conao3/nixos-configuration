@@ -487,48 +487,6 @@
       margin: 0;
     }
 
-    .checklist {
-      display: grid;
-      gap: 10px;
-    }
-
-    .check-row {
-      display: grid;
-      grid-template-columns: 24px minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-    }
-
-    .check-row input {
-      width: 18px;
-      height: 18px;
-      margin-top: 3px;
-      accent-color: var(--accent);
-    }
-
-    .check-row span {
-      color: var(--muted);
-    }
-
-    .meter {
-      height: 12px;
-      background: #e2ddd2;
-      border-radius: 999px;
-      overflow: hidden;
-      margin: 0 0 16px;
-    }
-
-    .meter-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, var(--accent), #7aa35d);
-      transition: width 240ms ease;
-    }
-
     .footer {
       color: var(--muted);
       padding: 24px 0 0;
@@ -635,15 +593,6 @@
       { time: "処理", title: "Inbox を NEXT / WAIT / SOMEDAY に分ける", body: "見出し上で C-c C-t、C-c C-s、C-c C-d を使う。曖昧な TODO は物理的な次の行動に書き換える。" },
       { time: "実行", title: "Agenda から NEXT を選ぶ", body: "場所、時間、集中力に合う NEXT を選び、終わったら C-c C-t で DONE。続きがあれば次の NEXT を同じプロジェクトに作る。" },
       { time: "週次", title: "信頼できる一覧に戻す", body: "Inbox を空にし、WAIT の待ち先を確認し、古い DONE を C-c C-x C-a で archive。Someday は残す理由があるものだけにする。" }
-    ];
-
-    const checklist = [
-      "org-capture の入口を 1 キーで呼べる",
-      "Inbox、Projects、Someday、Archive の役割が分かれている",
-      "NEXT は物理的に実行できる動詞で始まる",
-      "WAIT には誰から何を待っているかが書かれている",
-      "週次レビューで agenda、inbox、projects を見る",
-      "完了ログを残し、古い完了タスクは archive する"
     ];
 
     function WorkspacePreview() {
@@ -796,31 +745,6 @@
       );
     }
 
-    function Checklist() {
-      const [checked, setChecked] = useState([]);
-      const ratio = Math.round((checked.length / checklist.length) * 100);
-      const toggle = (index) => {
-        setChecked(checked.includes(index) ? checked.filter((item) => item !== index) : [...checked, index]);
-      };
-      return React.createElement(React.Fragment, null,
-        React.createElement("div", { className: "meter", "aria-label": `progress ${ratio}%` },
-          React.createElement("div", { className: "meter-fill", style: { width: `${ratio}%` } })
-        ),
-        React.createElement("div", { className: "checklist" },
-          checklist.map((item, index) =>
-            React.createElement("label", { className: "check-row", key: item },
-              React.createElement("input", {
-                type: "checkbox",
-                checked: checked.includes(index),
-                onChange: () => toggle(index)
-              }),
-              React.createElement("span", null, item)
-            )
-          )
-        )
-      );
-    }
-
     function App() {
       const scrollTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
       return React.createElement("div", { className: "shell" },
@@ -898,13 +822,6 @@
                 React.createElement("pre", null, "(setq org-agenda-files\n      '(\"~/org/inbox.org\"\n        \"~/org/projects.org\"\n        \"~/org/someday.org\"))\n\n(setq org-capture-templates\n      '((\"t\" \"Task\" entry\n         (file \"~/org/inbox.org\")\n         \"* TODO %?\\n  :PROPERTIES:\\n  :CREATED: %U\\n  :END:\")\n        (\"j\" \"Journal\" entry\n         (file+datetree \"~/org/journal.org\")\n         \"* %U %?\")))")
               )
             )
-          ),
-          React.createElement("section", { className: "section" },
-            React.createElement("div", { className: "section-header" },
-              React.createElement("h2", null, "運用チェック"),
-              React.createElement("p", null, "設定よりも、レビューで信頼を保てているかが重要。チェックすると進捗バーが動く。")
-            ),
-            React.createElement(Checklist)
           ),
           React.createElement("section", { className: "footer" },
             React.createElement("p", null, "Org-mode GTD の基本形: capture で集める、clarify で次の行動にする、agenda で見る、review で信頼を保つ。")

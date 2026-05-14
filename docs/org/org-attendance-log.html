@@ -422,44 +422,6 @@
       margin: 0;
     }
 
-    .checklist {
-      display: grid;
-      gap: 10px;
-    }
-
-    .check-row {
-      display: grid;
-      grid-template-columns: 24px minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-    }
-
-    .check-row input {
-      width: 18px;
-      height: 18px;
-      margin-top: 3px;
-      accent-color: var(--work);
-    }
-
-    .meter {
-      height: 12px;
-      background: #e2ddd2;
-      border-radius: 999px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .meter-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, var(--work), #789d58);
-      transition: width 220ms ease;
-    }
-
     .footer {
       color: var(--muted);
       padding-top: 24px;
@@ -570,17 +532,6 @@
       { time: "退勤", title: "最後の clock を閉じて補正メモを確認", body: "退勤時に C-c C-x C-o。打刻忘れや実時刻との差があれば NOTE 補正に短く理由を書く。" },
       { time: "日次", title: "clocktable を更新して会社別に見る", body: "clocktable 上で C-c C-c。company_a と company_b の集計、BREAK の扱い、未終了 clock がないことを確認する。" },
       { time: "月末", title: "会社ごとの提出用集計を作る", body: "月次 clocktable を C-c C-x C-r で作り、:tags \"company_a\" のように会社別ブロックを分ける。必要なら Org の表を export する。" }
-    ];
-
-    const checklist = [
-      "出勤・退勤・休憩の境界が clock として残っている",
-      "休憩は勤務時間と別の区分で集計できる",
-      "複数社勤務では各 clock 見出しに会社タグが付いている",
-      "打刻忘れの修正理由を短く残している",
-      "日次と週次の clocktable を同じ情報源から出せる",
-      "会社ごとの月次 clocktable を別々に更新できる",
-      "提出用の勤怠と、個人用の詳細作業ログを混ぜすぎていない",
-      "月末に archive しても過去の集計を追える"
     ];
 
     function minutesBetween(start, end) {
@@ -727,27 +678,6 @@
       );
     }
 
-    function Checklist() {
-      const [checked, setChecked] = useState([]);
-      const ratio = Math.round((checked.length / checklist.length) * 100);
-      const toggle = (index) => {
-        setChecked(checked.includes(index) ? checked.filter((item) => item !== index) : [...checked, index]);
-      };
-      return React.createElement(React.Fragment, null,
-        React.createElement("div", { className: "meter", "aria-label": `progress ${ratio}%` },
-          React.createElement("div", { className: "meter-fill", style: { width: `${ratio}%` } })
-        ),
-        React.createElement("div", { className: "checklist" },
-          checklist.map((item, index) =>
-            React.createElement("label", { className: "check-row", key: item },
-              React.createElement("input", { type: "checkbox", checked: checked.includes(index), onChange: () => toggle(index) }),
-              React.createElement("span", null, item)
-            )
-          )
-        )
-      );
-    }
-
     function App() {
       const scrollTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
       return React.createElement(React.Fragment, null,
@@ -834,13 +764,6 @@
                 React.createElement("pre", null, "#+BEGIN: clocktable :scope file :block today :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :block thisweek :tags \"company_a\" :maxlevel 3\n#+END:\n\n#+BEGIN: clocktable :scope file :tstart \"<2026-05-01>\" :tend \"<2026-06-01>\" :tags \"company_a\"\n#+END:")
               )
             )
-          ),
-          React.createElement("section", { className: "section" },
-            React.createElement("div", { className: "section-header" },
-              React.createElement("h2", null, "運用チェック"),
-              React.createElement("p", null, "勤怠ログは正確さと説明可能性が大事です。実際に使う前に、最低限の運用ルールが揃っているか確認する。")
-            ),
-            React.createElement(Checklist)
           ),
           React.createElement("section", { className: "footer" },
             React.createElement("p", null, "Org-mode 勤怠ログの基本形: clock で境界を残す、休憩を分ける、clocktable で集計する、補正理由を書く。")
