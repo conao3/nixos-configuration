@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Org-mode as a GTD Tool</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --ink: #1e2422;
+      --muted: #5f6964;
+      --line: #d8d4ca;
+      --panel: #fffdf8;
+      --accent: #256f68;
+      --accent-2: #b24b3d;
+      --accent-3: #4b679f;
+      --accent-soft: #dceee9;
+      --shadow: 0 18px 45px rgba(40, 37, 30, 0.12);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(110deg, rgba(37, 111, 104, 0.08), transparent 32%),
+        linear-gradient(180deg, #fbfaf6 0%, var(--bg) 48%, #ebe7de 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      min-height: 100vh;
+    }
+
+    .hero {
+      min-height: 82vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.98fr);
+      gap: 44px;
+      align-items: center;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 64px 28px 42px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 0;
+      margin: 0 0 16px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      margin-right: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 16px 0 0 var(--accent-2), 32px 0 0 var(--accent-3);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 720px;
+      font-size: clamp(2.7rem, 6vw, 5.9rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin: 24px 0 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fffdf8;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(30, 36, 34, 0.16);
+    }
+
+    .workspace {
+      background: #202621;
+      color: #eef4ec;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(30, 36, 34, 0.18);
+    }
+
+    .workspace-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #141915;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #dc665c;
+    }
+
+    .dot:nth-child(2) {
+      background: #dfb85a;
+    }
+
+    .dot:nth-child(3) {
+      background: #5fb982;
+    }
+
+    .buffer {
+      padding: 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      min-height: 410px;
+    }
+
+    .org-line {
+      opacity: 0;
+      transform: translateX(-8px);
+      animation: reveal 420ms ease forwards;
+      white-space: pre-wrap;
+    }
+
+    .org-line:nth-child(2) { animation-delay: 90ms; }
+    .org-line:nth-child(3) { animation-delay: 180ms; }
+    .org-line:nth-child(4) { animation-delay: 270ms; }
+    .org-line:nth-child(5) { animation-delay: 360ms; }
+    .org-line:nth-child(6) { animation-delay: 450ms; }
+    .org-line:nth-child(7) { animation-delay: 540ms; }
+    .org-line:nth-child(8) { animation-delay: 630ms; }
+    .org-line:nth-child(9) { animation-delay: 720ms; }
+    .org-line:nth-child(10) { animation-delay: 810ms; }
+
+    .todo { color: #f3c86b; font-weight: 800; }
+    .next { color: #7ed1ba; font-weight: 800; }
+    .wait { color: #95b7f0; font-weight: 800; }
+    .done { color: #a8b3aa; font-weight: 800; }
+    .tag { color: #e3a399; }
+    .date { color: #a6d9f7; }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    .section {
+      padding: 56px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(280px, 1.25fr);
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .section-header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(40, 37, 30, 0.06);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.72);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .flow-step.active {
+      background: var(--ink);
+      color: #fffdf8;
+      border-color: var(--ink);
+    }
+
+    .demo-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 310px;
+    }
+
+    .demo-panel h3 {
+      margin: 0 0 8px;
+      font-size: 1.4rem;
+    }
+
+    .demo-panel p {
+      color: var(--muted);
+      margin: 0 0 16px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #202621;
+      color: #eef4ec;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .simulator {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .inbox-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .inbox-form input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      background: white;
+      color: var(--ink);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .column {
+      background: rgba(255, 253, 248, 0.76);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 220px;
+      padding: 12px;
+    }
+
+    .column h3 {
+      margin: 0 0 12px;
+      font-size: 0.98rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .task {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease;
+    }
+
+    .task:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    .task small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .agenda-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .agenda-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .agenda-item {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 64px;
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: white;
+      background: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .badge.next-badge { background: var(--accent); }
+    .badge.wait-badge { background: var(--accent-3); }
+    .badge.todo-badge { background: var(--accent-2); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--accent);
+    }
+
+    .check-row span {
+      color: var(--muted);
+    }
+
+    .meter {
+      height: 12px;
+      background: #e2ddd2;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 0 0 16px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), #7aa35d);
+      transition: width 240ms ease;
+    }
+
+    .footer {
+      color: var(--muted);
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    @keyframes reveal {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .section-header,
+      .flow,
+      .simulator,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 34px;
+      }
+
+      .grid,
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .agenda-item {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useMemo, useState } = React;
+
+    const flowSteps = [
+      {
+        name: "Capture",
+        title: "気になることを Inbox に落とす",
+        body: "GTD では頭の中の未整理な気がかりを一度すべて外部化する。Org-mode では org-capture がその入口になり、ファイルを開く前に短いテンプレートへ素早く記録できる。",
+        sample: "* TODO 新しいキーボード配列を試す\n  :PROPERTIES:\n  :CREATED: 2026-05-14 Thu\n  :END:\n  まず現状の入力ミスを観察する。"
+      },
+      {
+        name: "Clarify",
+        title: "次にやる行動へ分解する",
+        body: "曖昧なメモは放置されやすい。Org の見出しを TODO、NEXT、WAIT、SOMEDAY などに変換し、必要ならプロジェクト配下へ移す。",
+        sample: "* PROJECT Emacs の GTD 運用を固める\n** NEXT capture template を 3 種類に絞る\n** WAIT レビュー観点を同僚に確認する"
+      },
+      {
+        name: "Organize",
+        title: "文脈、期限、参照情報を添える",
+        body: "タグ、SCHEDULED、DEADLINE、プロパティ、リンクで検索可能にする。ファイル分割は最小限から始め、agenda-files に含める範囲を明確にする。",
+        sample: "* NEXT 週次レビューを実施する :review:home:\n  SCHEDULED: <2026-05-16 Sat 09:00>\n  - inbox.org\n  - projects.org\n  - someday.org"
+      },
+      {
+        name: "Reflect",
+        title: "Agenda で全体を眺め直す",
+        body: "org-agenda は GTD のレビュー面を担う。今日の予定、次の行動、待ち、期限切れを同じ画面に集め、判断に必要な視界を作る。",
+        sample: "(setq org-agenda-custom-commands\n      '((\"g\" \"GTD\"\n         ((agenda \"\")\n          (todo \"NEXT\")\n          (todo \"WAIT\")))))"
+      },
+      {
+        name: "Engage",
+        title: "今の文脈で実行する",
+        body: "一覧を眺めるだけでなく、場所、時間、エネルギーに合う NEXT を選ぶ。完了したら DONE にし、ログを残して次のレビュー材料にする。",
+        sample: "* DONE capture template を 3 種類に絞る\n  CLOSED: [2026-05-14 Thu 22:15]\n  - task / idea / journal に整理した。"
+      }
+    ];
+
+    const agendaItems = [
+      { state: "NEXT", context: "home", text: "inbox.org を空にする", date: "Today" },
+      { state: "NEXT", context: "pc", text: "org-agenda-custom-commands を調整する", date: "Today" },
+      { state: "WAIT", context: "work", text: "レビュー依頼の返答を待つ", date: "Fri" },
+      { state: "TODO", context: "errand", text: "ノート用紙を補充する", date: "Sat" },
+      { state: "NEXT", context: "review", text: "週次レビューで someday を 5 件削る", date: "Sun" }
+    ];
+
+    const checklist = [
+      "org-capture の入口を 1 キーで呼べる",
+      "Inbox、Projects、Someday、Archive の役割が分かれている",
+      "NEXT は物理的に実行できる動詞で始まる",
+      "WAIT には誰から何を待っているかが書かれている",
+      "週次レビューで agenda、inbox、projects を見る",
+      "完了ログを残し、古い完了タスクは archive する"
+    ];
+
+    function WorkspacePreview() {
+      return React.createElement("div", { className: "workspace", "aria-label": "Org-mode buffer preview" },
+        React.createElement("div", { className: "workspace-top" },
+          React.createElement("span", { className: "dot" }),
+          React.createElement("span", { className: "dot" }),
+          React.createElement("span", { className: "dot" })
+        ),
+        React.createElement("div", { className: "buffer" },
+          React.createElement("div", { className: "org-line" }, "* GTD dashboard"),
+          React.createElement("div", { className: "org-line" }, "** ", React.createElement("span", { className: "todo" }, "TODO"), " Inbox を処理する ", React.createElement("span", { className: "tag" }, ":review:")),
+          React.createElement("div", { className: "org-line" }, "** ", React.createElement("span", { className: "next" }, "NEXT"), " org-capture template を整理する ", React.createElement("span", { className: "tag" }, ":emacs:")),
+          React.createElement("div", { className: "org-line" }, "   ", React.createElement("span", { className: "date" }, "SCHEDULED: <2026-05-14 Thu>")),
+          React.createElement("div", { className: "org-line" }, "** ", React.createElement("span", { className: "wait" }, "WAIT"), " 参考資料の確認を待つ ", React.createElement("span", { className: "tag" }, ":work:")),
+          React.createElement("div", { className: "org-line" }, "** ", React.createElement("span", { className: "done" }, "DONE"), " 週次レビューのチェック項目を書く"),
+          React.createElement("br"),
+          React.createElement("div", { className: "org-line" }, "- capture: 迷わず入れる"),
+          React.createElement("div", { className: "org-line" }, "- agenda: 選ぶために見る"),
+          React.createElement("div", { className: "org-line" }, "- archive: 完了を軽くする")
+        )
+      );
+    }
+
+    function FlowExplorer() {
+      const [active, setActive] = useState(0);
+      const step = flowSteps[active];
+      return React.createElement("div", { className: "flow" },
+        React.createElement("div", { className: "flow-list" },
+          flowSteps.map((item, index) =>
+            React.createElement("button", {
+              key: item.name,
+              className: "flow-step" + (index === active ? " active" : ""),
+              onClick: () => setActive(index)
+            }, `${index + 1}. ${item.name}`)
+          )
+        ),
+        React.createElement("div", { className: "demo-panel" },
+          React.createElement("h3", null, step.title),
+          React.createElement("p", null, step.body),
+          React.createElement("pre", null, step.sample)
+        )
+      );
+    }
+
+    function CaptureSimulator() {
+      const [text, setText] = useState("");
+      const [tasks, setTasks] = useState([
+        { id: 1, state: "Inbox", title: "読んだ記事を要約する", note: "未整理の気がかり" },
+        { id: 2, state: "Next", title: "agenda view を g キーに割り当てる", note: "実行可能な次の行動" },
+        { id: 3, state: "Waiting", title: "会議日程の返答を待つ", note: "自分以外がボールを持つ" }
+      ]);
+
+      const addTask = () => {
+        const title = text.trim();
+        if (!title) return;
+        setTasks([{ id: Date.now(), state: "Inbox", title, note: "capture 直後" }, ...tasks]);
+        setText("");
+      };
+
+      const cycle = (task) => {
+        const nextState = task.state === "Inbox" ? "Next" : task.state === "Next" ? "Waiting" : "Done";
+        setTasks(tasks.map((item) => item.id === task.id ? { ...item, state: nextState, note: nextState === "Done" ? "完了ログへ" : item.note } : item));
+      };
+
+      const columns = ["Inbox", "Next", "Waiting"];
+      return React.createElement("div", { className: "simulator" },
+        React.createElement("div", { className: "card" },
+          React.createElement("h3", null, "Capture を試す"),
+          React.createElement("p", null, "入力した内容は Inbox に入り、クリックするたびに Next、Waiting、Done へ流れます。"),
+          React.createElement("div", { className: "inbox-form" },
+            React.createElement("input", {
+              value: text,
+              onChange: (event) => setText(event.target.value),
+              onKeyDown: (event) => { if (event.key === "Enter") addTask(); },
+              placeholder: "例: 週次レビューの観点を見直す"
+            }),
+            React.createElement("button", { className: "button", onClick: addTask }, "Inbox に追加")
+          )
+        ),
+        React.createElement("div", { className: "board" },
+          columns.map((column) =>
+            React.createElement("div", { className: "column", key: column },
+              React.createElement("h3", null,
+                React.createElement("span", null, column),
+                React.createElement("span", null, tasks.filter((task) => task.state === column).length)
+              ),
+              tasks.filter((task) => task.state === column).map((task) =>
+                React.createElement("div", { className: "task", key: task.id, onClick: () => cycle(task) },
+                  React.createElement("strong", null, task.title),
+                  React.createElement("small", null, task.note)
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+
+    function AgendaView() {
+      const [filter, setFilter] = useState("all");
+      const filtered = useMemo(() => filter === "all" ? agendaItems : agendaItems.filter((item) => item.state === filter), [filter]);
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", { className: "agenda-controls" },
+          ["all", "NEXT", "WAIT", "TODO"].map((item) =>
+            React.createElement("button", {
+              key: item,
+              className: "tab" + (filter === item ? " active" : ""),
+              onClick: () => setFilter(item)
+            }, item)
+          )
+        ),
+        React.createElement("div", { className: "agenda-list" },
+          filtered.map((item) =>
+            React.createElement("div", { className: "agenda-item", key: `${item.state}-${item.text}` },
+              React.createElement("strong", null, item.date),
+              React.createElement("span", null, item.text, " ", React.createElement("small", null, `@${item.context}`)),
+              React.createElement("span", { className: `badge ${item.state.toLowerCase()}-badge` }, item.state)
+            )
+          )
+        )
+      );
+    }
+
+    function Checklist() {
+      const [checked, setChecked] = useState([]);
+      const ratio = Math.round((checked.length / checklist.length) * 100);
+      const toggle = (index) => {
+        setChecked(checked.includes(index) ? checked.filter((item) => item !== index) : [...checked, index]);
+      };
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", { className: "meter", "aria-label": `progress ${ratio}%` },
+          React.createElement("div", { className: "meter-fill", style: { width: `${ratio}%` } })
+        ),
+        React.createElement("div", { className: "checklist" },
+          checklist.map((item, index) =>
+            React.createElement("label", { className: "check-row", key: item },
+              React.createElement("input", {
+                type: "checkbox",
+                checked: checked.includes(index),
+                onChange: () => toggle(index)
+              }),
+              React.createElement("span", null, item)
+            )
+          )
+        )
+      );
+    }
+
+    function App() {
+      const scrollTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+      return React.createElement("div", { className: "shell" },
+        React.createElement("section", { className: "hero" },
+          React.createElement("div", null,
+            React.createElement("p", { className: "eyebrow" }, "Org-mode / GTD"),
+            React.createElement("h1", null, "Org-mode を GTD の実行環境にする"),
+            React.createElement("p", { className: "lead" }, "Org-mode はアウトライナー、予定表、タスク管理、ログ、検索を同じテキスト構造に載せられる。GTD の Capture、Clarify、Organize、Reflect、Engage を Emacs 内で軽く回すための考え方と設定例を、動くミニデモでまとめる。"),
+            React.createElement("div", { className: "hero-actions" },
+              React.createElement("button", { className: "button", onClick: () => scrollTo("flow") }, "流れを見る"),
+              React.createElement("button", { className: "button secondary", onClick: () => scrollTo("setup") }, "設定例へ")
+            )
+          ),
+          React.createElement(WorkspacePreview)
+        ),
+        React.createElement("main", null,
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "なぜ Org-mode が GTD に向くのか"),
+              React.createElement("p", null, "GTD はツールより運用の設計が重要だが、Org-mode は低摩擦な capture、階層的なプロジェクト管理、agenda によるレビュー、DONE ログまでを同じデータで扱える。アプリ間の同期より、テキストを信頼できる単一の作業面にする発想と相性がよい。")
+            ),
+            React.createElement("div", { className: "grid" },
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "見出しがタスクになる"), React.createElement("p", null, "メモ、プロジェクト、サブタスクを同じ階層で扱える。粒度を変えても構造が崩れにくい。")),
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "Agenda がレビュー画面になる"), React.createElement("p", null, "複数ファイルから予定、期限、状態を集約し、今日見るべきものだけを表示できる。")),
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "ログが自然に残る"), React.createElement("p", null, "DONE、CLOSED、CLOCK、ノートが同じ場所に残り、週次レビューの材料になる。"))
+            )
+          ),
+          React.createElement("section", { className: "section", id: "flow" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "GTD の 5 ステップを Org に対応させる"),
+              React.createElement("p", null, "左のステップを選ぶと、考え方と Org の断片が切り替わる。重要なのは高機能化ではなく、気がかりを入口から実行まで流せること。")
+            ),
+            React.createElement(FlowExplorer)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "Inbox から Next へ流す"),
+              React.createElement("p", null, "GTD 運用の詰まりは Inbox が溜まるか、TODO が曖昧なまま残るところで起きる。小さなシミュレータで、未整理の項目を次の行動へ押し出す感覚を確認できる。")
+            ),
+            React.createElement(CaptureSimulator)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "Agenda は実行のための視界"),
+              React.createElement("p", null, "今日の予定と NEXT を混ぜて見ると、やることリストではなく選択画面になる。フィルタで状態ごとの見え方を切り替えられる。")
+            ),
+            React.createElement(AgendaView)
+          ),
+          React.createElement("section", { className: "section", id: "setup" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "最小設定例"),
+              React.createElement("p", null, "最初は状態とファイルを増やしすぎない。Inbox を空にする流れ、NEXT の抽出、WAIT の監視、Archive の軽量化が揃えば、GTD として十分に機能する。")
+            ),
+            React.createElement("div", { className: "two-col" },
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "org-todo-keywords"),
+                React.createElement("pre", null, "(setq org-todo-keywords\n      '((sequence \"TODO(t)\" \"NEXT(n)\" \"WAIT(w@)\" \"SOMEDAY(s)\" \"|\" \"DONE(d!)\" \"CANCELLED(c@)\")))\n\n(setq org-log-done 'time)\n(setq org-log-into-drawer t)")
+              ),
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "capture と agenda"),
+                React.createElement("pre", null, "(setq org-agenda-files\n      '(\"~/org/inbox.org\"\n        \"~/org/projects.org\"\n        \"~/org/someday.org\"))\n\n(setq org-capture-templates\n      '((\"t\" \"Task\" entry\n         (file \"~/org/inbox.org\")\n         \"* TODO %?\\n  :PROPERTIES:\\n  :CREATED: %U\\n  :END:\")\n        (\"j\" \"Journal\" entry\n         (file+datetree \"~/org/journal.org\")\n         \"* %U %?\")))")
+              )
+            )
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "運用チェック"),
+              React.createElement("p", null, "設定よりも、レビューで信頼を保てているかが重要。チェックすると進捗バーが動く。")
+            ),
+            React.createElement(Checklist)
+          ),
+          React.createElement("section", { className: "footer" },
+            React.createElement("p", null, "Org-mode GTD の基本形: capture で集める、clarify で次の行動にする、agenda で見る、review で信頼を保つ。")
+          )
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+</body>
+</html>
