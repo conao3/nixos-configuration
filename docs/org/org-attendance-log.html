@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Org-mode Attendance Log</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --ink: #1d2320;
+      --muted: #606a65;
+      --line: #d9d5cb;
+      --panel: #fffdf8;
+      --work: #236b62;
+      --break: #a85a32;
+      --admin: #4e6597;
+      --warn: #b33f3f;
+      --soft: #e7efea;
+      --shadow: 0 18px 48px rgba(40, 37, 30, 0.12);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(120deg, rgba(35, 107, 98, 0.08), transparent 34%),
+        linear-gradient(180deg, #fbfaf6 0%, var(--bg) 52%, #ece8df 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    button,
+    input,
+    select { font: inherit; }
+
+    .hero {
+      min-height: 82vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(330px, 0.94fr);
+      gap: 44px;
+      align-items: center;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 64px 28px 42px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px;
+      color: var(--work);
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      margin-right: 32px;
+      border-radius: 50%;
+      background: var(--work);
+      box-shadow: 16px 0 0 var(--break), 32px 0 0 var(--admin);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2.6rem, 5.7vw, 5.6rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    p { margin: 0; }
+
+    .lead {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-top: 24px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fffdf8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 850;
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(30, 36, 34, 0.16);
+    }
+
+    .timesheet {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .sheet-head {
+      display: grid;
+      grid-template-columns: 0.8fr 0.8fr 0.8fr 1fr;
+      border-bottom: 1px solid var(--line);
+      background: #f1eee6;
+    }
+
+    .sheet-head div,
+    .sheet-row div {
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .sheet-head div {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .sheet-row {
+      display: grid;
+      grid-template-columns: 0.8fr 0.8fr 0.8fr 1fr;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+
+    .sheet-row:last-child { border-bottom: 0; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .pill.work { background: var(--work); }
+    .pill.break { background: var(--break); }
+    .pill.admin { background: var(--admin); }
+
+    .total-band {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+      background: #202621;
+      color: #f5f3ec;
+    }
+
+    .total-band strong {
+      display: block;
+      font-size: 1.55rem;
+      line-height: 1.1;
+    }
+
+    .total-band span {
+      color: #cfd8d1;
+      font-size: 0.84rem;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    .section {
+      padding: 56px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(280px, 1.25fr);
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    .section-header p,
+    .card p,
+    .note {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(40, 37, 30, 0.06);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.74);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .step.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fffdf8;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 310px;
+    }
+
+    pre {
+      margin: 16px 0 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #202621;
+      color: #eef4ec;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .logger {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .form input,
+    .form select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      background: white;
+      color: var(--ink);
+    }
+
+    .log-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 100px 110px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .log-row button {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.55rem;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--work);
+    }
+
+    .meter {
+      height: 12px;
+      background: #e2ddd2;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--work), #789d58);
+      transition: width 220ms ease;
+    }
+
+    .footer {
+      color: var(--muted);
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .section-header,
+      .flow,
+      .logger,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .hero { padding-top: 34px; }
+
+      .grid,
+      .summary,
+      .total-band {
+        grid-template-columns: 1fr;
+      }
+
+      .sheet-head div,
+      .sheet-row div {
+        padding: 10px 8px;
+        font-size: 0.88rem;
+      }
+
+      .log-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useMemo, useState } = React;
+
+    const guideSteps = [
+      {
+        name: "出勤",
+        title: "勤務日の最初に CLOCK を開始する",
+        body: "勤怠ログでは、タスクの完了よりも時刻の証跡が主役になる。出勤時刻、休憩開始、休憩終了、退勤時刻を、あとから説明できる粒度で残す。",
+        sample: "* 2026-05-14 Thu\n** WORK 勤務\n   CLOCK: [2026-05-14 Thu 09:30]--[2026-05-14 Thu 12:00]"
+      },
+      {
+        name: "休憩",
+        title: "休憩は勤務とは別の見出しにする",
+        body: "休憩を勤務時間から差し引く必要があるなら、同じ WORK 見出しに混ぜない。BREAK 見出しとして記録すると、集計時に扱いやすい。",
+        sample: "** BREAK 昼休憩\n   CLOCK: [2026-05-14 Thu 12:00]--[2026-05-14 Thu 13:00]"
+      },
+      {
+        name: "作業区分",
+        title: "勤怠と工数を混ぜすぎない",
+        body: "勤怠は法的・契約的な勤務実績、工数はプロジェクト別の作業配分。Org では同じ clock を使えるが、見出しやタグで目的を分ける。",
+        sample: "** WORK 実装 :project-a:\n   CLOCK: [2026-05-14 Thu 13:00]--[2026-05-14 Thu 16:30]\n** ADMIN 日報 :admin:\n   CLOCK: [2026-05-14 Thu 16:30]--[2026-05-14 Thu 17:00]"
+      },
+      {
+        name: "集計",
+        title: "clocktable で日次・週次を出す",
+        body: "Org の clocktable は、期間、タグ、ファイル単位で clock を集計できる。提出用には Org から表を生成し、必要なら CSV に寄せる。",
+        sample: "#+BEGIN: clocktable :scope file :block today :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope agenda :block thisweek :tags \"work\"\n#+END:"
+      },
+      {
+        name: "補正",
+        title: "修正理由をログに残す",
+        body: "打刻忘れを修正する場合は、時刻だけ直すよりも理由を短く添える。勤怠は後日の説明可能性が重要になる。",
+        sample: "** WORK 勤務\n   CLOCK: [2026-05-14 Thu 09:35]--[2026-05-14 Thu 12:00]\n   - 09:30 出勤、打刻忘れのため 09:35 に補正。"
+      }
+    ];
+
+    const initialLogs = [
+      { id: 1, type: "WORK", start: "09:30", end: "12:00", title: "午前勤務" },
+      { id: 2, type: "BREAK", start: "12:00", end: "13:00", title: "昼休憩" },
+      { id: 3, type: "WORK", start: "13:00", end: "16:30", title: "実装" },
+      { id: 4, type: "ADMIN", start: "16:30", end: "17:00", title: "日報" }
+    ];
+
+    const checklist = [
+      "出勤・退勤・休憩の境界が clock として残っている",
+      "休憩は勤務時間と別の区分で集計できる",
+      "打刻忘れの修正理由を短く残している",
+      "日次と週次の clocktable を同じ情報源から出せる",
+      "提出用の勤怠と、個人用の詳細作業ログを混ぜすぎていない",
+      "月末に archive しても過去の集計を追える"
+    ];
+
+    function minutesBetween(start, end) {
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
+    }
+
+    function formatMinutes(minutes) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return `${h}:${String(m).padStart(2, "0")}`;
+    }
+
+    function HeroSheet() {
+      return React.createElement("div", { className: "timesheet", "aria-label": "Attendance log preview" },
+        React.createElement("div", { className: "sheet-head" },
+          React.createElement("div", null, "区分"),
+          React.createElement("div", null, "開始"),
+          React.createElement("div", null, "終了"),
+          React.createElement("div", null, "内容")
+        ),
+        initialLogs.map((log) =>
+          React.createElement("div", { className: "sheet-row", key: log.id },
+            React.createElement("div", null, React.createElement("span", { className: `pill ${log.type.toLowerCase()}` }, log.type)),
+            React.createElement("div", null, log.start),
+            React.createElement("div", null, log.end),
+            React.createElement("div", null, log.title)
+          )
+        ),
+        React.createElement("div", { className: "total-band" },
+          React.createElement("div", null, React.createElement("strong", null, "6:00"), React.createElement("span", null, "勤務")),
+          React.createElement("div", null, React.createElement("strong", null, "1:00"), React.createElement("span", null, "休憩")),
+          React.createElement("div", null, React.createElement("strong", null, "0:30"), React.createElement("span", null, "管理作業"))
+        )
+      );
+    }
+
+    function FlowGuide() {
+      const [active, setActive] = useState(0);
+      const step = guideSteps[active];
+      return React.createElement("div", { className: "flow" },
+        React.createElement("div", { className: "steps" },
+          guideSteps.map((item, index) =>
+            React.createElement("button", {
+              key: item.name,
+              className: "step" + (active === index ? " active" : ""),
+              onClick: () => setActive(index)
+            }, `${index + 1}. ${item.name}`)
+          )
+        ),
+        React.createElement("div", { className: "panel" },
+          React.createElement("h3", null, step.title),
+          React.createElement("p", { className: "note" }, step.body),
+          React.createElement("pre", null, step.sample)
+        )
+      );
+    }
+
+    function LogSimulator() {
+      const [logs, setLogs] = useState(initialLogs);
+      const [type, setType] = useState("WORK");
+      const [start, setStart] = useState("17:00");
+      const [end, setEnd] = useState("18:00");
+      const [title, setTitle] = useState("レビュー");
+
+      const add = () => {
+        if (!start || !end || !title.trim()) return;
+        setLogs([{ id: Date.now(), type, start, end, title: title.trim() }, ...logs]);
+      };
+
+      const remove = (id) => setLogs(logs.filter((log) => log.id !== id));
+
+      const totals = useMemo(() => {
+        const result = { WORK: 0, BREAK: 0, ADMIN: 0 };
+        logs.forEach((log) => { result[log.type] += minutesBetween(log.start, log.end); });
+        return result;
+      }, [logs]);
+
+      const net = totals.WORK + totals.ADMIN;
+
+      return React.createElement("div", null,
+        React.createElement("div", { className: "summary" },
+          React.createElement("div", { className: "metric" }, React.createElement("strong", null, formatMinutes(net)), React.createElement("span", null, "勤務合計")),
+          React.createElement("div", { className: "metric" }, React.createElement("strong", null, formatMinutes(totals.WORK)), React.createElement("span", null, "WORK")),
+          React.createElement("div", { className: "metric" }, React.createElement("strong", null, formatMinutes(totals.ADMIN)), React.createElement("span", null, "ADMIN")),
+          React.createElement("div", { className: "metric" }, React.createElement("strong", null, formatMinutes(totals.BREAK)), React.createElement("span", null, "BREAK"))
+        ),
+        React.createElement("div", { className: "logger" },
+          React.createElement("div", { className: "card" },
+            React.createElement("h3", null, "打刻を追加"),
+            React.createElement("p", null, "区分、開始、終了、内容を入れると合計が更新されます。"),
+            React.createElement("div", { className: "form" },
+              React.createElement("select", { value: type, onChange: (event) => setType(event.target.value) },
+                React.createElement("option", { value: "WORK" }, "WORK"),
+                React.createElement("option", { value: "BREAK" }, "BREAK"),
+                React.createElement("option", { value: "ADMIN" }, "ADMIN")
+              ),
+              React.createElement("input", { type: "time", value: start, onChange: (event) => setStart(event.target.value) }),
+              React.createElement("input", { type: "time", value: end, onChange: (event) => setEnd(event.target.value) }),
+              React.createElement("input", { value: title, onChange: (event) => setTitle(event.target.value), placeholder: "内容" }),
+              React.createElement("button", { className: "button", onClick: add }, "ログを追加")
+            )
+          ),
+          React.createElement("div", { className: "log-list" },
+            logs.map((log) =>
+              React.createElement("div", { className: "log-row", key: log.id },
+                React.createElement("span", { className: `pill ${log.type.toLowerCase()}` }, log.type),
+                React.createElement("strong", null, `${log.start}-${log.end}`),
+                React.createElement("span", null, log.title),
+                React.createElement("button", { onClick: () => remove(log.id) }, "削除")
+              )
+            )
+          )
+        )
+      );
+    }
+
+    function Checklist() {
+      const [checked, setChecked] = useState([]);
+      const ratio = Math.round((checked.length / checklist.length) * 100);
+      const toggle = (index) => {
+        setChecked(checked.includes(index) ? checked.filter((item) => item !== index) : [...checked, index]);
+      };
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", { className: "meter", "aria-label": `progress ${ratio}%` },
+          React.createElement("div", { className: "meter-fill", style: { width: `${ratio}%` } })
+        ),
+        React.createElement("div", { className: "checklist" },
+          checklist.map((item, index) =>
+            React.createElement("label", { className: "check-row", key: item },
+              React.createElement("input", { type: "checkbox", checked: checked.includes(index), onChange: () => toggle(index) }),
+              React.createElement("span", null, item)
+            )
+          )
+        )
+      );
+    }
+
+    function App() {
+      const scrollTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+      return React.createElement(React.Fragment, null,
+        React.createElement("section", { className: "hero" },
+          React.createElement("div", null,
+            React.createElement("p", { className: "eyebrow" }, "Org-mode / Attendance"),
+            React.createElement("h1", null, "Org-mode で勤怠ログをつける"),
+            React.createElement("p", { className: "lead" }, "勤怠ログは GTD のようなタスク選択ではなく、勤務実績を説明できる形で残すための記録です。Org-mode の clock、日次見出し、タグ、clocktable を使うと、出退勤、休憩、作業区分、集計をひとつのテキストから扱えます。"),
+            React.createElement("div", { className: "actions" },
+              React.createElement("button", { className: "button", onClick: () => scrollTo("model") }, "記録モデルを見る"),
+              React.createElement("button", { className: "button secondary", onClick: () => scrollTo("template") }, "テンプレートへ")
+            )
+          ),
+          React.createElement(HeroSheet)
+        ),
+        React.createElement("main", null,
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "勤怠ログで見るべきもの"),
+              React.createElement("p", null, "勤怠管理では、何を完了したかより、いつ勤務状態だったか、いつ休憩したか、あとから修正理由を説明できるかが重要になる。Org-mode は clock を中心にすれば、タスク管理とは別の用途として使える。")
+            ),
+            React.createElement("div", { className: "grid" },
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "境界を残す"), React.createElement("p", null, "出勤、休憩開始、休憩終了、退勤の境界を clock で記録する。")),
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "区分を分ける"), React.createElement("p", null, "WORK、BREAK、ADMIN などの見出しやタグで、集計時に混ざらないようにする。")),
+              React.createElement("div", { className: "card" }, React.createElement("h3", null, "集計できる形にする"), React.createElement("p", null, "日次、週次、月次の clocktable を出せるよう、ファイルと見出しを揃える。"))
+            )
+          ),
+          React.createElement("section", { className: "section", id: "model" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "記録の流れ"),
+              React.createElement("p", null, "勤怠ログは、打刻、区分、集計、補正の一連の流れで考えると崩れにくい。左の項目を選ぶと、Org の記録例が切り替わる。")
+            ),
+            React.createElement(FlowGuide)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "打刻と合計のミニデモ"),
+              React.createElement("p", null, "Org の clocktable がやることを簡略化したデモです。休憩は勤務合計から外し、WORK と ADMIN を勤務時間として合算しています。")
+            ),
+            React.createElement(LogSimulator)
+          ),
+          React.createElement("section", { className: "section", id: "template" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "最小テンプレート"),
+              React.createElement("p", null, "提出用の勤怠に使うなら、日ごとの見出し、区分、clock、修正メモを優先する。個人用の詳細作業ログはタグや下位見出しで分ける。")
+            ),
+            React.createElement("div", { className: "two-col" },
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "日次ログ"),
+                React.createElement("pre", null, "* 2026-05-14 Thu\n** WORK 勤務\n   CLOCK: [2026-05-14 Thu 09:30]--[2026-05-14 Thu 12:00]\n** BREAK 昼休憩\n   CLOCK: [2026-05-14 Thu 12:00]--[2026-05-14 Thu 13:00]\n** WORK 勤務\n   CLOCK: [2026-05-14 Thu 13:00]--[2026-05-14 Thu 18:30]\n** NOTE 補正\n   - 退勤打刻を 18:35 に記録、実退勤は 18:30。")
+              ),
+              React.createElement("div", { className: "card" },
+                React.createElement("h3", null, "集計ブロック"),
+                React.createElement("pre", null, "#+BEGIN: clocktable :scope file :block today :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :block thisweek :maxlevel 2\n#+END:\n\n#+BEGIN: clocktable :scope file :tstart \"<2026-05-01>\" :tend \"<2026-06-01>\"\n#+END:")
+              )
+            )
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "運用チェック"),
+              React.createElement("p", null, "勤怠ログは正確さと説明可能性が大事です。実際に使う前に、最低限の運用ルールが揃っているか確認する。")
+            ),
+            React.createElement(Checklist)
+          ),
+          React.createElement("section", { className: "footer" },
+            React.createElement("p", null, "Org-mode 勤怠ログの基本形: clock で境界を残す、休憩を分ける、clocktable で集計する、補正理由を書く。")
+          )
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+</body>
+</html>
