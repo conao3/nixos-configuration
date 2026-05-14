@@ -364,6 +364,64 @@
       gap: 16px;
     }
 
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .shortcut {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #202621;
+      color: #fffdf8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .workflow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .workflow-row strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .workflow-row p,
+    .shortcut p {
+      color: var(--muted);
+      margin: 0;
+    }
+
     .checklist {
       display: grid;
       gap: 10px;
@@ -421,7 +479,8 @@
 
       .grid,
       .summary,
-      .total-band {
+      .total-band,
+      .shortcut-grid {
         grid-template-columns: 1fr;
       }
 
@@ -432,6 +491,11 @@
       }
 
       .log-row {
+        grid-template-columns: 1fr;
+      }
+
+      .shortcut,
+      .workflow-row {
         grid-template-columns: 1fr;
       }
     }
@@ -480,6 +544,26 @@
       { id: 2, type: "BREAK", start: "12:00", end: "13:00", title: "昼休憩" },
       { id: 3, type: "WORK", start: "13:00", end: "16:30", title: "実装" },
       { id: 4, type: "ADMIN", start: "16:30", end: "17:00", title: "日報" }
+    ];
+
+    const attendanceShortcuts = [
+      { key: "C-c C-x C-i", title: "Clock in", body: "現在の見出しで作業開始。出勤、休憩終了、作業再開のタイミングで使う。" },
+      { key: "C-c C-x C-o", title: "Clock out", body: "現在の clock を終了。休憩開始、退勤、作業区切りで使う。" },
+      { key: "C-c C-x C-j", title: "Clock 先へ移動", body: "現在 clock 中の見出しへジャンプする。別バッファで作業していて打刻状態を確認したいときに使う。" },
+      { key: "C-c C-x C-r", title: "Clock report", body: "clocktable を挿入する。日次、週次、月次の合計を出す入口になる。" },
+      { key: "C-c C-c", title: "表を更新", body: "clocktable ブロック上で実行すると集計を再計算する。提出前の確認で使う。" },
+      { key: "C-c C-s", title: "日付を入れる", body: "勤務日見出しや予定日を整える。日付プロンプトでは today、+1d、2026-05-14 などが使える。" },
+      { key: "C-c C-t", title: "区分を変える", body: "WORK、BREAK、ADMIN などを TODO keyword として使う場合の切替キー。" },
+      { key: "C-c C-x C-d", title: "Clock 表示", body: "現在の clock の経過時間を表示する。休憩前や退勤前の確認に向く。" }
+    ];
+
+    const attendanceWorkflow = [
+      { time: "出勤", title: "今日の見出しを作って WORK で clock in", body: "attendance.org に日付見出しを作り、** WORK 勤務 の上で C-c C-x C-i。これを勤務開始の基準にする。" },
+      { time: "休憩", title: "WORK を clock out して BREAK を clock in", body: "休憩開始時に C-c C-x C-o。BREAK 昼休憩の見出しへ移動して C-c C-x C-i。休憩を勤務と混ぜない。" },
+      { time: "再開", title: "BREAK を閉じて WORK / ADMIN に戻る", body: "休憩終了時に C-c C-x C-o。午後の作業見出しで C-c C-x C-i。日報や会議は ADMIN に分けると集計しやすい。" },
+      { time: "退勤", title: "最後の clock を閉じて補正メモを確認", body: "退勤時に C-c C-x C-o。打刻忘れや実時刻との差があれば NOTE 補正に短く理由を書く。" },
+      { time: "日次", title: "clocktable を更新して合計を見る", body: "clocktable 上で C-c C-c。WORK と ADMIN の合計、BREAK の控除、未終了 clock がないことを確認する。" },
+      { time: "月末", title: "提出用に期間集計を作る", body: "月次 clocktable を C-c C-x C-r で作り、必要なら Org の表をコピーまたは export する。個人用詳細は archive してよい。" }
     ];
 
     const checklist = [
@@ -607,6 +691,34 @@
       );
     }
 
+    function ShortcutGuide() {
+      return React.createElement("div", { className: "shortcut-grid" },
+        attendanceShortcuts.map((item) =>
+          React.createElement("div", { className: "shortcut", key: item.key },
+            React.createElement("kbd", null, item.key),
+            React.createElement("div", null,
+              React.createElement("strong", null, item.title),
+              React.createElement("p", null, item.body)
+            )
+          )
+        )
+      );
+    }
+
+    function AttendanceWorkflow() {
+      return React.createElement("div", { className: "workflow" },
+        attendanceWorkflow.map((item) =>
+          React.createElement("div", { className: "workflow-row", key: item.time + item.title },
+            React.createElement("kbd", null, item.time),
+            React.createElement("div", null,
+              React.createElement("strong", null, item.title),
+              React.createElement("p", null, item.body)
+            )
+          )
+        )
+      );
+    }
+
     function Checklist() {
       const [checked, setChecked] = useState([]);
       const ratio = Math.round((checked.length / checklist.length) * 100);
@@ -668,6 +780,20 @@
               React.createElement("p", null, "Org の clocktable がやることを簡略化したデモです。休憩は勤務合計から外し、WORK と ADMIN を勤務時間として合算しています。")
             ),
             React.createElement(LogSimulator)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "よく使うショートカット"),
+              React.createElement("p", null, "勤怠ログでは clock in と clock out が中心になる。区分の見出しを作ってから打刻し、集計ブロックは提出前に更新する。")
+            ),
+            React.createElement(ShortcutGuide)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "日次から月次までのワークフロー"),
+              React.createElement("p", null, "勤怠は記録漏れを後から推測で埋めるほど弱くなる。出勤、休憩、再開、退勤、日次確認、月末集計のタイミングで押すキーを固定する。")
+            ),
+            React.createElement(AttendanceWorkflow)
           ),
           React.createElement("section", { className: "section", id: "template" },
             React.createElement("div", { className: "section-header" },

@@ -429,6 +429,64 @@
       gap: 16px;
     }
 
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .shortcut {
+      display: grid;
+      grid-template-columns: 142px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #202621;
+      color: #fffdf8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .workflow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .workflow-row strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .workflow-row p,
+    .shortcut p {
+      color: var(--muted);
+      margin: 0;
+    }
+
     .checklist {
       display: grid;
       gap: 10px;
@@ -498,11 +556,17 @@
       }
 
       .grid,
-      .board {
+      .board,
+      .shortcut-grid {
         grid-template-columns: 1fr;
       }
 
       .agenda-item {
+        grid-template-columns: 1fr;
+      }
+
+      .shortcut,
+      .workflow-row {
         grid-template-columns: 1fr;
       }
     }
@@ -552,6 +616,25 @@
       { state: "WAIT", context: "work", text: "レビュー依頼の返答を待つ", date: "Fri" },
       { state: "TODO", context: "errand", text: "ノート用紙を補充する", date: "Sat" },
       { state: "NEXT", context: "review", text: "週次レビューで someday を 5 件削る", date: "Sun" }
+    ];
+
+    const shortcuts = [
+      { key: "C-c c", title: "Capture を開く", body: "org-capture を呼び出す。まず Inbox に入れる入口として使う。global-set-key で割り当てるのが一般的。" },
+      { key: "C-c C-c", title: "Capture を確定", body: "capture buffer の内容を保存して元の作業へ戻る。途中でやめる場合は C-c C-k。" },
+      { key: "C-c a", title: "Agenda を開く", body: "org-agenda を呼び出す。カスタムコマンド g を用意しておくと GTD ビューを 2 打鍵で開ける。" },
+      { key: "S-LEFT / S-RIGHT", title: "TODO 状態を変更", body: "見出し上で TODO、NEXT、WAIT、DONE を前後に切り替える。環境によっては C-c C-t が安定。" },
+      { key: "C-c C-s", title: "SCHEDULED を入れる", body: "次に見る日、着手予定日を入れる。日付プロンプトでは +1d、fri、2026-05-14 のように入力できる。" },
+      { key: "C-c C-d", title: "DEADLINE を入れる", body: "締切を入れる。NEXT の選択とは別に、期限として agenda に出す。" },
+      { key: "C-c C-t", title: "状態を選択", body: "TODO keyword をメニューから変更する。WAIT へ送る、DONE にする操作の基準キー。" },
+      { key: "C-c C-x C-a", title: "Archive する", body: "完了済みや古い見出しを archive へ移す。agenda を軽く保つため週次レビューで使う。" }
+    ];
+
+    const dailyWorkflow = [
+      { time: "随時", title: "気になった瞬間に Capture", body: "C-c c で Task テンプレートを選び、短い動詞で Inbox に入れる。分類や優先度付けはここで頑張らない。" },
+      { time: "朝", title: "Agenda で今日の視界を作る", body: "C-c a g で GTD ビューを開き、今日の予定、期限、NEXT を見る。実行できない項目は Inbox 処理へ戻す。" },
+      { time: "処理", title: "Inbox を NEXT / WAIT / SOMEDAY に分ける", body: "見出し上で C-c C-t、C-c C-s、C-c C-d を使う。曖昧な TODO は物理的な次の行動に書き換える。" },
+      { time: "実行", title: "Agenda から NEXT を選ぶ", body: "場所、時間、集中力に合う NEXT を選び、終わったら C-c C-t で DONE。続きがあれば次の NEXT を同じプロジェクトに作る。" },
+      { time: "週次", title: "信頼できる一覧に戻す", body: "Inbox を空にし、WAIT の待ち先を確認し、古い DONE を C-c C-x C-a で archive。Someday は残す理由があるものだけにする。" }
     ];
 
     const checklist = [
@@ -685,6 +768,34 @@
       );
     }
 
+    function ShortcutGuide() {
+      return React.createElement("div", { className: "shortcut-grid" },
+        shortcuts.map((item) =>
+          React.createElement("div", { className: "shortcut", key: item.key },
+            React.createElement("kbd", null, item.key),
+            React.createElement("div", null,
+              React.createElement("strong", null, item.title),
+              React.createElement("p", null, item.body)
+            )
+          )
+        )
+      );
+    }
+
+    function DailyWorkflow() {
+      return React.createElement("div", { className: "workflow" },
+        dailyWorkflow.map((item) =>
+          React.createElement("div", { className: "workflow-row", key: item.time + item.title },
+            React.createElement("kbd", null, item.time),
+            React.createElement("div", null,
+              React.createElement("strong", null, item.title),
+              React.createElement("p", null, item.body)
+            )
+          )
+        )
+      );
+    }
+
     function Checklist() {
       const [checked, setChecked] = useState([]);
       const ratio = Math.round((checked.length / checklist.length) * 100);
@@ -757,6 +868,20 @@
               React.createElement("p", null, "今日の予定と NEXT を混ぜて見ると、やることリストではなく選択画面になる。フィルタで状態ごとの見え方を切り替えられる。")
             ),
             React.createElement(AgendaView)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "よく使うショートカット"),
+              React.createElement("p", null, "GTD 運用では、分類よりも入口とレビューの摩擦を下げることが効く。C-c c と C-c a を起点にし、状態変更、予定日、締切、archive を同じ流れで使う。")
+            ),
+            React.createElement(ShortcutGuide)
+          ),
+          React.createElement("section", { className: "section" },
+            React.createElement("div", { className: "section-header" },
+              React.createElement("h2", null, "日常ワークフロー"),
+              React.createElement("p", null, "キー操作は単体で覚えるより、いつ押すかを決めるほうが定着する。Capture、Agenda、Inbox 処理、実行、週次レビューを固定の流れにする。")
+            ),
+            React.createElement(DailyWorkflow)
           ),
           React.createElement("section", { className: "section", id: "setup" },
             React.createElement("div", { className: "section-header" },
