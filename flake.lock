@@ -284,11 +284,11 @@
     "devo": {
       "flake": false,
       "locked": {
-        "lastModified": 1778682545,
-        "narHash": "sha256-iVvK61U8v2vN5463dMXT0Ft0N/poCIWuEaLN/e227ro=",
+        "lastModified": 1778864146,
+        "narHash": "sha256-mAMfeF0wR/EyVTZJRXAwx8hSULfwGKlgvyZzQEGzRV0=",
         "owner": "conao3",
         "repo": "rust-devo",
-        "rev": "e0c61ebf2f91bebe72fa812a96adde463445f816",
+        "rev": "f6369049a14a2ad5279f8a7329cab17f3c40c51b",
         "type": "github"
       },
       "original": {
