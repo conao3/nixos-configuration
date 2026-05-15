@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>worktrunk (wt) — Parallel AI Agent Worktree Management</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    :root {
+      --color-canvas: #faf9f5;
+      --color-surface-soft: #f5f0e8;
+      --color-surface-card: #efe9de;
+      --color-surface-cream-strong: #e8e0d2;
+      --color-surface-dark: #181715;
+      --color-surface-dark-elevated: #252320;
+      --color-surface-dark-soft: #1f1e1b;
+      --color-hairline: #e6dfd8;
+      --color-ink: #141413;
+      --color-body: #3d3d3a;
+      --color-muted: #6c6a64;
+      --color-muted-soft: #8e8b82;
+      --color-on-primary: #ffffff;
+      --color-on-dark: #faf9f5;
+      --color-on-dark-soft: #a09d96;
+      --color-primary: #cc785c;
+      --color-primary-active: #a9583e;
+      --color-accent-teal: #5db8a6;
+      --color-accent-amber: #e8a55a;
+      --color-warning: #d4a017;
+      --color-success: #5db872;
+      --rounded-sm: 6px;
+      --rounded-md: 8px;
+      --rounded-lg: 12px;
+      --rounded-pill: 9999px;
+      --spacing-sm: 12px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-section: 96px;
+      --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+      --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --bg: var(--color-canvas);
+      --ink: var(--color-ink);
+      --muted: var(--color-muted);
+      --line: var(--color-hairline);
+      --panel: var(--color-surface-card);
+      --accent: var(--color-primary);
+      --accent-2: var(--color-accent-amber);
+      --accent-3: var(--color-accent-teal);
+      --accent-soft: var(--color-surface-soft);
+      --shadow: 0 1px 3px rgba(20, 20, 19, 0.08);
+      color-scheme: light;
+      font-family: var(--font-body);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(110deg, rgba(204, 120, 92, 0.08), transparent 32%),
+        linear-gradient(180deg, var(--color-canvas) 0%, var(--bg) 48%, var(--color-surface-soft) 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      min-height: 100vh;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.98fr);
+      gap: 44px;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-section) 28px 42px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 0;
+      margin: 0 0 16px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      margin-right: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 16px 0 0 var(--accent-2), 32px 0 0 var(--accent-3);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 720px;
+      font-family: var(--font-display);
+      font-size: 4rem;
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin: 24px 0 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      border: 1px solid var(--color-primary);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      padding: 12px 16px;
+      border-radius: var(--rounded-md);
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .workspace {
+      background: var(--color-surface-dark);
+      color: var(--color-on-dark);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(30, 36, 34, 0.18);
+    }
+
+    .workspace-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: var(--color-surface-dark-elevated);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .workspace-title {
+      margin-left: 12px;
+      color: var(--color-on-dark-soft);
+      font-size: 0.86rem;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .dot:nth-child(2) {
+      background: var(--color-accent-amber);
+    }
+
+    .dot:nth-child(3) {
+      background: var(--color-success);
+    }
+
+    .buffer {
+      padding: 20px;
+      font-family: var(--font-code);
+      font-size: 0.94rem;
+      line-height: 1.6;
+      min-height: 320px;
+    }
+
+    .line {
+      opacity: 0;
+      transform: translateX(-8px);
+      animation: reveal 420ms ease forwards;
+      white-space: pre-wrap;
+    }
+
+    .line:nth-child(1) { animation-delay: 90ms; }
+    .line:nth-child(2) { animation-delay: 180ms; }
+    .line:nth-child(3) { animation-delay: 270ms; }
+    .line:nth-child(4) { animation-delay: 360ms; }
+    .line:nth-child(5) { animation-delay: 450ms; }
+    .line:nth-child(6) { animation-delay: 540ms; }
+    .line:nth-child(7) { animation-delay: 630ms; }
+    .line:nth-child(8) { animation-delay: 720ms; }
+
+    .prompt { color: var(--color-accent-teal); font-weight: 800; }
+    .cmd { color: var(--color-on-dark); }
+    .arg { color: var(--color-accent-amber); }
+    .flag { color: var(--color-primary); }
+    .comment { color: var(--color-muted-soft); }
+    .ok { color: var(--color-success); font-weight: 800; }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    .section {
+      padding: var(--spacing-section) 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(280px, 1.25fr);
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .section-header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .first-card {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border-radius: var(--rounded-lg);
+      padding: var(--spacing-xl);
+      display: grid;
+      gap: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .first-card h3 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .first-card p {
+      margin: 0;
+      opacity: 0.92;
+    }
+
+    .first-card pre {
+      background: rgba(20, 20, 19, 0.42);
+      color: var(--color-on-dark);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--rounded-md);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: var(--rounded-md);
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--color-on-primary);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      background: var(--color-canvas);
+      border-radius: var(--rounded-md);
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .flow-step.active {
+      background: var(--ink);
+      color: var(--color-on-dark);
+      border-color: var(--ink);
+    }
+
+    .flow-step small {
+      display: block;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .flow-step.active small {
+      color: var(--color-on-dark-soft);
+    }
+
+    .demo-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--rounded-md);
+      padding: 18px;
+      min-height: 320px;
+    }
+
+    .demo-panel h3 {
+      margin: 0 0 8px;
+      font-size: 1.4rem;
+      font-family: var(--font-display);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .demo-panel p {
+      color: var(--muted);
+      margin: 0 0 16px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: var(--color-surface-dark);
+      color: var(--color-on-dark);
+      border-radius: var(--rounded-md);
+      padding: 16px;
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    code {
+      font-family: var(--font-code);
+      background: var(--color-surface-cream-strong);
+      padding: 1px 6px;
+      border-radius: var(--rounded-sm);
+      font-size: 0.9em;
+    }
+
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .shortcut {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--rounded-md);
+      padding: 14px;
+    }
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 4px 10px;
+      border-radius: var(--rounded-sm);
+      background: var(--color-surface-dark);
+      color: var(--color-on-dark);
+      font-family: var(--font-code);
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .shortcut strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .shortcut p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .workflow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-row {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--rounded-md);
+      padding: 14px;
+    }
+
+    .workflow-row strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .workflow-row p {
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .footer {
+      color: var(--muted);
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+
+    .footer a {
+      color: var(--accent);
+    }
+
+    @keyframes reveal {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .section-header,
+      .flow,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 34px;
+      }
+
+      h1 {
+        font-size: 2.6rem;
+      }
+
+      h2 {
+        font-size: 2.1rem;
+      }
+
+      .grid,
+      .shortcut-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .shortcut,
+      .workflow-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useMemo, useState } = React;
+    const h = React.createElement;
+
+    const flowSteps = [
+      {
+        name: "Switch",
+        sub: "ブランチを開く / 作る",
+        title: "wt switch でブランチ + worktree を同時に用意する",
+        body: "新しいブランチを切るときも、既存ブランチに戻るときも、同じ wt switch で済む。--create でブランチ新規作成、--base で派生元を指定できる。自動 cd 統合 (wt config shell install) を有効にしておくと、コマンド一発でその worktree へ移動する。",
+        sample: "$ wt switch --create --base origin/main feature/grok\n→ .wt/feature-grok を作成し、origin/main から派生した feature/grok を切って cd する"
+      },
+      {
+        name: "List",
+        sub: "並走中の枝を把握する",
+        title: "wt list で全 worktree の状態を眺める",
+        body: "AI エージェントを並列で走らせていると、どのブランチでどの作業をしていたか忘れがち。wt list は各 worktree のパス、ブランチ、ahead/behind、未コミット差分を 1 画面に集約する。--branches で worktree を持たないブランチも含められる。",
+        sample: "$ wt list\nPATH                         BRANCH          STATUS\n.                            master          ✓ clean\n.wt/feature-grok             feature/grok    ●3 ahead  ±2 modified\n.wt/fix-portless             fix/portless    ✓ clean"
+      },
+      {
+        name: "Merge",
+        sub: "成果物を取り込む",
+        title: "wt merge で対象ブランチへ統合する",
+        body: "worktree 上の作業がまとまったら、wt merge で default ブランチ（または指定ブランチ）にマージする。worktree を抜けて元のブランチへ戻る必要はなく、現在のディレクトリのまま統合できる。",
+        sample: "$ wt merge\n→ 現在の feature/grok を default branch (master) にマージ\n\n$ wt merge --target develop\n→ 統合先を develop に指定"
+      },
+      {
+        name: "Remove",
+        sub: "後片付け",
+        title: "wt remove でマージ済みブランチごと畳む",
+        body: "PR がマージされたら wt remove で worktree とブランチを一括削除する。マージ済みでなければ自動で守られる。強制削除したいときは別途 --force。default branch は --allow-delete-default なしでは消えない。",
+        sample: "$ wt remove\n→ 現在の worktree を畳む。マージ済みなら worktree + ブランチ削除\n\n$ wt remove feature/grok"
+      }
+    ];
+
+    const shortcuts = [
+      { key: "^", title: "default branch", body: "main / master 等のリポジトリの default ブランチを指す。例: wt switch ^" },
+      { key: "@", title: "current", body: "現在の HEAD を指す。--base=@ で「現在のブランチから派生」させたいときに便利。" },
+      { key: "-", title: "previous", body: "直前にいた worktree。cd - と同じ感覚で 2 ブランチ間を往復できる。" },
+      { key: "pr:N", title: "GitHub PR", body: "PR 番号 N をブランチに解決。fork の PR でも fetch + pushRemote 設定まで自動。gh CLI が必要。" },
+      { key: "mr:N", title: "GitLab MR", body: "GitLab MR 版。glab CLI が必要。同じく fork からの MR を解決できる。" },
+      { key: "--branches", title: "picker 拡張", body: "interactive picker で worktree を持たない全ブランチも候補に含める。--remotes で remote 追跡も。" }
+    ];
+
+    const dailyWorkflow = [
+      {
+        when: "朝 / 着手前",
+        title: "新ブランチを切って AI エージェントに渡す",
+        body: "wt switch --create --base origin/main feature/<topic> で新しい worktree を切る。--execute と組み合わせると、起動と同時にエージェント (例: claude) を立ち上げられる。",
+        cmd: "wt switch --create --base origin/main feature/grok\n# あるいはエージェント起動まで一発\nwt switch --create -x claude feature/grok"
+      },
+      {
+        when: "並走中",
+        title: "別タスクへスイッチ / 戻る",
+        body: "もう 1 本ブランチを切って並走させたい場合は同じ手順で別 worktree を作る。元のブランチへ戻るときは wt switch - か wt switch <branch>。",
+        cmd: "wt switch --create --base origin/main fix/portless\nwt switch -          # 直前へ戻る\nwt switch feature/grok"
+      },
+      {
+        when: "状況把握",
+        title: "全 worktree の差分と進捗を 1 行で見る",
+        body: "wt list で各 worktree の ahead/behind と未コミット状態を確認。引数なしの wt switch は preview 付きの interactive picker を開き、HEAD±, log, base±, remote⇅, summary の 5 タブで枝を比較できる。",
+        cmd: "wt list\nwt switch            # interactive picker"
+      },
+      {
+        when: "PR レビュー",
+        title: "他人の PR を一時 worktree で検証",
+        body: "pr:N shortcut で PR の branch を別 worktree に展開。fork でも自動で fetch + pushRemote 設定までやる。レビューが終わったら wt remove で畳む。",
+        cmd: "wt switch pr:123\n# ローカルでテスト\nwt remove pr-123"
+      },
+      {
+        when: "完了時",
+        title: "default branch にマージしてブランチを畳む",
+        body: "wt merge で default branch (master) に統合 → wt remove で worktree + branch を削除。マージ済みなら自動的に branch も消える。",
+        cmd: "wt merge\nwt remove"
+      }
+    ];
+
+    const setupCommands = [
+      {
+        title: "シェル統合 (auto-cd + 補完)",
+        body: "wt switch 実行後に自動で対象 worktree へ cd するため、shell 統合を入れる。zsh / bash / fish 対応。",
+        code: "wt config shell install\n# または手動で:\neval \"$(wt config shell init zsh)\""
+      },
+      {
+        title: "worktree 配置先のカスタム",
+        body: "デフォルトは <repo>/.wt/<sanitized-branch>。チームのレイアウトに合わせて wt config create で書き換える。",
+        code: "wt config create        # 雛形を生成\n# [paths]\n# worktree_root = \"../wt-{{ repo_name }}\""
+      },
+      {
+        title: "alias でエージェント直起動",
+        body: "wsc (worktree switch create) のような alias を組むと、ブランチ作成 + worktree + エージェント起動を 1 コマンドに圧縮できる。",
+        code: "# .zshrc\nalias wsc='wt switch --create -x claude'\n\n# 使用例\nwsc feature/grok -- 'Fix GH #322'\n# → feature/grok を作成し claude を 'Fix GH #322' で起動"
+      }
+    ];
+
+    const heroLines = [
+      { cls: "comment", text: "# 今日の最初のコマンド" },
+      { cls: "prompt", text: "$ " , children: [
+        { cls: "cmd", text: "wt " },
+        { cls: "cmd", text: "switch " },
+        { cls: "flag", text: "--create " },
+        { cls: "flag", text: "--base " },
+        { cls: "arg", text: "origin/main " },
+        { cls: "arg", text: "feature/grok" }
+      ]},
+      { cls: "comment", text: "→ .wt/feature-grok を作成" },
+      { cls: "comment", text: "→ origin/main を base に feature/grok を新規作成" },
+      { cls: "comment", text: "→ 自動 cd でその worktree に入る" },
+      { cls: "ok", text: "✓ Ready. happy hacking." }
+    ];
+
+    const HeroLine = ({ line, idx }) => {
+      if (line.children) {
+        return h("div", { className: "line" },
+          h("span", { className: line.cls }, line.text),
+          ...line.children.map((c, i) => h("span", { className: c.cls, key: i }, c.text))
+        );
+      }
+      return h("div", { className: "line" },
+        h("span", { className: line.cls }, line.text)
+      );
+    };
+
+    const Hero = () => h("section", { className: "hero" },
+      h("div", null,
+        h("p", { className: "eyebrow" }, "WORKTRUNK"),
+        h("h1", null, "並走する worktree を、1 つの ", h("em", null, "wt"), " で。"),
+        h("p", { className: "lead" },
+          "worktrunk (wt) は git worktree を AI エージェント並列開発向けに薄くラップしたツール。",
+          "ブランチ作成 / 切り替え / 一覧 / マージ / 削除を 1 つのコマンド体系で扱え、",
+          "shell 統合で自動 cd まで面倒を見てくれる。"
+        ),
+        h("div", { className: "hero-actions" },
+          h("a", { className: "button", href: "#first" }, "今日の最初のコマンドを見る"),
+          h("a", { className: "button secondary", href: "https://worktrunk.dev", target: "_blank", rel: "noreferrer" }, "公式ドキュメント")
+        )
+      ),
+      h("div", { className: "workspace" },
+        h("div", { className: "workspace-top" },
+          h("span", { className: "dot" }),
+          h("span", { className: "dot" }),
+          h("span", { className: "dot" }),
+          h("span", { className: "workspace-title" }, "~/ghq/github.com/conao3/nixos-configuration")
+        ),
+        h("div", { className: "buffer" },
+          heroLines.map((line, idx) => h(HeroLine, { line, idx, key: idx }))
+        )
+      )
+    );
+
+    const FirstCommand = () => h("section", { className: "section", id: "first" },
+      h("div", { className: "section-header" },
+        h("div", null,
+          h("h2", null, "今日の最初のコマンド")
+        ),
+        h("p", null,
+          "セッション開始時にまず叩くやつ。",
+          h("code", null, "origin/main"),
+          " を base に新しいトピックブランチを切って worktree に入る。",
+          "shell 統合が入っていれば、このコマンド 1 つで feature ブランチの作業ディレクトリにいる状態になる。"
+        )
+      ),
+      h("div", { className: "first-card" },
+        h("h3", null, "feature/grok を origin/main から派生"),
+        h("p", null, "remote の最新 main を取り損なわないよう、base には ", h("code", { style: { background: "rgba(255,255,255,0.18)", color: "var(--color-on-primary)" } }, "origin/main"), " を明示する。"),
+        h("pre", null,
+          h("span", { className: "comment" }, "# 事前に origin を最新化しておくと安全\n"),
+          h("span", { className: "cmd" }, "git fetch origin\n\n"),
+          h("span", { className: "comment" }, "# ブランチ + worktree を一発で作って cd まで\n"),
+          h("span", { className: "cmd" }, "wt switch "),
+          h("span", { className: "flag" }, "--create "),
+          h("span", { className: "flag" }, "--base "),
+          h("span", { className: "arg" }, "origin/main "),
+          h("span", { className: "arg" }, "feature/grok")
+        ),
+        h("p", null,
+          "派生後の worktree は ",
+          h("code", { style: { background: "rgba(255,255,255,0.18)", color: "var(--color-on-primary)" } }, ".wt/feature-grok"),
+          " (デフォルト) に作られる。配置先は ",
+          h("code", { style: { background: "rgba(255,255,255,0.18)", color: "var(--color-on-primary)" } }, "wt config create"),
+          " で変更可能。"
+        )
+      )
+    );
+
+    const ConceptSection = () => {
+      const [active, setActive] = useState(0);
+      const step = flowSteps[active];
+      return h("section", { className: "section" },
+        h("div", { className: "section-header" },
+          h("div", null, h("h2", null, "4 つの動詞で worktree を回す")),
+          h("p", null,
+            "wt のサブコマンドは大きく ",
+            h("code", null, "switch / list / merge / remove"),
+            " の 4 つ。それぞれ git worktree + git branch + git checkout 相当の操作を 1 つに畳んでいて、",
+            "並列ブランチを意識しなくても良いインターフェースになっている。"
+          )
+        ),
+        h("div", { className: "flow" },
+          h("div", { className: "flow-list" },
+            flowSteps.map((s, idx) => h("button", {
+              key: s.name,
+              className: "flow-step" + (idx === active ? " active" : ""),
+              onClick: () => setActive(idx)
+            },
+              s.name,
+              h("small", null, s.sub)
+            ))
+          ),
+          h("div", { className: "demo-panel" },
+            h("h3", null, step.title),
+            h("p", null, step.body),
+            h("pre", null, step.sample)
+          )
+        )
+      );
+    };
+
+    const Shortcuts = () => h("section", { className: "section" },
+      h("div", { className: "section-header" },
+        h("div", null, h("h2", null, "ブランチ参照のショートカット")),
+        h("p", null,
+          "ブランチ名を毎回打たなくても、これらのシンボルでよく使う対象を指せる。",
+          h("code", null, "wt switch ^"),
+          " で default branch に戻り、",
+          h("code", null, "wt switch -"),
+          " で直前の worktree、",
+          h("code", null, "pr:123"),
+          " で GitHub PR の枝、といった具合。"
+        )
+      ),
+      h("div", { className: "shortcut-grid" },
+        shortcuts.map((s) => h("div", { className: "shortcut", key: s.key },
+          h("kbd", null, s.key),
+          h("div", null,
+            h("strong", null, s.title),
+            h("p", null, s.body)
+          )
+        ))
+      )
+    );
+
+    const DailyWorkflow = () => h("section", { className: "section" },
+      h("div", { className: "section-header" },
+        h("div", null, h("h2", null, "日常ワークフロー")),
+        h("p", null,
+          "1 日の作業を時間軸に沿って並べたパターン。",
+          "新ブランチ着手から PR レビュー、完了後の片付けまで、wt の 4 動詞で一通り回る。"
+        )
+      ),
+      h("div", { className: "workflow" },
+        dailyWorkflow.map((row) => h("div", { className: "workflow-row", key: row.when },
+          h("div", null,
+            h("strong", null, row.when)
+          ),
+          h("div", null,
+            h("strong", null, row.title),
+            h("p", null, row.body),
+            h("pre", null, row.cmd)
+          )
+        ))
+      )
+    );
+
+    const Setup = () => h("section", { className: "section" },
+      h("div", { className: "section-header" },
+        h("div", null, h("h2", null, "セットアップと拡張")),
+        h("p", null,
+          "初回に 1 度だけ走らせれば良い設定と、",
+          "alias でエージェント起動まで畳む使い方を置いておく。"
+        )
+      ),
+      h("div", { className: "grid" },
+        setupCommands.map((s) => h("div", { className: "card", key: s.title },
+          h("h3", null, s.title),
+          h("p", null, s.body),
+          h("pre", { style: { marginTop: 10 } }, s.code)
+        ))
+      )
+    );
+
+    const Footer = () => h("footer", { className: "footer" },
+      h("p", null,
+        "Source: ", h("code", null, "wt --help"), " (worktrunk CLI) / ",
+        h("a", { href: "https://worktrunk.dev", target: "_blank", rel: "noreferrer" }, "worktrunk.dev"), " / ",
+        h("a", { href: "https://github.com/max-sixty/worktrunk", target: "_blank", rel: "noreferrer" }, "github.com/max-sixty/worktrunk"),
+        "。git-wt と紛らわしいが別ツールなので、本文の wt は worktrunk を指す。"
+      )
+    );
+
+    const App = () => h("div", { className: "shell" },
+      h(Hero),
+      h("main", null,
+        h(FirstCommand),
+        h(ConceptSection),
+        h(Shortcuts),
+        h(DailyWorkflow),
+        h(Setup),
+        h(Footer)
+      )
+    );
+
+    ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+  </script>
+</body>
+</html>
