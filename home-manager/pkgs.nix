@@ -42,6 +42,7 @@
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
         src = inputs.clojure-mcp-light;
       };
+      grok = pkgs.callPackage ../pkgs/grok.nix { };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
@@ -135,6 +136,7 @@
         git-secrets
         git-wt
         gogcli
+        grok
         imagemagick
         inetutils
         libgccjit
