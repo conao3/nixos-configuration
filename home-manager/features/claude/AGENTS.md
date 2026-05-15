@@ -72,3 +72,9 @@
 - `{agent_global_home}/MEMORY.md`
 - `projects/{project_dir_canonical}.md`
 - `notes/{foo}.md`（トピックごとに `{foo}` を定める）
+
+ただし、プロジェクト固有メモ (`projects/{project_dir_canonical}.md`) については、ユーザーから別途禁止されていない限り、直接編集してよい。
+
+- 直接編集したプロジェクト固有メモの内容は、記憶の提案ファイルには重複して書かない。
+- 提案として書く内容が無い場合は、`MEMORY_SUGGEST/` にファイルを作成しなくてよい。
+- 複数プロジェクトの作業をした場合は、対象プロジェクトごとに直接編集または記憶の提案を行う。
