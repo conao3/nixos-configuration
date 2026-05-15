@@ -11,6 +11,8 @@
   - Codex: `$CODEX_HOME`
   - Cursor（cursor-agent プロファイル）: `$CURSOR_HOME`
 - `{agent_global_home}` — エージェント間で共有するディレクトリ。常に **`$HOME/.agents/share`** とする。`{agent_home}` とは別物。
+  - 実体は `~/ghq/github.com/conao3/agents-share/src/` の git レポジトリ。`MEMORY.md` / `MEMORY_SUGGEST/` / `notes/` / `projects/` / `specs/` / `auto-memory/` は symlink でこの repo を指す。`{agent_global_home}` 配下を編集した内容は agents-share でコミットする (conao3 配下なので AGENTS.md の能動的 commit ルールが適用される)。
+  - 例外: `AGENTS.md` (このファイル) のみ home-manager activation で配置される静的コピー。更新は `~/ghq/github.com/conao3/nixos-configuration/home-manager/features/claude/AGENTS.md` を編集して `make switch` で反映する。
 - `{project_dir_canonical}` — リポジトリのメイン作業ツリー（共有 `.git` を含むディレクトリの親）を、ホームからの相対パスにしたうえで `/` と `.` を `-` に置換した識別子。
 
   ```bash
