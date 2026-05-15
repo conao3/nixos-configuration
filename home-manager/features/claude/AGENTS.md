@@ -59,6 +59,12 @@
 - ファイルが無い場合のフォールバックは「毎セッション開始時」と同じ。
 - 該当ファイルが `notes/` への参照を持つ場合は合わせて読む。
 
+## `.claude-dev/` の配置
+
+作業用の一時ファイル (PR 下書き、生成スクリプト、調査メモなど) は対象レポジトリの `.claude-dev/` に置く。
+
+`git worktree` で複数の作業ツリーを持つレポジトリでは、メイン worktree (共有 `.git` を持つディレクトリ。`git rev-parse --path-format=absolute --git-common-dir` の親) に集約する。feature worktree 側に `.claude-dev/` を作らない。
+
 ## `ghq/github.com/conao3/` 配下のコミット運用
 
 ユーザー本人のプロジェクト（`~/ghq/github.com/conao3/` 配下）では、作業の論理単位ごとに能動的に commit してよい。ユーザーからの明示指示は不要。
