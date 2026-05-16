@@ -190,6 +190,7 @@ in
       ++ (with inputs.llm-agents.packages.${system}; [
         claude-agent-acp
         codex-acp
+        grok
         openclaw
         qmd # vector search
       ])
