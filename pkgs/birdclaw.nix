@@ -27,6 +27,9 @@ buildNpmPackage {
     substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/src/cli.ts \
       --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["node_modules/vite/bin/vite.js", "dev", "--port", "3000", "--configLoader", "runner"]'
 
+    substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/vite.config.ts \
+      --replace-fail 'const config = defineConfig({' 'const config = defineConfig({ cacheDir: (process.env.BIRDCLAW_HOME || (process.env.HOME + "/.birdclaw")) + "/.vite-cache",'
+
     makeWrapper ${nodejs_25}/bin/node $out/bin/birdclaw \
       --run 'export BIRDCLAW_HOME="''${BIRDCLAW_HOME:-$HOME/.birdclaw}"' \
       --run 'export BIRDCLAW_DISABLE_LIVE_WRITES="''${BIRDCLAW_DISABLE_LIVE_WRITES:-1}"' \
