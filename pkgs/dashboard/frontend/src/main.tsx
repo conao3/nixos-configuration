@@ -204,6 +204,18 @@ const PORT_CATALOG: PortCatalogEntry[] = [
     checkCurrentHostStatus: true,
   },
   {
+    id: "birdclaw-portless",
+    port: "443",
+    name: "Birdclaw (via portless)",
+    group: "helios",
+    state: "local",
+    purpose: "Local-first Twitter workspace web UI exposed through the portless HTTPS proxy.",
+    source: "pkgs/birdclaw.nix, home-manager/features/birdclaw.nix",
+    access: "https://birdclaw.localhost/",
+    href: "https://birdclaw.localhost/",
+    note: "Started manually via `portless birdclaw birdclaw serve`; the underlying Vite port is allocated dynamically.",
+  },
+  {
     id: "agent-vm-ssh-forward",
     port: "2222",
     name: "agent-vm SSH forward",
