@@ -25,7 +25,7 @@ buildNpmPackage {
     cp -R node_modules package.json package-lock.json $out/lib/birdclaw/
     ln -s .. $out/lib/birdclaw/node_modules/birdclaw/node_modules
     substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/src/cli.ts \
-      --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["node_modules/vite/bin/vite.js", "dev", "--port", "3000", "--configLoader", "runner"]'
+      --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["node_modules/vite/bin/vite.js", "dev", "--port", process.env.PORT || "3000", "--host", process.env.HOST || "localhost", "--configLoader", "runner"]'
 
     substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/vite.config.ts \
       --replace-fail 'const config = defineConfig({' 'const config = defineConfig({ cacheDir: (process.env.BIRDCLAW_HOME || (process.env.HOME + "/.birdclaw")) + "/.vite-cache",'
