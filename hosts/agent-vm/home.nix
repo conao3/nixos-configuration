@@ -425,6 +425,40 @@ in
     };
   };
 
+  systemd.user.services.birdclaw-webui = {
+    Unit = {
+      Description = "Birdclaw web UI";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.callPackage ../../pkgs/birdclaw.nix { }}/bin/birdclaw serve";
+      Restart = "always";
+      RestartSec = "5";
+      Environment = [
+        "PORT=3000"
+        "HOST=127.0.0.1"
+        "PATH=${
+          lib.concatStringsSep ":" [
+            "/run/wrappers/bin"
+            "${homeDir}/.nix-profile/bin"
+            "/nix/profile/bin"
+            "${homeDir}/.local/state/nix/profile/bin"
+            "/etc/profiles/per-user/${username}/bin"
+            "/nix/var/nix/profiles/default/bin"
+            "/run/current-system/sw/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+          ]
+        }"
+      ];
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
   systemd.user.services.qmd-mcp = {
     Unit = {
       Description = "QMD MCP Server (HTTP daemon)";
