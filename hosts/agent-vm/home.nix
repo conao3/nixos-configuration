@@ -17,7 +17,6 @@ let
   };
   chromeDevtoolsPackage = pkgs.callPackage ../../pkgs/chrome-devtools.nix { };
   birdPackage = pkgs.callPackage ../../pkgs/bird.nix { };
-  birdclawPackage = pkgs.callPackage ../../pkgs/birdclaw.nix { };
   birdConao3Package = pkgs.writeShellApplication {
     name = "bird-conao3";
     runtimeInputs = [ pkgs.nodejs_25 ];
@@ -197,7 +196,6 @@ in
       ++ [
         birdConao3Package
         birdPackage
-        birdclawPackage
         chromeDevtoolsPackage
         hermesAgentPackage
         hermesWebuiPackage
@@ -244,6 +242,7 @@ in
   imports = [
     (commonHomeDir + "/features/atuin.nix")
     (commonHomeDir + "/features/bash.nix")
+    (commonHomeDir + "/features/birdclaw.nix")
     (commonHomeDir + "/features/direnv.nix")
     (commonHomeDir + "/features/emacs.nix")
     (commonHomeDir + "/features/git")

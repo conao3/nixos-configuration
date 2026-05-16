@@ -4,6 +4,7 @@
   # keep-sorted start
   ../home-manager/features/atuin.nix
   ../home-manager/features/bash.nix
+  ../home-manager/features/birdclaw.nix
   ../home-manager/features/claude
   ../home-manager/features/direnv.nix
   ../home-manager/features/dotfiles
