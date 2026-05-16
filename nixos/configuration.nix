@@ -102,9 +102,9 @@
   };
 
   services = {
-    # Keep the classic dbus daemon so `nixos-rebuild switch` does not hit the
-    # dbus -> broker switch inhibitor during ordinary updates.
-    dbus.implementation = "dbus";
+    # Keep dbus-broker aligned with the running system so ordinary
+    # `nixos-rebuild switch` does not hit the broker/dbus switch inhibitor.
+    dbus.implementation = "broker";
     displayManager.defaultSession = "xfce";
     # displayManager.defaultSession = "none+i3";
     spice-vdagentd.enable = true;
