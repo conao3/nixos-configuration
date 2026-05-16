@@ -49,11 +49,11 @@
     "blueprint_2": {
       "inputs": {
         "nixpkgs": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "nixpkgs"
         ],
         "systems": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "systems"
         ]
       },
@@ -108,28 +108,28 @@
     "bun2nix_2": {
       "inputs": {
         "flake-parts": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "flake-parts"
         ],
         "nixpkgs": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "nixpkgs"
         ],
         "systems": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "systems"
         ],
         "treefmt-nix": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "treefmt-nix"
         ]
       },
       "locked": {
-        "lastModified": 1777369708,
-        "narHash": "sha256-1xW7cRZNsFNPQD+cE0fwnLVStnDth0HSoASEIFeT7uI=",
+        "lastModified": 1778445566,
+        "narHash": "sha256-oQvcadh2BCkrog+SGrG6YffKJrveYpjj3TdQJWaKhaM=",
         "owner": "nix-community",
         "repo": "bun2nix",
-        "rev": "e659e1cc4b8e1b21d0aa85f1c481f9db61ecfa98",
+        "rev": "2499dedd70744dba1815875b854818a3019e9e4c",
         "type": "github"
       },
       "original": {
@@ -475,16 +475,16 @@
     "flake-parts_5": {
       "inputs": {
         "nixpkgs-lib": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1777932387,
-        "narHash": "sha256-nUYVPiqrzr36ThiQOAr5MKeGHDBSDM3OFWkz0uDjOvc=",
+        "lastModified": 1778716662,
+        "narHash": "sha256-m1Yf0wZ8j1OHjTc2UwHwyQRSnNeSgLJOd7q5Y45hzi4=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "71a3a77326609675e9f8b51084cf23d5d1945899",
+        "rev": "f7c1a2d347e4c52d5fb8d10cb4d94b5884e546fb",
         "type": "github"
       },
       "original": {
@@ -723,7 +723,7 @@
         "type": "github"
       }
     },
-    "llm-agents-conao3": {
+    "llm-agents-hermes-agent": {
       "inputs": {
         "blueprint": "blueprint_2",
         "bun2nix": "bun2nix_2",
@@ -735,16 +735,16 @@
         "treefmt-nix": "treefmt-nix_3"
       },
       "locked": {
-        "lastModified": 1777947189,
-        "narHash": "sha256-5jXkgxKHfXiRdkf73QnVqS4vbct4drDV3hqbzpnhrv8=",
+        "lastModified": 1778897906,
+        "narHash": "sha256-TNKCcsqP5s4tlR75GT60ao7xBD+P3aomltPv/PL7bQo=",
         "owner": "conao3",
         "repo": "llm-agents.nix",
-        "rev": "d9d1f3266577699eafee7a16e39c46eec22b1bf1",
+        "rev": "8dc89bc1ee3df6f79026b332e21eea931ac8f556",
         "type": "github"
       },
       "original": {
         "owner": "conao3",
-        "ref": "fix/hermes-dashboard-web-dist",
+        "ref": "feature/hermes-agent",
         "repo": "llm-agents.nix",
         "type": "github"
       }
@@ -1191,7 +1191,7 @@
         "home-manager": "home-manager",
         "home-manager-worktrunk": "home-manager-worktrunk",
         "llm-agents": "llm-agents",
-        "llm-agents-conao3": "llm-agents-conao3",
+        "llm-agents-hermes-agent": "llm-agents-hermes-agent",
         "mac-app-util": "mac-app-util",
         "nix-claude-code": "nix-claude-code",
         "nix-darwin": "nix-darwin",
@@ -1416,7 +1416,7 @@
     "treefmt-nix_3": {
       "inputs": {
         "nixpkgs": [
-          "llm-agents-conao3",
+          "llm-agents-hermes-agent",
           "nixpkgs"
         ]
       },
