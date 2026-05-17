@@ -213,7 +213,7 @@ const PORT_CATALOG: PortCatalogEntry[] = [
     source: "hosts/agent-vm/home.nix, hosts/helios/default.nix",
     access: "https://birdclaw.localhost/",
     href: "https://birdclaw.localhost/",
-    note: "Register the portless alias once with `portless alias birdclaw 9120`. Data lives only on agent-vm to avoid SQLite write conflicts.",
+    note: "Production build (vite build + custom Node SSR runner) served by birdclaw-webui.service. Register the portless alias once with `portless alias birdclaw 9120`. Data lives only on agent-vm.",
     checkCurrentHostStatus: true,
   },
   {
