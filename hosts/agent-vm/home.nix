@@ -11,7 +11,7 @@ let
   username = config.home.username;
   homeDir = config.home.homeDirectory;
   commonHomeDir = ../../home-manager;
-  hermesAgentPackage = inputs.llm-agents-hermes-agent.packages.${system}.hermes-agent;
+  hermesAgentPackage = inputs.llm-agents.packages.${system}.hermes-agent;
   hermesWebuiPackage = pkgs.callPackage ../../pkgs/hermes-webui.nix {
     hermes-agent = hermesAgentPackage;
   };
