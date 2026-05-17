@@ -1,8 +1,8 @@
 {
   lib,
   buildNpmPackage,
-  nodejs_25,
   makeWrapper,
+  nodejs_25,
 }:
 
 buildNpmPackage {
@@ -18,17 +18,22 @@ buildNpmPackage {
   npmFlags = [ "--legacy-peer-deps" ];
   dontNpmBuild = true;
 
+  buildPhase = ''
+    runHook preBuild
+    ln -sfn .. node_modules/birdclaw/node_modules
+    ( cd node_modules/birdclaw && ${nodejs_25}/bin/node node_modules/vite/bin/vite.js build )
+    runHook postBuild
+  '';
+
   installPhase = ''
     runHook preInstall
 
     mkdir -p $out/lib/birdclaw $out/bin
     cp -R node_modules package.json package-lock.json $out/lib/birdclaw/
-    ln -s .. $out/lib/birdclaw/node_modules/birdclaw/node_modules
-    substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/src/cli.ts \
-      --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["node_modules/vite/bin/vite.js", "dev", "--port", process.env.PORT || "3000", "--host", process.env.HOST || "localhost", "--configLoader", "runner"]'
+    cp ${./birdclaw/server-runner.mjs} $out/lib/birdclaw/node_modules/birdclaw/server-runner.mjs
 
-    substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/vite.config.ts \
-      --replace-fail 'const config = defineConfig({' 'const config = defineConfig({ cacheDir: (process.env.BIRDCLAW_HOME || (process.env.HOME + "/.birdclaw")) + "/.vite-cache",'
+    substituteInPlace $out/lib/birdclaw/node_modules/birdclaw/src/cli.ts \
+      --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["./server-runner.mjs"]'
 
     makeWrapper ${nodejs_25}/bin/node $out/bin/birdclaw \
       --run 'export BIRDCLAW_HOME="''${BIRDCLAW_HOME:-$HOME/.birdclaw}"' \
