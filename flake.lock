@@ -735,11 +735,11 @@
         "treefmt-nix": "treefmt-nix_3"
       },
       "locked": {
-        "lastModified": 1778897906,
-        "narHash": "sha256-TNKCcsqP5s4tlR75GT60ao7xBD+P3aomltPv/PL7bQo=",
+        "lastModified": 1779010278,
+        "narHash": "sha256-9ghKc3EiDYxD9X0M0qL+i9sx4AZtOEz8A6gRliJbJEM=",
         "owner": "conao3",
         "repo": "llm-agents.nix",
-        "rev": "8dc89bc1ee3df6f79026b332e21eea931ac8f556",
+        "rev": "7429ccac967c5f7624a75ab983ac4e040545c8af",
         "type": "github"
       },
       "original": {
