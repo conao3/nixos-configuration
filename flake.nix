@@ -187,6 +187,7 @@
               modules = [
                 ./darwin/configuration.nix
                 ./darwin/home-manager.nix
+                ./darwin/portless.nix
                 {
                   nixpkgs.overlays = [
                     (import ./overlays/go.nix)
