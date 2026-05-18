@@ -55,6 +55,9 @@
         src = inputs.devo;
         cargoLock.lockFile = inputs.devo + "/Cargo.lock";
       };
+      wrangler = pkgs.writeShellScriptBin "wrangler" ''
+        exec ${pkgs.nodejs_24}/bin/npx --yes wrangler@4.62.0 "$@"
+      '';
       dev = pkgs.writeShellScriptBin "dev" ''
         set -euo pipefail
 
@@ -157,6 +160,7 @@
         tree
         unixtools.watch
         unzip
+        wrangler
         zip
         zlib
         # keep-sorted end
