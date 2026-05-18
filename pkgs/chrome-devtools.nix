@@ -10,11 +10,11 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
-  version = "0.2.1";
+  version = "0.2.2";
 
   src = fetchCrate {
     inherit pname version;
-    hash = "sha256-jdeJ/6Kor7gJVtYqqCDsl7yRI3CUYJRrqZzxfxhrgsE=";
+    hash = "sha256-QJZqfAvhgnqwnteT2aMFal/hzYov4AgGb0D+2XTX7zE=";
   };
 
   cargoLock = {
