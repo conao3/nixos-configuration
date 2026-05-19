@@ -22,7 +22,7 @@ let
 
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-jQwTJWa2w/dSGfcrvwu84smUyWixborYFk0oEw91JS4=";
+    outputHash = "sha256-IcHP1ehEzBMTmIwJJQHnKXkNFf7V+7PInLJ3v6SMyGk=";
 
     NIX_SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
 
