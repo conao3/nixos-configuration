@@ -119,12 +119,19 @@ let
   agentDirs = [
     "$HOME/.agents"
     "$HOME/.agents/share"
+    claudeSharedDir
   ]
   ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
+  claudeSharedDir = "$HOME/.agents/.claude.shared";
+  claudeSpecs = builtins.filter (spec: spec.type == "claude") wrapperSpecs;
+  claudeSpecDirs = map (spec: "$HOME/${spec.dir}") (
+    (builtins.filter (spec: spec.name == "claude.agent001") claudeSpecs)
+    ++ (builtins.filter (spec: spec.name != "claude.agent001") claudeSpecs)
+  );
   claudeConfigDirs = [
     "$HOME/.claude"
-  ]
-  ++ map (spec: "$HOME/${spec.dir}") (builtins.filter (spec: spec.type == "claude") wrapperSpecs);
+    claudeSharedDir
+  ];
   codexConfigDirs = [
     "$HOME/.codex"
   ]
@@ -137,10 +144,11 @@ let
   );
   agentInstructionFiles = [
     "$HOME/.agents/share/AGENTS.md"
+    "${claudeSharedDir}/CLAUDE.md"
   ]
-  ++ map (
-    spec: "$HOME/${spec.dir}/${if spec.type == "claude" then "CLAUDE.md" else "AGENTS.md"}"
-  ) wrapperSpecs;
+  ++ map (spec: "$HOME/${spec.dir}/AGENTS.md") (
+    builtins.filter (spec: spec.type != "claude") wrapperSpecs
+  );
 
   claudeSettings = {
     theme = "dark";
@@ -415,6 +423,70 @@ in
       ${applyMcpServers}
     '') claudeJsonFiles}
   '';
+
+  home.activation.claudeShareReconcile =
+    lib.hm.dag.entryAfter
+      [
+        "writeBoundary"
+        "ensureAgentDirs"
+        "agentInstructions"
+        "claudeSettings"
+      ]
+      ''
+        shared="${claudeSharedDir}"
+        mkdir -p "$shared"
+        backupRoot="$HOME/.agents/.claude.backup-$(${pkgs.coreutils}/bin/date +%Y%m%d-%H%M%S)"
+        profiles=(${lib.concatStringsSep " " (map (d: "\"" + d + "\"") claudeSpecDirs)})
+        shopt -s dotglob nullglob
+        for p in "''${profiles[@]}"; do
+          [ -d "$p" ] || continue
+          for path in "$p"/*; do
+            e="$(${pkgs.coreutils}/bin/basename "$path")"
+            case "$e" in
+              .claude.json | .credentials.json) continue ;;
+            esac
+            target="$shared/$e"
+            if [ -L "$path" ]; then
+              ${pkgs.coreutils}/bin/ln -sfn "$target" "$path"
+              continue
+            fi
+            bdir="$backupRoot/$(${pkgs.coreutils}/bin/basename "$p")"
+            mkdir -p "$bdir"
+            ${pkgs.coreutils}/bin/cp -a "$path" "$bdir/" 2>/dev/null || true
+            if [ -d "$path" ]; then
+              mkdir -p "$target"
+              ${pkgs.coreutils}/bin/cp -an "$path/." "$target/" 2>/dev/null || true
+              ${pkgs.coreutils}/bin/rm -rf "$path"
+            elif [ "$e" = "history.jsonl" ]; then
+              tmp="$target.merge.$$"
+              if [ -e "$target" ]; then
+                ${pkgs.coreutils}/bin/cat "$target" "$path"
+              else
+                ${pkgs.coreutils}/bin/cat "$path"
+              fi \
+                | ${pkgs.jq}/bin/jq -sc 'map(select(type=="object")) | unique | sort_by(.timestamp // 0) | .[]' \
+                > "$tmp" 2>/dev/null || ${pkgs.coreutils}/bin/cp "$path" "$tmp"
+              ${pkgs.coreutils}/bin/mv "$tmp" "$target"
+              ${pkgs.coreutils}/bin/rm -f "$path"
+            elif [ "$e" = "settings.json" ] || [ "$e" = "CLAUDE.md" ]; then
+              ${pkgs.coreutils}/bin/rm -f "$path"
+            else
+              if [ ! -e "$target" ]; then
+                ${pkgs.coreutils}/bin/mv "$path" "$target"
+              elif [ "$path" -nt "$target" ]; then
+                ${pkgs.coreutils}/bin/cp -a "$path" "$target"
+                ${pkgs.coreutils}/bin/rm -f "$path"
+              else
+                ${pkgs.coreutils}/bin/rm -f "$path"
+              fi
+            fi
+            ${pkgs.coreutils}/bin/ln -sfn "$target" "$path"
+          done
+          for req in settings.json CLAUDE.md; do
+            ${pkgs.coreutils}/bin/ln -sfn "$shared/$req" "$p/$req"
+          done
+        done
+      '';
 
   # MEMORYない方が良いのではという疑惑。エージェントレベルは無効化する。
   # home.activation.agentTemplates = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
