@@ -122,7 +122,7 @@ let
     claudeSharedDir
   ]
   ++ map (spec: "$HOME/${spec.dir}") wrapperSpecs;
-  claudeSharedDir = "$HOME/.agents/.claude.shared";
+  claudeSharedDir = "$HOME/.agents/.claude";
   claudeSpecs = builtins.filter (spec: spec.type == "claude") wrapperSpecs;
   claudeSpecDirs = map (spec: "$HOME/${spec.dir}") (
     (builtins.filter (spec: spec.name == "claude.agent001") claudeSpecs)
@@ -484,6 +484,15 @@ in
           done
           for req in settings.json CLAUDE.md; do
             ${pkgs.coreutils}/bin/ln -sfn "$shared/$req" "$p/$req"
+          done
+          for spath in "$shared"/*; do
+            se="$(${pkgs.coreutils}/bin/basename "$spath")"
+            case "$se" in
+              .claude.json | .credentials.json) continue ;;
+            esac
+            if [ ! -e "$p/$se" ] && [ ! -L "$p/$se" ]; then
+              ${pkgs.coreutils}/bin/ln -sfn "$spath" "$p/$se"
+            fi
           done
         done
       '';
