@@ -185,6 +185,7 @@ let
     preferredNotifChannel = "terminal_bell";
     includeCoAuthoredBy = false;
     language = "japanese";
+    autoMemoryEnabled = false;
     autoMemoryDirectory = "~/.agents/share/auto-memory";
     statusLine = {
       type = "command";
