@@ -111,6 +111,15 @@ let
     (pkgs.writeShellScriptBin "cursor.agent001" cursorProfileBody)
   ];
 
+  statusLineScript = pkgs.writeShellScript "claude-statusline" ''
+    set -euo pipefail -o posix
+    input="$(${pkgs.coreutils}/bin/cat)"
+    email="$(${pkgs.jq}/bin/jq -r '.oauthAccount.emailAddress // empty' "''${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.claude.json" 2>/dev/null || true)"
+    model="$(printf '%s' "$input" | ${pkgs.jq}/bin/jq -r '.model.display_name // empty')"
+    dir="$(printf '%s' "$input" | ${pkgs.jq}/bin/jq -r '.workspace.current_dir // .cwd // empty')"
+    printf '%s | %s | %s' "$email" "$model" "$(${pkgs.coreutils}/bin/basename "$dir")"
+  '';
+
   soulTemplate = pkgs.writeText "SOUL.md" (builtins.readFile ./SOUL.md);
   identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
   agentsTemplate = ./AGENTS.md;
@@ -177,6 +186,10 @@ let
     includeCoAuthoredBy = false;
     language = "japanese";
     autoMemoryDirectory = "~/.agents/share/auto-memory";
+    statusLine = {
+      type = "command";
+      command = "${statusLineScript}";
+    };
   };
 
   flattenSettings =
