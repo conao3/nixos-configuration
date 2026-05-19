@@ -630,7 +630,13 @@ in
       ]
       (
     let
-      codexMcpServersJson = builtins.toJSON { mcp_servers = codexMcpServers; };
+      codexFeatures = {
+        goals = true;
+      };
+      codexBaseJson = builtins.toJSON {
+        mcp_servers = codexMcpServers;
+        features = codexFeatures;
+      };
     in
     ''
       ${lib.concatMapStringsSep "\n" (dir: ''
@@ -638,10 +644,13 @@ in
         configTarget="${dir}/config.toml"
         if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
           rm -f "$configTarget"
-          echo '${codexMcpServersJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
+          echo '${codexBaseJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
         else
           ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
-            | ${pkgs.jq}/bin/jq --argjson servers '${builtins.toJSON codexMcpServers}' '.mcp_servers = $servers' \
+            | ${pkgs.jq}/bin/jq \
+                --argjson servers '${builtins.toJSON codexMcpServers}' \
+                --argjson features '${builtins.toJSON codexFeatures}' \
+                '.mcp_servers = $servers | .features = $features' \
             | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
             && mv "$configTarget.tmp" "$configTarget"
         fi
