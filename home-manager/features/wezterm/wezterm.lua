@@ -21,6 +21,13 @@ config.keys = {
     { key = '-', mods = 'CTRL', action = act.DisableDefaultAssignment },
     { key = '+', mods = 'CTRL', action = act.DisableDefaultAssignment },
     { key = '=', mods = 'CTRL', action = act.DisableDefaultAssignment },
+    {
+        key = '!',
+        mods = 'CTRL|SHIFT',
+        action = wezterm.action_callback(function(_, pane)
+            pane:move_to_new_window()
+        end),
+    },
 }
 
 return config
