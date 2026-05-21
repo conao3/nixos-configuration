@@ -1,0 +1,30 @@
+From: conao3 <conao3@gmail.com>
+Subject: codex/app_server: emit permissionMode on thread/start
+
+Symphony's thread/start sends `approvalPolicy` (Codex-native), but
+strict app-server implementations such as sapsaldog/claude-app-server
+ignore that field and look at `permissionMode` instead. Without it,
+the spawned `claude --print` runs with the default permission mode
+and every tool call returns `turn/permission_denied`.
+
+Map Symphony's `approval_policy: "never"` to claude's
+`permissionMode: "bypassPermissions"` so the same `symphony` binary
+can drive claude-app-server end-to-end. Codex's own app-server keeps
+working because it reads `approvalPolicy` and ignores
+`permissionMode`.
+
+---
+ lib/symphony_elixir/codex/app_server.ex | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/symphony_elixir/codex/app_server.ex b/lib/symphony_elixir/codex/app_server.ex
+--- a/lib/symphony_elixir/codex/app_server.ex
++++ b/lib/symphony_elixir/codex/app_server.ex
+@@ -282,6 +282,7 @@ defmodule SymphonyElixir.Codex.AppServer do
+       "id" => @thread_start_id,
+       "params" => %{
+         "approvalPolicy" => approval_policy,
++        "permissionMode" => if(approval_policy == "never", do: "bypassPermissions", else: "default"),
+         "sandbox" => thread_sandbox,
+         "cwd" => workspace,
+         "dynamicTools" => DynamicTool.tool_specs()
