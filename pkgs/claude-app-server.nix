@@ -10,7 +10,7 @@ let
   pnpm = pnpm_10;
 in
 stdenv.mkDerivation (finalAttrs: {
-  pname = "symphony-claude";
+  pname = "claude-app-server";
   version = "1.0.0-unstable-2026-03-05";
 
   src = fetchFromGitHub {
@@ -40,10 +40,10 @@ stdenv.mkDerivation (finalAttrs: {
 
   installPhase = ''
     runHook preInstall
-    mkdir -p "$out/lib/symphony-claude"
-    cp -r dist package.json node_modules "$out/lib/symphony-claude/"
-    makeWrapper ${nodejs}/bin/node "$out/bin/symphony-claude" \
-      --add-flags "$out/lib/symphony-claude/dist/index.js"
+    mkdir -p "$out/lib/claude-app-server"
+    cp -r dist package.json node_modules "$out/lib/claude-app-server/"
+    makeWrapper ${nodejs}/bin/node "$out/bin/claude-app-server" \
+      --add-flags "$out/lib/claude-app-server/dist/index.js"
     runHook postInstall
   '';
 
@@ -51,7 +51,7 @@ stdenv.mkDerivation (finalAttrs: {
     description = "JSON-RPC 2.0 Claude Code App Server conforming to OpenAI Symphony Codex protocol";
     homepage = "https://github.com/sapsaldog/claude-app-server";
     license = lib.licenses.mit;
-    mainProgram = "symphony-claude";
+    mainProgram = "claude-app-server";
     platforms = lib.platforms.unix;
   };
 })
