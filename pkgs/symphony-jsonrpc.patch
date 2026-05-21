@@ -1,0 +1,28 @@
+From: conao3 <conao3@gmail.com>
+Subject: codex/app_server: emit jsonrpc field on outgoing messages
+
+claude-app-server (sapsaldog/claude-app-server, the Claude Code
+back-end of Symphony's Codex JSON-RPC protocol) validates incoming
+lines strictly against `jsonrpc === "2.0"` in `protocol.ts`. Symphony's
+own `send_message` omits this field, so any non-Codex app-server
+implementation that follows the JSON-RPC 2.0 spec rejects Symphony's
+requests and times out at `initialize`.
+
+Add the field on the way out so symphony can drive both `codex
+app-server` and conforming third-party app-servers.
+
+---
+ lib/symphony_elixir/codex/app_server.ex | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/symphony_elixir/codex/app_server.ex b/lib/symphony_elixir/codex/app_server.ex
+--- a/lib/symphony_elixir/codex/app_server.ex
++++ b/lib/symphony_elixir/codex/app_server.ex
+@@ -1055,7 +1055,7 @@ defmodule SymphonyElixir.Codex.AppServer do
+   defp tool_call_arguments(_params), do: %{}
+
+   defp send_message(port, message) do
+-    line = Jason.encode!(message) <> "\n"
++    line = (message |> Map.put("jsonrpc", "2.0") |> Jason.encode!()) <> "\n"
+     Port.command(port, line)
+   end

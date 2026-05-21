@@ -28,5 +28,6 @@ beamPkgs.mixRelease {
   version = "0.1.0";
   src = "${src}/elixir";
   inherit mixFodDeps;
+  patches = [ ./symphony-jsonrpc.patch ];
   escriptBinName = "bin/symphony";
 }
