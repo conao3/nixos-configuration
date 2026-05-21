@@ -246,6 +246,22 @@ in
     }
   ];
 
+  services.earlyoom = {
+    enable = true;
+    enableNotifications = true;
+    freeMemThreshold = 5;
+    freeMemKillThreshold = 2;
+    freeSwapThreshold = 10;
+    freeSwapKillThreshold = 5;
+    reportInterval = 0;
+    extraArgs = [
+      "--prefer"
+      "^(firefox|RDD Process|Isolated Web Co|WebExtensions|Privileged Cont|Utility Process|Socket Process)$"
+      "--avoid"
+      "^(systemd|sshd|init|Xorg|wezterm-gui|emacs|claude|codex|sway|gnome-shell|xfce4-session|xfwm4|dbus-daemon)$"
+    ];
+  };
+
   systemd.user.services = {
     vm-agent-tunnel = {
       description = "SSH tunnel to agent-vm";
