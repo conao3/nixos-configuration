@@ -48,6 +48,7 @@
       pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
+      symphony-claude = pkgs.callPackage ../pkgs/symphony-claude.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
       gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
       devo = pkgs.rustPlatform.buildRustPackage {
@@ -157,6 +158,7 @@
         sqldef
         sqlite
         symphony
+        symphony-claude
         tig
         tokei
         tree
