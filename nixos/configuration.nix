@@ -183,14 +183,6 @@
     port = 9400;
   };
 
-  services.gitea = {
-    enable = true;
-    settings.server = {
-      HTTP_PORT = 9404;
-      ROOT_URL = "http://localhost:9404/";
-    };
-  };
-
   services.cgit."local" = {
     enable = true;
     nginx.virtualHost = "cgit.local";

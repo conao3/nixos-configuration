@@ -180,18 +180,6 @@ const PORT_CATALOG: PortCatalogEntry[] = [
     checkCurrentHostStatus: true,
   },
   {
-    id: "gitea-http",
-    port: "9404",
-    name: "Gitea HTTP",
-    group: "helios",
-    state: "local",
-    purpose: "Local Gitea web UI and API endpoint used by the mirror job.",
-    source: "nixos/configuration.nix, hosts/helios/default.nix",
-    access: "http://localhost:9404/",
-    href: "http://localhost:9404/",
-    checkCurrentHostStatus: true,
-  },
-  {
     id: "cgit-http",
     port: "9405",
     name: "cgit",

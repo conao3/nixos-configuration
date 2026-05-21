@@ -81,20 +81,20 @@ systemd.timers.example-job = {
 system timer の例:
 
 ```nix
-systemd.services.gitea-mirror = {
-  description = "Mirror local git repositories to Gitea";
+systemd.services.example-mirror = {
+  description = "Example periodic job";
   serviceConfig = {
     Type = "oneshot";
     User = "conao";
     TimeoutStartSec = "30min";
-    ExecStart = "${pkgs.writeShellScript "gitea-mirror" ''
+    ExecStart = "${pkgs.writeShellScript "example-mirror" ''
       set -euxo pipefail -o posix
       # ...
     ''}";
   };
 };
 
-systemd.timers.gitea-mirror = {
+systemd.timers.example-mirror = {
   wantedBy = [ "timers.target" ];
   timerConfig = {
     OnBootSec = "10min";
