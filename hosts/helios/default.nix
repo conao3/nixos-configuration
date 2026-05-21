@@ -242,24 +242,15 @@ in
   swapDevices = [
     {
       device = "/swapfile";
-      size = 128 * 1024;
+      size = 16 * 1024;
     }
   ];
 
-  services.earlyoom = {
+  systemd.oomd = {
     enable = true;
-    enableNotifications = true;
-    freeMemThreshold = 5;
-    freeMemKillThreshold = 2;
-    freeSwapThreshold = 10;
-    freeSwapKillThreshold = 5;
-    reportInterval = 0;
-    extraArgs = [
-      "--prefer"
-      "^(firefox|RDD Process|Isolated Web Co|WebExtensions|Privileged Cont|Utility Process|Socket Process)$"
-      "--avoid"
-      "^(systemd|sshd|init|Xorg|wezterm-gui|emacs|claude|codex|sway|gnome-shell|xfce4-session|xfwm4|dbus-daemon)$"
-    ];
+    enableRootSlice = true;
+    enableSystemSlice = true;
+    enableUserSlices = true;
   };
 
   systemd.user.services = {
