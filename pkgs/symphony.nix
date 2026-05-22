@@ -31,6 +31,7 @@ beamPkgs.mixRelease {
   patches = [
     ./symphony-jsonrpc.patch
     ./symphony-permission-mode.patch
+    ./symphony-skip-guardrails-ack.patch
   ];
   escriptBinName = "bin/symphony";
 }

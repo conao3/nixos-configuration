@@ -1,0 +1,35 @@
+From: conao3 <conao3@gmail.com>
+Subject: cli: skip guardrails acknowledgement flag
+
+Symphony refuses to start unless invoked with
+`--i-understand-that-this-will-be-running-without-the-usual-guardrails`.
+The flag is meant to warn operators that the engineering preview ships
+without Codex guardrails, but our deployment runs `symphony` from a
+nix-managed binary with a stable, intentional configuration and the
+banner adds friction every time the binary is launched.
+
+Always treat the acknowledgement as granted. The CLI switch remains
+registered so any wrappers that still pass it continue to parse cleanly.
+
+---
+ lib/symphony_elixir/cli.ex | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/lib/symphony_elixir/cli.ex b/lib/symphony_elixir/cli.ex
+--- a/lib/symphony_elixir/cli.ex
++++ b/lib/symphony_elixir/cli.ex
+@@ -114,12 +114,8 @@ defmodule SymphonyElixir.CLI do
+     end
+   end
+
+-  defp require_guardrails_acknowledgement(opts) do
+-    if Keyword.get(opts, @acknowledgement_switch, false) do
+-      :ok
+-    else
+-      {:error, acknowledgement_banner()}
+-    end
++  defp require_guardrails_acknowledgement(_opts) do
++    :ok
+   end
+
+   @spec acknowledgement_banner() :: String.t()
