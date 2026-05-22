@@ -188,6 +188,7 @@
         pciutils
         pencil-dev
         qpdfview
+        slack
         steam-run
         telegram-desktop
         vlc
