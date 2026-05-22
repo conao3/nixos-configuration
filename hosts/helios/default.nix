@@ -338,6 +338,25 @@ in
         ];
       };
     };
+
+    kill-orphan-vitest = {
+      description = "Kill orphaned (PPID=1) vitest processes";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.writeShellScript "kill-orphan-vitest" ''
+          set -uo pipefail
+          for pid in $(${pkgs.procps}/bin/pgrep -f 'node_modules/\.bin/vitest run' || true); do
+            [ "$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')" = 1 ] || continue
+            ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
+            kill -9 "$pid" 2>/dev/null || true
+          done
+          for pid in $(${pkgs.procps}/bin/pgrep -f 'vitest/dist/workers/forks\.js' || true); do
+            [ "$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')" = 1 ] || continue
+            kill -9 "$pid" 2>/dev/null || true
+          done
+        ''}";
+      };
+    };
   }
   // codingAgentServices;
 
@@ -347,6 +366,14 @@ in
       timerConfig = {
         OnBootSec = "1min";
         OnUnitActiveSec = "1min";
+      };
+    };
+
+    kill-orphan-vitest = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "5min";
+        OnUnitActiveSec = "5min";
       };
     };
   }
