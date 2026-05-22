@@ -156,6 +156,7 @@
         rlwrap
         sqldef
         sqlite
+        ssm-session-manager-plugin
         symphony
         tig
         tokei
