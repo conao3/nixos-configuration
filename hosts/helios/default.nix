@@ -379,6 +379,22 @@ in
         ''}";
       };
     };
+
+    kill-orphan-claude-print = {
+      description = "Kill orphaned (PPID=1) claude --print processes (claude-app-server crash residue)";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.writeShellScript "kill-orphan-claude-print" ''
+          set -uo pipefail
+          my_uid=$(${pkgs.coreutils}/bin/id -u)
+          for pid in $(${pkgs.procps}/bin/pgrep -u "$my_uid" -f 'claude --print' || true); do
+            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            [ "$ppid" = 1 ] || continue
+            kill -9 "$pid" 2>/dev/null || true
+          done
+        ''}";
+      };
+    };
   }
   // codingAgentServices;
 
@@ -400,6 +416,14 @@ in
     };
 
     kill-orphan-portless = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "5min";
+        OnUnitActiveSec = "5min";
+      };
+    };
+
+    kill-orphan-claude-print = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnBootSec = "5min";
