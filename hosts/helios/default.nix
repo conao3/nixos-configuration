@@ -340,18 +340,23 @@ in
     };
 
     kill-orphan-vitest = {
-      description = "Kill orphaned (PPID=1) vitest processes";
+      description = "Kill orphaned (PPID=1) or long-running (>30min) vitest processes";
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.writeShellScript "kill-orphan-vitest" ''
           set -uo pipefail
+          MAX_ETIME=1800
           for pid in $(${pkgs.procps}/bin/pgrep -f 'node_modules/\.bin/vitest run' || true); do
-            [ "$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')" = 1 ] || continue
+            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            etime=$(${pkgs.procps}/bin/ps -o etimes= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            [ "$ppid" = 1 ] || { [ -n "$etime" ] && [ "$etime" -gt "$MAX_ETIME" ]; } || continue
             ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
             kill -9 "$pid" 2>/dev/null || true
           done
           for pid in $(${pkgs.procps}/bin/pgrep -f 'vitest/dist/workers/forks\.js' || true); do
-            [ "$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')" = 1 ] || continue
+            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            etime=$(${pkgs.procps}/bin/ps -o etimes= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            [ "$ppid" = 1 ] || { [ -n "$etime" ] && [ "$etime" -gt "$MAX_ETIME" ]; } || continue
             kill -9 "$pid" 2>/dev/null || true
           done
         ''}";
