@@ -246,6 +246,15 @@ in
     enableRootSlice = true;
     enableSystemSlice = true;
     enableUserSlices = true;
+    extraConfig = {
+      DefaultMemoryPressureLimit = "50%";
+      DefaultMemoryPressureDurationSec = "20s";
+      SwapUsedLimit = "80%";
+    };
+  };
+
+  systemd.slices."user".sliceConfig = {
+    MemoryHigh = "38G";
   };
 
   systemd.user.services = {
