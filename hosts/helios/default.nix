@@ -210,7 +210,7 @@ in
       WorkingDirectory = "/home/conao";
       ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
       Restart = "always";
-      RestartSec = 3;
+      RestartSec = 30;
     };
   };
 
