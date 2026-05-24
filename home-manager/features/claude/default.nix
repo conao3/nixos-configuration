@@ -15,17 +15,6 @@ let
   cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
   agentExe = lib.getExe cursorAgentPkg;
 
-  pencilMcpServer = "${
-    pkgs.appimageTools.extractType2 {
-      pname = "pencil-dev";
-      version = "2025.1.0";
-      src = pkgs.fetchurl {
-        url = "https://www.pencil.dev/download/Pencil-linux-x86_64.AppImage";
-        hash = "sha256-31gqv4kU8LB2e84MQKcNYXTLNSeJLzmWQahz6+bi2jk=";
-      };
-    }
-  }/resources/app.asar.unpacked/out/mcp-server-linux-x64";
-
   aliasSpecs = [
     {
       executableName = "claude";
@@ -256,27 +245,14 @@ let
     };
     penpot = {
       type = "http";
-      url = "http://localhost:4401/mcp";
+      url = "https://design.penpot.app/mcp/stream?userToken=\${PENPOT_MCP_KEY}";
     };
-  }
-  // {
     devin = {
       type = "http";
       url = "https://mcp.devin.ai/mcp";
       headers = {
         Authorization = "Bearer \${DEVIN_API_KEY}";
       };
-    };
-  }
-  // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
-    pencil = {
-      command = "bash";
-      args = [
-        "-c"
-        ''
-          set -euo pipefail; pbin=/etc/profiles/per-user/conao/bin/pencil-dev; init=$(grep -o "/nix/store/[^ ]*-init" "$(readlink -f "$pbin")" | head -n1); appdir=$(grep -o "/nix/store/[^ ]*-extracted" "$init" | head -n1); exec steam-run "$appdir/resources/app.asar.unpacked/out/mcp-server-linux-x64" --app desktop
-        ''
-      ];
     };
   };
 

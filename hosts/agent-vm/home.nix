@@ -218,6 +218,7 @@ in
         SLACK_BOT_TOKEN=${config.sops.placeholder."slack-bot-token"}
         SLACK_APP_TOKEN=${config.sops.placeholder."slack-app-token"}
         CLI_PROXY_API_KEY=${config.sops.placeholder."cli-proxy-api-key"}
+        PENPOT_MCP_KEY=${config.sops.placeholder."penpot-mcp-key"}
       '';
     };
     secrets = {
@@ -234,6 +235,7 @@ in
       ssh-private-key = { };
       ssh-public-key = { };
       cli-proxy-api-key = { };
+      penpot-mcp-key = { };
     };
   };
 
