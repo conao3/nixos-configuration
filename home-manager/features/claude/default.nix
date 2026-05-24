@@ -17,14 +17,6 @@ let
 
   aliasSpecs = [
     {
-      executableName = "claude";
-      target = "claude.agent001";
-    }
-    {
-      executableName = "codex";
-      target = "codex.agent001";
-    }
-    {
       executableName = "cursor";
       target = "cursor.agent001";
     }
@@ -183,17 +175,6 @@ let
         template = agentsWorkerTemplate;
       }
     ];
-
-  workerBinEntries = [
-    {
-      name = ".agents/.claude.worker/bin/claude";
-      source = claudeBin;
-    }
-    {
-      name = ".agents/.codex.worker/bin/codex";
-      source = codexBin;
-    }
-  ];
 
   claudeSettings = {
     theme = "dark";
@@ -529,19 +510,15 @@ in
           source = entry.template;
         };
       }) agentInstructionFileEntries
-    )
-    // builtins.listToAttrs (
-      map (entry: {
-        name = entry.name;
-        value = {
-          source = entry.source;
-        };
-      }) workerBinEntries
     );
 
   home.packages =
     wrapperPackages
     ++ cursorProfilePackages
+    ++ [
+      inputs.nix-claude-code.packages.${system}.default
+      llmAgents.codex
+    ]
     ++ map (spec: pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"'') aliasSpecs;
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
