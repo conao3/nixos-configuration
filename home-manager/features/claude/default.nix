@@ -184,6 +184,17 @@ let
       }
     ];
 
+  workerBinEntries = [
+    {
+      name = ".agents/.claude.worker/bin/claude";
+      source = claudeBin;
+    }
+    {
+      name = ".agents/.codex.worker/bin/codex";
+      source = codexBin;
+    }
+  ];
+
   claudeSettings = {
     theme = "dark";
     defaultMode = "acceptEdits";
@@ -518,6 +529,14 @@ in
           source = entry.template;
         };
       }) agentInstructionFileEntries
+    )
+    // builtins.listToAttrs (
+      map (entry: {
+        name = entry.name;
+        value = {
+          source = entry.source;
+        };
+      }) workerBinEntries
     );
 
   home.packages =
