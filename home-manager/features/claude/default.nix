@@ -87,9 +87,11 @@ let
     "claude.agent001"
     "claude.agent002"
     "claude.yui"
+    "claude.worker"
     "codex.conao3"
     "codex.agent001"
     "codex.agent002"
+    "codex.worker"
     "pi.agent001"
     "pi.agent002"
     "cursor-agent.agent001"
@@ -123,6 +125,7 @@ let
   soulTemplate = pkgs.writeText "SOUL.md" (builtins.readFile ./SOUL.md);
   identityTemplate = pkgs.writeText "IDENTITY.md" (builtins.readFile ./IDENTITY.md);
   agentsTemplate = ./AGENTS.md;
+  agentsWorkerTemplate = ./AGENTS-worker.md;
 
   wrapperPackages = map mkWrapper wrapperSpecs;
   agentDirs = [
@@ -135,8 +138,10 @@ let
   claudeSharedDir = "$HOME/.agents/.claude";
   claudeSpecs = builtins.filter (spec: spec.type == "claude") wrapperSpecs;
   claudeSpecDirs = map (spec: "$HOME/${spec.dir}") (
-    (builtins.filter (spec: spec.name == "claude.agent001") claudeSpecs)
-    ++ (builtins.filter (spec: spec.name != "claude.agent001") claudeSpecs)
+    builtins.filter (spec: !(lib.hasSuffix ".worker" spec.name)) (
+      (builtins.filter (spec: spec.name == "claude.agent001") claudeSpecs)
+      ++ (builtins.filter (spec: spec.name != "claude.agent001") claudeSpecs)
+    )
   );
   claudeConfigDirs = [
     "$HOME/.claude"
@@ -145,8 +150,10 @@ let
   codexSharedDir = "$HOME/.agents/.codex";
   codexSpecs = builtins.filter (spec: spec.type == "codex") wrapperSpecs;
   codexSpecDirs = map (spec: "$HOME/${spec.dir}") (
-    (builtins.filter (spec: spec.name == "codex.agent001") codexSpecs)
-    ++ (builtins.filter (spec: spec.name != "codex.agent001") codexSpecs)
+    builtins.filter (spec: !(lib.hasSuffix ".worker" spec.name)) (
+      (builtins.filter (spec: spec.name == "codex.agent001") codexSpecs)
+      ++ (builtins.filter (spec: spec.name != "codex.agent001") codexSpecs)
+    )
   );
   codexConfigDirs = [
     "$HOME/.codex"
@@ -158,14 +165,35 @@ let
   ++ map (spec: "$HOME/${spec.dir}/.claude.json") (
     builtins.filter (spec: spec.type == "claude") wrapperSpecs
   );
-  agentInstructionFiles = [
-    "$HOME/.agents/share/AGENTS.md"
-    "${claudeSharedDir}/CLAUDE.md"
-    "${codexSharedDir}/AGENTS.md"
-  ]
-  ++ map (spec: "$HOME/${spec.dir}/AGENTS.md") (
-    builtins.filter (spec: spec.type != "claude" && spec.type != "codex") wrapperSpecs
-  );
+  agentInstructionFileEntries =
+    [
+      {
+        name = ".agents/share/AGENTS.md";
+        template = agentsTemplate;
+      }
+      {
+        name = "${lib.removePrefix "$HOME/" claudeSharedDir}/CLAUDE.md";
+        template = agentsTemplate;
+      }
+      {
+        name = "${lib.removePrefix "$HOME/" codexSharedDir}/AGENTS.md";
+        template = agentsTemplate;
+      }
+    ]
+    ++ map (spec: {
+      name = "${spec.dir}/AGENTS.md";
+      template = agentsTemplate;
+    }) (builtins.filter (spec: spec.type != "claude" && spec.type != "codex") wrapperSpecs)
+    ++ [
+      {
+        name = ".agents/.claude.worker/CLAUDE.md";
+        template = agentsWorkerTemplate;
+      }
+      {
+        name = ".agents/.codex.worker/AGENTS.md";
+        template = agentsWorkerTemplate;
+      }
+    ];
 
   claudeSettings = {
     theme = "dark";
@@ -486,26 +514,35 @@ let
     '';
 in
 {
-  home.file = {
-    ".claude" = {
-      source = ./dotclaude;
-      recursive = true;
-    };
-    ".config/Claude/claude_desktop_config.json" = {
-      text = builtins.toJSON {
-        globalShortcut = "Alt+Cmd+Space";
-        mcpServers = {
-          claude-code = {
-            command = claudeBin;
-            args = [
-              "mcp"
-              "serve"
-            ];
+  home.file =
+    {
+      ".claude" = {
+        source = ./dotclaude;
+        recursive = true;
+      };
+      ".config/Claude/claude_desktop_config.json" = {
+        text = builtins.toJSON {
+          globalShortcut = "Alt+Cmd+Space";
+          mcpServers = {
+            claude-code = {
+              command = claudeBin;
+              args = [
+                "mcp"
+                "serve"
+              ];
+            };
           };
         };
       };
-    };
-  };
+    }
+    // builtins.listToAttrs (
+      map (entry: {
+        name = entry.name;
+        value = {
+          source = entry.template;
+        };
+      }) agentInstructionFileEntries
+    );
 
   home.packages =
     wrapperPackages
@@ -514,13 +551,6 @@ in
 
   home.activation.ensureAgentDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") agentDirs}
-  '';
-
-  home.activation.agentInstructions = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
-    ${lib.concatMapStringsSep "\n" (file: ''
-      rm -f "${file}"
-      ${pkgs.coreutils}/bin/install -m 644 ${agentsTemplate} "${file}"
-    '') agentInstructionFiles}
   '';
 
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" "ensureAgentDirs" ] ''
