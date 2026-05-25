@@ -44,6 +44,7 @@
       };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
+      microsandbox = pkgs.callPackage ../pkgs/microsandbox.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
       pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
       portless = pkgs.callPackage ../pkgs/portless.nix { };
@@ -184,6 +185,7 @@
         gparted
         lightpanda
         logseq
+        microsandbox
         ollama
         pciutils
         pencil-dev
