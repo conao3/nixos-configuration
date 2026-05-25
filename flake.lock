@@ -791,6 +791,26 @@
         "url": "file:../nix-flakes"
       }
     },
+    "nix-msb": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779681419,
+        "narHash": "sha256-v3Kn45SHbY4MJhbuUhzR2fncwc2QJ2D3od/LVGkiIHM=",
+        "owner": "conao3",
+        "repo": "nix-msb",
+        "rev": "60153d269349d96ac004936e111b9052b5543e67",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "nix-msb",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1761236834,
@@ -1089,6 +1109,7 @@
         "nix-darwin": "nix-darwin",
         "nix-flake-clojure": "nix-flake-clojure",
         "nix-flakes": "nix-flakes",
+        "nix-msb": "nix-msb",
         "nixpkgs": "nixpkgs_5",
         "pype": "pype",
         "rust-fetch-usage-limit": "rust-fetch-usage-limit",

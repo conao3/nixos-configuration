@@ -84,6 +84,10 @@
       url = "github:bhauman/clojure-mcp-light/v0.2.2";
       flake = false;
     };
+    nix-msb = {
+      url = "github:conao3/nix-msb";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -120,6 +124,7 @@
           commonNixpkgsConfig = {
             overlays = [
               inputs.emacs-overlay.overlays.default
+              inputs.nix-msb.overlays.default
               (import ./overlays/go.nix)
               (import ./overlays/direnv.nix)
               (import ./overlays/node-packages.nix)
