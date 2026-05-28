@@ -1,7 +1,7 @@
 {
   lib,
   rustPlatform,
-  fetchCrate,
+  fetchzip,
   makeWrapper,
   nodejs,
   google-chrome,
@@ -12,8 +12,10 @@ rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
   version = "0.2.5";
 
-  src = fetchCrate {
-    inherit pname version;
+  src = fetchzip {
+    name = "${pname}-${version}.tar.gz";
+    url = "https://static.crates.io/crates/${pname}/${pname}-${version}.crate";
+    extension = "tar.gz";
     hash = "sha256-9/ZLyyGk0bU3SbO5x8iZwlk6np/n6Mb1uScfvTt/r7I=";
   };
 
