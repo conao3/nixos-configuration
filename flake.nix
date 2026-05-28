@@ -198,6 +198,7 @@
                   nixpkgs.overlays = [
                     (import ./overlays/go.nix)
                     (import ./overlays/direnv.nix)
+                    (import ./overlays/crates-io-static.nix)
                   ];
                 }
               ];
