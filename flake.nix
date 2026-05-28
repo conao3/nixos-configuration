@@ -88,6 +88,12 @@
       url = "github:conao3/nix-msb";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    keg = {
+      url = "github:conao3/keg.el";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
   };
 
   outputs =

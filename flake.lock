@@ -617,6 +617,32 @@
         "type": "github"
       }
     },
+    "keg": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779870703,
+        "narHash": "sha256-ZCYjUWi6HPaTljLQ2iaBuvPChumw+RboYlAZtcJpnMo=",
+        "owner": "conao3",
+        "repo": "keg.el",
+        "rev": "91030f36115ce50c4f812b95b169aeaffdd0e042",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "keg.el",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "blueprint": "blueprint",
@@ -1103,6 +1129,7 @@
         "gitm": "gitm",
         "home-manager": "home-manager",
         "home-manager-worktrunk": "home-manager-worktrunk",
+        "keg": "keg",
         "llm-agents": "llm-agents",
         "mac-app-util": "mac-app-util",
         "nix-claude-code": "nix-claude-code",
