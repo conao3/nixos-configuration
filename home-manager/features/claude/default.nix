@@ -180,6 +180,7 @@ let
     theme = "dark";
     defaultMode = "acceptEdits";
     skipDangerousModePermissionPrompt = true;
+    cleanupPeriodDays = 9999;
     env = {
       CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR = "1";
       CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY = "1";
