@@ -19,7 +19,7 @@ let
   birdPackage = pkgs.callPackage ../../pkgs/bird.nix { };
   birdConao3Package = pkgs.writeShellApplication {
     name = "bird-conao3";
-    runtimeInputs = [ pkgs.nodejs_25 ];
+    runtimeInputs = [ pkgs.nodejs_26 ];
     text = ''
       export BIRD_BIN=${birdPackage}/bin/bird
       exec node ${./bird-conao3.mjs} "$@"
