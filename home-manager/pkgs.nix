@@ -176,6 +176,7 @@
         burpsuite
         chromium
         dbeaver-bin
+        discord
         firefox
         gimp
         gnome-system-monitor
