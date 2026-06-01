@@ -132,6 +132,7 @@
             ];
             config.permittedInsecurePackages = [
               "googleearth-pro-7.3.7.1155"
+              "electron-39.8.10"
             ];
           };
 
