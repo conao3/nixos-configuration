@@ -406,6 +406,23 @@ in
         ''}";
       };
     };
+
+    kill-orphan-lean = {
+      description = "Kill orphaned (PPID=1) lean --run processes";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.writeShellScript "kill-orphan-lean" ''
+          set -uo pipefail
+          my_uid=$(${pkgs.coreutils}/bin/id -u)
+          for pid in $(${pkgs.procps}/bin/pgrep -u "$my_uid" -f 'lean --run' || true); do
+            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
+            [ "$ppid" = 1 ] || continue
+            ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
+            kill -9 "$pid" 2>/dev/null || true
+          done
+        ''}";
+      };
+    };
   }
   // codingAgentServices;
 
@@ -435,6 +452,14 @@ in
     };
 
     kill-orphan-claude-print = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "5min";
+        OnUnitActiveSec = "5min";
+      };
+    };
+
+    kill-orphan-lean = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnBootSec = "5min";
