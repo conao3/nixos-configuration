@@ -108,6 +108,10 @@
           ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@" || true
           ${pkgs.tmux}/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
         else
+          if ${pkgs.tmux}/bin/tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+            echo "dev: tmux session '$SESSION_NAME' already exists. Run 'dev stop' first." >&2
+            exit 1
+          fi
           exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
         fi
       '';
