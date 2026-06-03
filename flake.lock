@@ -289,11 +289,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1780404756,
-        "narHash": "sha256-nMzq53Ufd1ViOdsfkaDnys6debl1Q7p6J580x3RTxoI=",
+        "lastModified": 1780462028,
+        "narHash": "sha256-3ArZHprtny19GPWLQs5pmF9KsR98MlLC1ipMZGSu2v4=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "6115e0beeb4646b42d128487f7744a12a799cb46",
+        "rev": "5e1a66d7833eede45cbc510f8e3d1ed65fcc310c",
         "type": "github"
       },
       "original": {
@@ -629,11 +629,11 @@
         "treefmt-nix": "treefmt-nix_2"
       },
       "locked": {
-        "lastModified": 1780411792,
-        "narHash": "sha256-aaO6ogxzNZNcHU0vQ2yN3Cnkhj5gAnOQ8JceAQSERVw=",
+        "lastModified": 1780449489,
+        "narHash": "sha256-UxyWzZhTiciPcpq5iYJg51439egKbytTdt9TZ7/NgwQ=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "2f2a2d3e3422a7ad6a105c115db2a08a630a03c4",
+        "rev": "1410995627b17a8f6f3ad6c4c202c6419e690e2a",
         "type": "github"
       },
       "original": {
@@ -674,11 +674,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780348180,
-        "narHash": "sha256-52IbBND56yikEf8FEwfmsVCfQNc6FMBST+++SooODfc=",
+        "lastModified": 1780424083,
+        "narHash": "sha256-rLZlfCYiYsHZVaJSB9/gptH2wVrlCRoNh8NBWi4flnU=",
         "owner": "ryoppippi",
         "repo": "nix-claude-code",
-        "rev": "cd47177fa859bc3c1cc994a502a691a8dd0f2d35",
+        "rev": "0c2e95452c12f9df8e7f1978e8a348c71b22758c",
         "type": "github"
       },
       "original": {
@@ -778,11 +778,11 @@
     "nix-flakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1780417915,
-        "narHash": "sha256-YUGJIotxdxa8Vh/fFBImMXHYAmnuVRONE9120PVazpw=",
+        "lastModified": 1780496608,
+        "narHash": "sha256-2f+yV60EvGZSIqeZEhE6IyAF0RhwkMdmXMwtAWegwxM=",
         "ref": "refs/heads/master",
-        "rev": "e52ea7a37e21ee1e2057056e0291d9b3a7d93096",
-        "revCount": 71,
+        "rev": "9b465b268b96429478cd4730ee12e8f3588d533e",
+        "revCount": 72,
         "type": "git",
         "url": "file:../nix-flakes"
       },
