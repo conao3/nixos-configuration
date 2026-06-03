@@ -136,7 +136,8 @@ in
         export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         export DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
         export N8N_API_KEY=${config.sops.placeholder."n8n-api-key"}
-        export CLI_PROXY_API_TOKEN=${config.sops.placeholder."cli-proxy-api-key"}
+        export ANTHROPIC_WORKER_URL=https://cli-proxy-api.sancode.dev
+        export ANTHROPIC_WORKER_API_TOKEN=${config.sops.placeholder."cli-proxy-api-key"}
         export PENPOT_MCP_KEY=${config.sops.placeholder."penpot-mcp-key"}
       '';
     };
