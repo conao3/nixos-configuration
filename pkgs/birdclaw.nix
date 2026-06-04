@@ -8,10 +8,10 @@
 
 buildNpmPackage {
   pname = "birdclaw";
-  version = "0.4.1";
+  version = "0.7.0";
 
   src = ./birdclaw;
-  npmDepsHash = "sha256-AhbjwTP1fVkEThxzmr6CIzGFsOcdXravass3JQScxC8=";
+  npmDepsHash = "sha256-TPQX/YQYbuOV7C9yLGj7Bh9vFjRT+S21QOG1Z4NAACY=";
 
   nodejs = nodejs_26;
   nativeBuildInputs = [ makeWrapper ];
@@ -21,7 +21,7 @@ buildNpmPackage {
 
   preBuild = ''
     substituteInPlace node_modules/birdclaw/src/cli.ts \
-      --replace-fail '["node_modules/vite/bin/vite.js", "dev", "--port", "3000"]' '["./server-runner.mjs"]'
+      --replace-fail '"node_modules/vite/bin/vite.js",' '"./server-runner.mjs",'
 
     substituteInPlace node_modules/birdclaw/src/lib/bird.ts \
       --replace-quiet '"/bin/bash"' '"${bash}/bin/bash"'
