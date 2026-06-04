@@ -10,6 +10,7 @@
   ../home-manager/features/dotfiles
   ../home-manager/features/emacs.nix
   ../home-manager/features/git
+  ../home-manager/features/mise.nix
   ../home-manager/features/neovim
   ../home-manager/features/nom.nix
   ../home-manager/features/programs-enable.nix

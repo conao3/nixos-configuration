@@ -7,7 +7,6 @@
       which anyenv >/dev/null 2>&1 && eval "$(anyenv init -)"
     '';
     initContent = ''
-      [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
       bindkey -e
       function ghq() {
         if [ "$1" = "cd" ]; then
