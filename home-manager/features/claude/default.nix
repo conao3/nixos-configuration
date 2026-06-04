@@ -193,7 +193,10 @@ let
       BASH_MAX_TIMEOUT_MS = "1200000";
     };
     preferredNotifChannel = "terminal_bell";
-    includeCoAuthoredBy = false;
+    attribution = {
+      commit = "";
+      pr = "";
+    };
     language = "japanese";
     autoMemoryEnabled = false;
     autoMemoryDirectory = "~/.agents/share/auto-memory";
