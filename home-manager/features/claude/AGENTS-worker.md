@@ -77,7 +77,7 @@ echo "$HOME/.agents/share/projects/$CANONICAL.md"
 ## tool 使用の効率
 
 - Edit 後に同一ファイルを再 Read しない。直前の Read 結果を覚えておき、複数 Edit をまとめて適用する。
-- 同一ファイルへの繰り返し Read は避ける (同 session で同じ path を 2 回目以降に開こうとすると hook が block する)。
+- 同一ファイルへの繰り返し Read は避ける (1 session で同じファイルを 5 回以上読んでいたら設計を疑う signal)。
 - **大型 file (1 MB 超、vendor された JSON 等) は raw Read で全文を取らない**。project memo に helper script (`scripts/*.ts` / `scripts/*.sh`) が用意されているケースがある。先に project memo を確認し、無ければ `grep -n` で line 番号を取って `Read offset N limit 30` で必要箇所だけ抽出する (signature-only retrieval)。
 - Bash output は必ず `head` / `tail` / `grep` / 末尾 `| tail -<N>` で trim する。生 stdout が長い command (`bun test` / `cargo test` / `make` の生出力など) は trim 必須。
 - subagent (`Agent` tool / `Task` tool) は使わない。worker は単一 thread で完結させる。Agent 経由で subprocess を呼ぶと context 重複と token overhead が大きい。
