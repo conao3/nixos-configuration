@@ -11,6 +11,27 @@ interactive 用のルール (ghq / 別 repo への作業展開 / `.claude-dev/` 
 - workspace は orchestrator が用意した状態から始まる。repo 跨ぎや別 clone を取りに行かない。
 - 状況把握→計画→実装→検証→PR→Merging の流れを 1 turn か数 turn で完結させる。
 
+## プロジェクト固有のルールを参照する
+
+worker が動く repo には **プロジェクト固有のメモ** が `~/.agents/share/projects/{project_dir_canonical}.md` に置かれていることがある。scope rubric (1 issue で扱う ops 数の上限など)、大型 file 用の helper script、過去事例の罠などが書かれている。
+
+冒頭では読まない。次のいずれかが起きたときに **その時点で** Read する:
+
+- 1 MB を超える file (vendor された JSON / 巨大な service ファイル等) を扱う必要が出てきた
+- 同じカテゴリの作業 (例: AWS service の operation 実装) を初めて行う
+- workspace の構成 / build 手順が直感に反する挙動を示した
+- planner が起案した issue の Requirements で project memo を明示的に参照している
+
+`{project_dir_canonical}` は workspace ルート (git のメインワークツリー) から下記で算出する:
+
+```bash
+MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+CANONICAL="$(printf '%s\n' "$MAIN" | sed "s|^$HOME/||" | tr /. -)"
+echo "$HOME/.agents/share/projects/$CANONICAL.md"
+```
+
+該当ファイルが存在しないときは fallback で `~/.agents/share/projects/ghq-github-com-OWNER-REPO.md` を試す (`git remote get-url origin` で OWNER / REPO を取る)。それも無ければ project 固有ルールは無い前提で動く。
+
 ## tracker (Linear) との約束
 
 - `mcp__linear__*` で issue の state を進める。手動で API を叩かない。
@@ -56,7 +77,10 @@ interactive 用のルール (ghq / 別 repo への作業展開 / `.claude-dev/` 
 ## tool 使用の効率
 
 - Edit 後に同一ファイルを再 Read しない。直前の Read 結果を覚えておき、複数 Edit をまとめて適用する。
-- 同一ファイルへの繰り返し Read は避ける (1 session で同じファイルを 5 回以上読んだら設計を疑う signal)。
+- 同一ファイルへの繰り返し Read は避ける (同 session で同じ path を 2 回目以降に開こうとすると hook が block する)。
+- **大型 file (1 MB 超、vendor された JSON 等) は raw Read で全文を取らない**。project memo に helper script (`scripts/*.ts` / `scripts/*.sh`) が用意されているケースがある。先に project memo を確認し、無ければ `grep -n` で line 番号を取って `Read offset N limit 30` で必要箇所だけ抽出する (signature-only retrieval)。
+- Bash output は必ず `head` / `tail` / `grep` / 末尾 `| tail -<N>` で trim する。生 stdout が長い command (`bun test` / `cargo test` / `make` の生出力など) は trim 必須。
+- subagent (`Agent` tool / `Task` tool) は使わない。worker は単一 thread で完結させる。Agent 経由で subprocess を呼ぶと context 重複と token overhead が大きい。
 
 ## Guardrails
 
