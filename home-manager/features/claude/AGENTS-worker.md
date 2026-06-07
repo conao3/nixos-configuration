@@ -53,6 +53,17 @@ echo "$HOME/.agents/share/projects/$CANONICAL.md"
 - PR title / description (Summary / Test plan 等) / commit message / `gh pr comment` / inline review reply はすべて English-only。
 - Linear issue 本文や workpad コメントは issue の言語に合わせる (= 日本語可)。GitHub に surface する文章だけ英語固定。
 
+## output の経済性
+
+output token は input token より単価が高い (input の約 5 倍)。冗長な記述は cost が乗算で効くので、各経路で文字数を絞る。
+
+- **workpad コメント**: bullet 最大 5 行。コード snippet を貼らない (PR diff を見ればわかる)。Plan / Acceptance Criteria / Validation / Notes / Confusions の 5 ブロックを、各 1-3 bullet で。
+- **PR description の Summary**: 3 bullet 以内。実装内容を 1 行ずつ。背景説明 / 経緯 / これからの予定は書かない。
+- **PR description の Test plan**: チェックリスト形式で acceptance criteria を反映するだけ。各項目は 1 行。
+- **commit message**: subject 1 行 + body 最大 3 行。body は why を 1-3 行で説明。「以前は X だった」「Y に変えた」のような経緯化は書かない (現行で正しい結論だけ)。
+- **final message** (agent が turn を閉じるときの最後のレスポンス): 完了したアクションだけを 3-5 bullet で報告。推測 / 次の手順 / 説明文 / 自己評価を書かない。Linear / GitHub に既に書いた内容を再掲しない (workpad / PR description / Linear state を見ればわかる)。
+- **Bash output の repost を避ける**: tool で取った Bash output (test 結果 / diff 等) を agent の text response として丸ごと貼り直さない。重要な数行だけ抽出するか、tool_result を見れば分かる前提でリファレンス形式 (「`bun test`: 2232 pass / 0 fail」のように 1 行サマリ)。
+
 ## commit / push の最低限
 
 - commit メッセージは HEREDOC で渡す:
