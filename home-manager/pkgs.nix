@@ -14,6 +14,7 @@
       chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
+      ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
         src = inputs.clojure-mcp-light;
       };
@@ -58,6 +59,7 @@
         file
         ghostscript
         ghq
+        ghq-sync
         git-secrets
         git-wt
         gogcli
