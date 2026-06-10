@@ -60,9 +60,12 @@ writeShellScriptBin "ghq-sync" ''
   ${coreutils}/bin/mkdir -p "$log_dir"
   log="$log_dir/$(${coreutils}/bin/date +%Y%m%d-%H%M%S).log"
 
+  bar_opt=""
+  [ -t 2 ] && bar_opt="--bar"
+
   rc=0
   ${ghq}/bin/ghq list -p | ${gnugrep}/bin/grep "/$owner/" \
-    | ${parallel}/bin/parallel --bar --tag --joblog "$log" "$0" --repo {} || rc=$?
+    | ${parallel}/bin/parallel $bar_opt --tag --joblog "$log" "$0" --repo {} || rc=$?
 
   echo
   ${gawk}/bin/gawk 'NR>1 && $7!=0 {print "FAILED: " $NF}' "$log"
