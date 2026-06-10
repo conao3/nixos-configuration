@@ -2,6 +2,7 @@
   writeShellScriptBin,
   coreutils,
   gawk,
+  gh,
   git,
   gnugrep,
   parallel,
@@ -59,6 +60,9 @@ writeShellScriptBin "ghq-sync" ''
   log_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/ghq-sync"
   ${coreutils}/bin/mkdir -p "$log_dir"
   log="$log_dir/$(${coreutils}/bin/date +%Y%m%d-%H%M%S).log"
+
+  ${gh}/bin/gh repo list "$owner" --limit 1000 --source --json sshUrl --jq '.[].sshUrl' \
+    | ${ghq}/bin/ghq get -p 2>&1 | ${gnugrep}/bin/grep -v "exists " || true
 
   bar_opt=""
   [ -t 2 ] && bar_opt="--bar"
