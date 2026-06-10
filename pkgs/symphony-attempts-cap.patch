@@ -1,3 +1,44 @@
+From: conao3 <conao3@gmail.com>
+Subject: orchestrator: cap agent attempts per issue and force Cancelled on overshoot
+
+Symphony's default retry policy spawns a fresh worker for every continuation
+attempt as long as the Linear issue stays in an active state. With long
+self-driving runs this lets a single scope-violating ticket (one Linear issue
+that the agent cannot finish in a single PR) burn arbitrarily many attempts:
+in bun-bunsai's 24h baseline a single issue went 62 sessions before the
+operator manually intervened.
+
+Add a per-issue attempt cap so the orchestrator can break the loop.
+
+Two layers:
+
+  Phase 1 - opportunistic self-cancel signal
+    * New `agent.max_attempts_per_issue` config field (default 0 = disabled,
+      preserving upstream behavior).
+    * When the orchestrator is about to dispatch the cap'th attempt, it sets
+      `final_attempt: true` and the PromptBuilder exposes it to the workflow
+      template. WORKFLOW.md can branch on `{% if final_attempt %}` to tell the
+      agent to stop implementing, record a workspace summary on the workpad,
+      and move the issue to Cancelled.
+
+  Phase 2 - hard gate
+    * Agents in the wild ignore the `final_attempt` branch in ~98% of cases
+      (618 final_attempt=true dispatches vs 10 self-Cancelled in our trace),
+      so once `attempt > max_attempts_per_issue` the orchestrator stops
+      spawning entirely and calls `Tracker.update_issue_state(id, "Cancelled")`
+      itself, emitting a `CanceledByAttemptLimit` warning. The operator/planner
+      then splits the work via the "Cancel-and-resplit" playbook
+      (notes/playbook/operation-symphony.md).
+
+Default value of 0 keeps upstream behavior untouched for users who do not opt
+in. Tracker.update_issue_state is the same path Symphony already uses for
+terminal transitions, so no new Linear API surface is required.
+
+Related: bun-bunsai/.claude-dev/task-goal-000.md (token-reduction plan,
+action A1) describes the rationale and target metrics.
+
+---
+
 diff --git a/lib/symphony_elixir/config/schema.ex b/lib/symphony_elixir/config/schema.ex
 index 17ead4a..4c54bbf 100644
 --- a/lib/symphony_elixir/config/schema.ex
@@ -25,16 +66,43 @@ index 17ead4a..4c54bbf 100644
        |> update_change(:max_concurrent_agents_by_state, &Schema.normalize_state_limits/1)
        |> Schema.validate_state_limits(:max_concurrent_agents_by_state)
 diff --git a/lib/symphony_elixir/orchestrator.ex b/lib/symphony_elixir/orchestrator.ex
-index 0445776..141e428 100644
+index 0445776..d359c82 100644
 --- a/lib/symphony_elixir/orchestrator.ex
 +++ b/lib/symphony_elixir/orchestrator.ex
-@@ -924,13 +924,16 @@ defmodule SymphonyElixir.Orchestrator do
+@@ -924,13 +924,43 @@ defmodule SymphonyElixir.Orchestrator do
    end
  
    defp spawn_issue_on_worker_host(%State{} = state, issue, attempt, recipient, worker_host) do
 +    max_attempts = Config.settings!().agent.max_attempts_per_issue
 +    final_attempt = is_integer(max_attempts) and max_attempts > 0 and is_integer(attempt) and attempt >= max_attempts
++    cap_exceeded = is_integer(max_attempts) and max_attempts > 0 and is_integer(attempt) and attempt > max_attempts
 +
++    if cap_exceeded do
++      force_cancel_attempt_limit(state, issue, attempt, max_attempts)
++    else
++      spawn_issue_on_worker_host_impl(state, issue, attempt, recipient, worker_host, final_attempt)
++    end
++  end
++
++  defp force_cancel_attempt_limit(%State{} = state, issue, attempt, max_attempts) do
++    Logger.warning("CanceledByAttemptLimit: #{issue_context(issue)} attempt=#{attempt} > max_attempts_per_issue=#{max_attempts}; forcing Cancelled without spawn")
++
++    case Tracker.update_issue_state(issue.id, "Cancelled") do
++      :ok ->
++        :ok
++
++      {:error, reason} ->
++        Logger.error("CanceledByAttemptLimit: Tracker.update_issue_state failed for #{issue_context(issue)}: #{inspect(reason)}")
++    end
++
++    %{
++      state
++      | retry_attempts: Map.delete(state.retry_attempts, issue.id),
++        claimed: MapSet.delete(state.claimed, issue.id)
++    }
++  end
++
++  defp spawn_issue_on_worker_host_impl(%State{} = state, issue, attempt, recipient, worker_host, final_attempt) do
      case Task.Supervisor.start_child(SymphonyElixir.TaskSupervisor, fn ->
 -           AgentRunner.run(issue, recipient, attempt: attempt, worker_host: worker_host)
 +           AgentRunner.run(issue, recipient, attempt: attempt, final_attempt: final_attempt, worker_host: worker_host)
