@@ -61,7 +61,12 @@ writeShellScriptBin "ghq-sync" ''
   ${coreutils}/bin/mkdir -p "$log_dir"
   log="$log_dir/$(${coreutils}/bin/date +%Y%m%d-%H%M%S).log"
 
-  ${gh}/bin/gh repo list "$owner" --limit 1000 --source --json sshUrl --jq '.[].sshUrl' \
+  total="$(${gh}/bin/gh api graphql \
+    -f query='query($login: String!) { repositoryOwner(login: $login) { repositories(ownerAffiliations: OWNER) { totalCount } } }' \
+    -F login="$owner" --jq '.data.repositoryOwner.repositories.totalCount' 2>/dev/null || echo 0)"
+  [ "$total" -gt 0 ] || total=1000
+
+  ${gh}/bin/gh repo list "$owner" --limit "$total" --source --json sshUrl --jq '.[].sshUrl' \
     | ${ghq}/bin/ghq get -p 2>&1 | ${gnugrep}/bin/grep -v "exists" || true
 
   bar_opt=""
