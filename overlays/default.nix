@@ -4,7 +4,6 @@
     (import ./direnv.nix)
   ];
   linux = [
-    (import ./node-packages.nix)
     (import ./cursor.nix)
   ];
   darwin = [
