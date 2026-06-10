@@ -2,7 +2,23 @@
 
 {
   nix = {
-    optimise.automatic = true;
+    gc = {
+      automatic = true;
+      interval = {
+        Weekday = 1;
+        Hour = 0;
+        Minute = 0;
+      };
+      options = "--delete-older-than 14d";
+    };
+    optimise = {
+      automatic = true;
+      interval = {
+        Weekday = 1;
+        Hour = 1;
+        Minute = 0;
+      };
+    };
     linux-builder.enable = true;
     settings = {
       experimental-features = "nix-command flakes";
