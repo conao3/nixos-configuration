@@ -29,6 +29,13 @@ endif
 lint:
 	nix eval .#nixosConfigurations.conao-nixos-agent.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 
+.PHONY: lint-all
+lint-all:
+	nix eval .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+	nix eval .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+	nix eval .#nixosConfigurations.conao-nixos-agent.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+	nix eval .#darwinConfigurations.yamashita-naoya-con0178-3.system.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+
 .PHONY: update
 update:
 	nix flake update --log-format internal-json -v 2>&1 | $(NOM) --json
