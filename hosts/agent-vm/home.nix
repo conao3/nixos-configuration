@@ -27,6 +27,18 @@ let
   };
   lightpandaPackage = pkgs.callPackage ../../pkgs/lightpanda.nix { };
   ollamaTailnetHost = "yamashita-naoya-con0178-3.tail6dd115.ts.net";
+  basePath = [
+    "/run/wrappers/bin"
+    "${homeDir}/.nix-profile/bin"
+    "/nix/profile/bin"
+    "${homeDir}/.local/state/nix/profile/bin"
+    "/etc/profiles/per-user/${username}/bin"
+    "/nix/var/nix/profiles/default/bin"
+    "/run/current-system/sw/bin"
+    "/usr/local/bin"
+    "/usr/bin"
+    "/bin"
+  ];
 in
 {
   home = {
@@ -292,21 +304,7 @@ in
       RestartSec = "5";
       KillMode = "process";
       Environment = [
-        "PATH=${
-          lib.concatStringsSep ":" [
-            "${homeDir}/.openclaw/workspace/bin"
-            "/run/wrappers/bin"
-            "${homeDir}/.nix-profile/bin"
-            "/nix/profile/bin"
-            "${homeDir}/.local/state/nix/profile/bin"
-            "/etc/profiles/per-user/${username}/bin"
-            "/nix/var/nix/profiles/default/bin"
-            "/run/current-system/sw/bin"
-            "/usr/local/bin"
-            "/usr/bin"
-            "/bin"
-          ]
-        }"
+        "PATH=${lib.concatStringsSep ":" ([ "${homeDir}/.openclaw/workspace/bin" ] ++ basePath)}"
         "NODE_LLAMA_CPP_SKIP_DOWNLOAD=true"
         "NODE_OPTIONS=--no-network-family-autoselection --dns-result-order=ipv4first"
       ];
@@ -327,20 +325,7 @@ in
       TimeoutStopSec = "75";
       Environment = [
         "HERMES_HOME=${homeDir}/.hermes"
-        "PATH=${
-          lib.concatStringsSep ":" [
-            "/run/wrappers/bin"
-            "${homeDir}/.nix-profile/bin"
-            "/nix/profile/bin"
-            "${homeDir}/.local/state/nix/profile/bin"
-            "/etc/profiles/per-user/${username}/bin"
-            "/nix/var/nix/profiles/default/bin"
-            "/run/current-system/sw/bin"
-            "/usr/local/bin"
-            "/usr/bin"
-            "/bin"
-          ]
-        }"
+        "PATH=${lib.concatStringsSep ":" basePath}"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
@@ -362,20 +347,7 @@ in
       TimeoutStopSec = "75";
       Environment = [
         "HERMES_HOME=${homeDir}/.hermes"
-        "PATH=${
-          lib.concatStringsSep ":" [
-            "/run/wrappers/bin"
-            "${homeDir}/.nix-profile/bin"
-            "/nix/profile/bin"
-            "${homeDir}/.local/state/nix/profile/bin"
-            "/etc/profiles/per-user/${username}/bin"
-            "/nix/var/nix/profiles/default/bin"
-            "/run/current-system/sw/bin"
-            "/usr/local/bin"
-            "/usr/bin"
-            "/bin"
-          ]
-        }"
+        "PATH=${lib.concatStringsSep ":" basePath}"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
@@ -404,21 +376,7 @@ in
         "HERMES_WEBUI_PORT=8787"
         "HERMES_WEBUI_STATE_DIR=${homeDir}/.hermes/webui"
         "HERMES_WEBUI_AUTO_INSTALL=0"
-        "PATH=${
-          lib.concatStringsSep ":" [
-            "${hermesAgentPackage}/bin"
-            "/run/wrappers/bin"
-            "${homeDir}/.nix-profile/bin"
-            "/nix/profile/bin"
-            "${homeDir}/.local/state/nix/profile/bin"
-            "/etc/profiles/per-user/${username}/bin"
-            "/nix/var/nix/profiles/default/bin"
-            "/run/current-system/sw/bin"
-            "/usr/local/bin"
-            "/usr/bin"
-            "/bin"
-          ]
-        }"
+        "PATH=${lib.concatStringsSep ":" ([ "${hermesAgentPackage}/bin" ] ++ basePath)}"
       ];
       EnvironmentFile = config.sops.templates."agent-vm-env".path;
     };
@@ -440,20 +398,7 @@ in
       Environment = [
         "PORT=3000"
         "HOST=127.0.0.1"
-        "PATH=${
-          lib.concatStringsSep ":" [
-            "/run/wrappers/bin"
-            "${homeDir}/.nix-profile/bin"
-            "/nix/profile/bin"
-            "${homeDir}/.local/state/nix/profile/bin"
-            "/etc/profiles/per-user/${username}/bin"
-            "/nix/var/nix/profiles/default/bin"
-            "/run/current-system/sw/bin"
-            "/usr/local/bin"
-            "/usr/bin"
-            "/bin"
-          ]
-        }"
+        "PATH=${lib.concatStringsSep ":" basePath}"
       ];
     };
     Install = {
