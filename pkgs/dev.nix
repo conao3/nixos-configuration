@@ -1,8 +1,10 @@
 {
   writeShellScriptBin,
   coreutils,
+  devo,
   gawk,
   git,
+  gnugrep,
   gnused,
   nix,
   tmux,
@@ -54,15 +56,26 @@ let
     fi
 
     registry_name="$owner-$repo"
+    has_nix_app=0
+    if ${nix}/bin/nix registry list 2>/dev/null | ${gnugrep}/bin/grep -qE "^(global|user)[[:space:]]+${registry_name}[[:space:]]"; then
+      has_nix_app=1
+    fi
+
     if [ "$app" = "dev-stop" ]; then
-      ${nix}/bin/nix run "$registry_name#$app" "$@" || true
+      if [ "$has_nix_app" = "1" ]; then
+        ${nix}/bin/nix run "$registry_name#$app" "$@" || true
+      fi
       ${tmux}/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
     else
       if ${tmux}/bin/tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
         echo "dev: tmux session '$SESSION_NAME' already exists. Run 'dev stop' first." >&2
         exit 1
       fi
-      exec ${nix}/bin/nix run "$registry_name#$app" "$@"
+      if [ "$has_nix_app" = "1" ]; then
+        exec ${nix}/bin/nix run "$registry_name#$app" "$@"
+      else
+        exec ${devo}/bin/devo run --attach
+      fi
     fi
   '';
 
