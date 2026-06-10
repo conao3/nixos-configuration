@@ -11,7 +11,5 @@ let
       "https://static.crates.io/crates/${builtins.elemAt m 0}/${builtins.elemAt m 0}-${builtins.elemAt m 1}.crate";
 in
 {
-  fetchurl =
-    args:
-    prev.fetchurl (if args ? url then args // { url = rewrite args.url; } else args);
+  fetchurl = args: prev.fetchurl (if args ? url then args // { url = rewrite args.url; } else args);
 }

@@ -146,35 +146,34 @@ let
   ++ map (spec: "$HOME/${spec.dir}/.claude.json") (
     builtins.filter (spec: spec.type == "claude") wrapperSpecs
   );
-  agentInstructionFileEntries =
-    [
-      {
-        name = ".agents/share/AGENTS.md";
-        template = agentsTemplate;
-      }
-      {
-        name = "${lib.removePrefix "$HOME/" claudeSharedDir}/CLAUDE.md";
-        template = agentsTemplate;
-      }
-      {
-        name = "${lib.removePrefix "$HOME/" codexSharedDir}/AGENTS.md";
-        template = agentsTemplate;
-      }
-    ]
-    ++ map (spec: {
-      name = "${spec.dir}/AGENTS.md";
+  agentInstructionFileEntries = [
+    {
+      name = ".agents/share/AGENTS.md";
       template = agentsTemplate;
-    }) (builtins.filter (spec: spec.type != "claude" && spec.type != "codex") wrapperSpecs)
-    ++ [
-      {
-        name = ".agents/.claude.worker/CLAUDE.md";
-        template = agentsWorkerTemplate;
-      }
-      {
-        name = ".agents/.codex.worker/AGENTS.md";
-        template = agentsWorkerTemplate;
-      }
-    ];
+    }
+    {
+      name = "${lib.removePrefix "$HOME/" claudeSharedDir}/CLAUDE.md";
+      template = agentsTemplate;
+    }
+    {
+      name = "${lib.removePrefix "$HOME/" codexSharedDir}/AGENTS.md";
+      template = agentsTemplate;
+    }
+  ]
+  ++ map (spec: {
+    name = "${spec.dir}/AGENTS.md";
+    template = agentsTemplate;
+  }) (builtins.filter (spec: spec.type != "claude" && spec.type != "codex") wrapperSpecs)
+  ++ [
+    {
+      name = ".agents/.claude.worker/CLAUDE.md";
+      template = agentsWorkerTemplate;
+    }
+    {
+      name = ".agents/.codex.worker/AGENTS.md";
+      template = agentsWorkerTemplate;
+    }
+  ];
 
   claudeSettings = {
     theme = "dark";
@@ -486,35 +485,34 @@ let
     '';
 in
 {
-  home.file =
-    {
-      ".claude" = {
-        source = ./dotclaude;
-        recursive = true;
-      };
-      ".config/Claude/claude_desktop_config.json" = {
-        text = builtins.toJSON {
-          globalShortcut = "Alt+Cmd+Space";
-          mcpServers = {
-            claude-code = {
-              command = claudeBin;
-              args = [
-                "mcp"
-                "serve"
-              ];
-            };
+  home.file = {
+    ".claude" = {
+      source = ./dotclaude;
+      recursive = true;
+    };
+    ".config/Claude/claude_desktop_config.json" = {
+      text = builtins.toJSON {
+        globalShortcut = "Alt+Cmd+Space";
+        mcpServers = {
+          claude-code = {
+            command = claudeBin;
+            args = [
+              "mcp"
+              "serve"
+            ];
           };
         };
       };
-    }
-    // builtins.listToAttrs (
-      map (entry: {
-        name = entry.name;
-        value = {
-          source = entry.template;
-        };
-      }) agentInstructionFileEntries
-    );
+    };
+  }
+  // builtins.listToAttrs (
+    map (entry: {
+      name = entry.name;
+      value = {
+        source = entry.template;
+      };
+    }) agentInstructionFileEntries
+  );
 
   home.packages =
     wrapperPackages
@@ -635,34 +633,34 @@ in
         "codexShareReconcile"
       ]
       (
-    let
-      codexFeatures = {
-        goals = true;
-      };
-      codexBaseJson = builtins.toJSON {
-        mcp_servers = codexMcpServers;
-        features = codexFeatures;
-      };
-    in
-    ''
-      ${lib.concatMapStringsSep "\n" (dir: ''
-        mkdir -p "${dir}"
-        configTarget="${dir}/config.toml"
-        if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
-          rm -f "$configTarget"
-          echo '${codexBaseJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
-        else
-          ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
-            | ${pkgs.jq}/bin/jq \
-                --argjson servers '${builtins.toJSON codexMcpServers}' \
-                --argjson features '${builtins.toJSON codexFeatures}' \
-                '.mcp_servers = $servers | .features = $features' \
-            | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
-            && mv "$configTarget.tmp" "$configTarget"
-        fi
-      '') codexConfigDirs}
-    ''
-  );
+        let
+          codexFeatures = {
+            goals = true;
+          };
+          codexBaseJson = builtins.toJSON {
+            mcp_servers = codexMcpServers;
+            features = codexFeatures;
+          };
+        in
+        ''
+          ${lib.concatMapStringsSep "\n" (dir: ''
+            mkdir -p "${dir}"
+            configTarget="${dir}/config.toml"
+            if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
+              rm -f "$configTarget"
+              echo '${codexBaseJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
+            else
+              ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
+                | ${pkgs.jq}/bin/jq \
+                    --argjson servers '${builtins.toJSON codexMcpServers}' \
+                    --argjson features '${builtins.toJSON codexFeatures}' \
+                    '.mcp_servers = $servers | .features = $features' \
+                | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
+                && mv "$configTarget.tmp" "$configTarget"
+            fi
+          '') codexConfigDirs}
+        ''
+      );
 
   # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).
   # Use activation (not home.file) so cursor-agent cannot replace the symlink with an empty file.
