@@ -21,7 +21,6 @@
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
-      pencil-dev = pkgs.callPackage ../pkgs/pencil-dev.nix { };
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
@@ -111,7 +110,6 @@
         microsandbox
         ollama
         pciutils
-        pencil-dev
         qpdfview
         slack
         steam-run
