@@ -169,7 +169,7 @@
         # keep-sorted start
         agent-browser
         agent-deck
-        auto-claude
+        aperant
         catnip
         ck
         claude-agent-acp
