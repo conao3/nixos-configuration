@@ -20,24 +20,12 @@
       url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    mac-app-util = {
-      url = "github:hraban/mac-app-util";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-claude-code = {
       url = "github:ryoppippi/nix-claude-code";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    cljgen = {
-      url = "github:conao3/clojure-cljgen";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nix-flake-clojure = {
-      url = "github:conao3-playground/nix-flake-clojure";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     claude-desktop = {
@@ -66,10 +54,6 @@
     };
     rust-llm-quota = {
       url = "github:conao3/rust-llm-quota";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    arto = {
-      url = "github:arto-app/Arto";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     devo = {

@@ -149,8 +149,6 @@
       ];
 
       inputPackages = [
-        # inputs.cljgen.packages.${system}.default
-        # inputs.nix-flake-clojure.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.keg.packages.${system}.default
         inputs.pype.packages.${system}.default
@@ -161,9 +159,7 @@
       ]
       ++ (
         if pkgs.stdenv.isDarwin then
-          [
-            # inputs.arto.packages.${system}.default  # arto build broken (e0663d4)
-          ]
+          [ ]
         else
           [
             claude-desktop-with-fhs
