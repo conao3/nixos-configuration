@@ -15,14 +15,22 @@ This repository contains declarative system configurations for:
 ```
 .
 ├── flake.nix          # Main flake entry point
+├── flake/             # flake-parts modules (treefmt, etc.)
+├── common/            # Modules shared between NixOS and nix-darwin
 ├── darwin/            # macOS (nix-darwin) configuration
 ├── nixos/             # NixOS-specific modules
 ├── hosts/             # Machine-specific configurations
 │   ├── helios/        # NixOS workstation
-│   └── eos/           # NixOS machine
-├── home-manager/      # User-level configuration
-│   └── programs/      # Application configs (emacs, neovim, git, zsh, etc.)
-└── overlays/          # Nix package overlays
+│   ├── eos/           # NixOS machine
+│   └── agent-vm/      # Self-contained QEMU VM for agents
+├── home-manager/      # home-manager modules
+│   ├── base.nix       # username, stateVersion, sessionPath
+│   ├── pkgs.nix       # user package list
+│   └── features/      # one module per feature (emacs, neovim, git, zsh, etc.)
+├── home-profile/      # profile = user + feature module list, per host
+├── pkgs/              # custom package definitions
+├── overlays/          # Nix package overlays
+└── secrets/           # sops-encrypted secrets
 ```
 
 ## Prerequisites
@@ -46,16 +54,17 @@ The public stub only needs to provide files imported by this repository, such as
 
 ## Usage
 
-### NixOS
+Apply the configuration for the current machine (NixOS and macOS are detected automatically):
 
 ```sh
-sudo nixos-rebuild switch --flake ~/dev/repos/nixos-configuration#helios
+make switch
 ```
 
-### macOS
+Equivalent raw commands:
 
 ```sh
-darwin-rebuild switch --flake ~/dev/repos/nixos-configuration#macos
+sudo nixos-rebuild switch --flake .            # NixOS
+sudo -H nix run nix-darwin -- switch --flake . # macOS
 ```
 
 ## Maintenance
@@ -65,8 +74,7 @@ darwin-rebuild switch --flake ~/dev/repos/nixos-configuration#macos
 To avoid long build times, update nixpkgs to match the revision used by numtide's binary cache:
 
 ```sh
-REV=$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev')
-nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/${REV}
+make update
 ```
 
 This ensures that packages will be fetched from cache instead of being built locally.

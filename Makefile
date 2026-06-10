@@ -22,17 +22,17 @@ switch-dry-run:
 ifeq ($(UNAME_S),Darwin)
 	sudo -H nix run nix-darwin -- switch --flake . --dry-run --show-trace |& $(NOM)
 else
-	sudo nixos-rebuild switch --flake . --dry-run --log-format internal-json -v 2>&1 | nom --json
+	sudo nixos-rebuild switch --flake . --dry-run --log-format internal-json -v 2>&1 | $(NOM) --json
 endif
 
 .PHONY: lint
 lint:
-	nix eval .#nixosConfigurations.agent-vm.config.system.build.toplevel 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+	nix eval .#nixosConfigurations.conao-nixos-agent.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 
 .PHONY: update
 update:
-	nix flake update --log-format internal-json -v 2>&1 | nom --json
-	nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/$$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev') --log-format internal-json -v 2>&1 | nom --json
+	nix flake update --log-format internal-json -v 2>&1 | $(NOM) --json
+	nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/$$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev') --log-format internal-json -v 2>&1 | $(NOM) --json
 
 MEMORY ?= 4096
 CORES ?= 2
@@ -44,7 +44,7 @@ edit-secrets:
 
 .PHONY: vm-agent
 vm-agent:
-	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm --log-format internal-json -v 2>&1 | nom --json
+	nix build -L .#nixosConfigurations.conao-nixos-agent.config.system.build.vm --log-format internal-json -v 2>&1 | $(NOM) --json
 	@if [ -e conao-nixos-agent.qcow2 ]; then \
 		QEMU_IMG=$$(nix build --no-link --print-out-paths nixpkgs#qemu-utils)/bin/qemu-img; \
 		CUR=$$($$QEMU_IMG info --output=json conao-nixos-agent.qcow2 | nix run nixpkgs#jq -- -r '."virtual-size"'); \
@@ -60,7 +60,7 @@ vm-agent:
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
-	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo --log-format internal-json -v 2>&1 | nom --json
+	NIX_SSHOPTS="-p 2222" nixos-rebuild switch --flake .#conao-nixos-agent --target-host conao@localhost --sudo --log-format internal-json -v 2>&1 | $(NOM) --json
 
 .PHONY: vm-agent-fix-openclaw
 vm-agent-fix-openclaw:
