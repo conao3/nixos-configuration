@@ -1,5 +1,4 @@
 {
-  lib,
   pkgs,
   system,
   inputs,
@@ -9,32 +8,8 @@
   # https://search.nixos.org/packages?channel=24.11
   home.packages =
     let
-      claudeDesktopSrc = inputs.claude-desktop;
-      patchy-cnb = pkgs.callPackage (claudeDesktopSrc + "/pkgs/patchy-cnb.nix") { };
-      claude-desktop = pkgs.callPackage (claudeDesktopSrc + "/pkgs/claude-desktop.nix") {
-        inherit patchy-cnb;
-        nodePackages = {
-          inherit (pkgs) asar;
-        };
-      };
-      claude-desktop-with-fhs = pkgs.buildFHSEnv {
-        name = "claude-desktop";
-        targetPkgs =
-          pkgs': with pkgs'; [
-            docker
-            glibc
-            openssl
-            nodejs
-            uv
-          ];
-        runScript = "${claude-desktop}/bin/claude-desktop";
-        extraInstallCommands = ''
-          mkdir -p $out/share/applications
-          cp ${claude-desktop}/share/applications/claude.desktop $out/share/applications/
-
-          mkdir -p $out/share/icons
-          cp -r ${claude-desktop}/share/icons/* $out/share/icons/
-        '';
+      claude-desktop-with-fhs = pkgs.callPackage ../pkgs/claude-desktop-fhs.nix {
+        src = inputs.claude-desktop;
       };
       chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
@@ -49,7 +24,7 @@
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
-      gogcli = pkgs.callPackage ./pkgs/gogcli.nix { inherit system; };
+      gogcli = pkgs.callPackage ../pkgs/gogcli.nix { inherit system; };
       devo = pkgs.rustPlatform.buildRustPackage {
         pname = "devo";
         version = "0.1.0";
@@ -59,65 +34,7 @@
       wrangler = pkgs.writeShellScriptBin "wrangler" ''
         exec ${pkgs.nodejs_24}/bin/npx --yes wrangler@4.62.0 "$@"
       '';
-      dev = pkgs.writeShellScriptBin "dev" ''
-        set -euo pipefail
-
-        app="dev"
-        if [ "''${1:-}" = "stop" ] || [ "''${1:-}" = "dev-stop" ]; then
-          app="dev-stop"
-          shift
-        fi
-
-        remote="$(${pkgs.git}/bin/git remote get-url origin 2>/dev/null || true)"
-        if [ -z "$remote" ]; then
-          echo "dev: git remote 'origin' was not found from $(pwd)" >&2
-          exit 1
-        fi
-
-        repo_path="$(printf '%s\n' "$remote" | ${pkgs.gnused}/bin/sed -E \
-          -e 's#^git@[^:]+:##' \
-          -e 's#^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+/##' \
-          -e 's#\.git$##')"
-        owner="$(printf '%s\n' "$repo_path" | ${pkgs.gawk}/bin/awk -F/ '{ print tolower($(NF-1)) }')"
-        repo="$(printf '%s\n' "$repo_path" | ${pkgs.gawk}/bin/awk -F/ '{ print tolower($NF) }')"
-
-        if [ -z "$owner" ] || [ -z "$repo" ] || [ "$owner" = "." ]; then
-          echo "dev: failed to infer registry name from origin: $remote" >&2
-          exit 1
-        fi
-
-        top="$(${pkgs.git}/bin/git rev-parse --show-toplevel)"
-        root_env_name="$(printf '%s_ROOT\n' "$repo" | ${pkgs.gnused}/bin/sed -E 's/[^a-zA-Z0-9]+/_/g' | ${pkgs.coreutils}/bin/tr '[:lower:]' '[:upper:]')"
-        if [ -z "$(${pkgs.coreutils}/bin/printenv "$root_env_name" 2>/dev/null || true)" ]; then
-          export "$root_env_name=$top"
-        fi
-
-        if [ -z "''${SESSION_NAME:-}" ]; then
-          canonical="$HOME/ghq/github.com/$owner/$repo"
-          if [ "$top" = "$canonical" ]; then
-            SESSION_NAME="$repo"
-          else
-            top_hash="$(printf '%s\n' "$top" | ${pkgs.coreutils}/bin/cksum | ${pkgs.gawk}/bin/awk '{ print $1 }')"
-            SESSION_NAME="$repo-$top_hash"
-          fi
-          export SESSION_NAME
-        fi
-
-        registry_name="$owner-$repo"
-        if [ "$app" = "dev-stop" ]; then
-          ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@" || true
-          ${pkgs.tmux}/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
-        else
-          if ${pkgs.tmux}/bin/tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-            echo "dev: tmux session '$SESSION_NAME' already exists. Run 'dev stop' first." >&2
-            exit 1
-          fi
-          exec ${pkgs.nix}/bin/nix run "$registry_name#$app" "$@"
-        fi
-      '';
-      dev-stop = pkgs.writeShellScriptBin "dev-stop" ''
-        exec ${dev}/bin/dev dev-stop "$@"
-      '';
+      inherit (pkgs.callPackage ../pkgs/dev.nix { }) dev dev-stop;
 
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
