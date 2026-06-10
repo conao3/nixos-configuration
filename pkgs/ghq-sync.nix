@@ -62,7 +62,7 @@ writeShellScriptBin "ghq-sync" ''
   log="$log_dir/$(${coreutils}/bin/date +%Y%m%d-%H%M%S).log"
 
   ${gh}/bin/gh repo list "$owner" --limit 1000 --source --json sshUrl --jq '.[].sshUrl' \
-    | ${ghq}/bin/ghq get -p 2>&1 | ${gnugrep}/bin/grep -v "exists " || true
+    | ${ghq}/bin/ghq get -p 2>&1 | ${gnugrep}/bin/grep -v "exists" || true
 
   bar_opt=""
   [ -t 2 ] && bar_opt="--bar"
