@@ -126,16 +126,15 @@
           macSystem = "aarch64-darwin";
 
           profiles = import ./home-profile;
+          overlaySets = import ./overlays;
 
           commonNixpkgsConfig = {
             overlays = [
               inputs.emacs-overlay.overlays.default
               inputs.nix-msb.overlays.default
-              (import ./overlays/go.nix)
-              (import ./overlays/direnv.nix)
-              (import ./overlays/node-packages.nix)
-              (import ./overlays/cursor.nix)
-            ];
+            ]
+            ++ overlaySets.common
+            ++ overlaySets.linux;
             config.permittedInsecurePackages = [
               "googleearth-pro-7.3.7.1155"
               "electron-39.8.10"
@@ -167,24 +166,7 @@
             "conao-nixos-agent" = inputs.nixpkgs.lib.nixosSystem {
               system = linuxSystem;
               specialArgs = { inherit inputs; };
-              modules = [
-                ./hosts/agent-vm
-                { nixpkgs.config.allowUnfree = true; }
-                inputs.home-manager.nixosModules.home-manager
-                {
-                  home-manager = {
-                    useGlobalPkgs = true;
-                    useUserPackages = true;
-                    backupFileExtension = "backup";
-                    extraSpecialArgs = {
-                      inherit inputs;
-                      system = linuxSystem;
-                    };
-                    sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
-                    users.conao = import ./hosts/agent-vm/home.nix;
-                  };
-                }
-              ];
+              modules = [ ./hosts/agent-vm ];
             };
           };
 
@@ -200,13 +182,7 @@
                 ./darwin/configuration.nix
                 ./darwin/home-manager.nix
                 ./darwin/portless.nix
-                {
-                  nixpkgs.overlays = [
-                    (import ./overlays/go.nix)
-                    (import ./overlays/direnv.nix)
-                    (import ./overlays/crates-io-static.nix)
-                  ];
-                }
+                { nixpkgs.overlays = overlaySets.common ++ overlaySets.darwin; }
               ];
             };
           };

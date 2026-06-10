@@ -5,7 +5,23 @@
 }:
 
 {
+  imports = [ inputs.home-manager.nixosModules.home-manager ];
+
   system.stateVersion = "24.11";
+
+  nixpkgs.config.allowUnfree = true;
+
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "backup";
+    extraSpecialArgs = {
+      inherit inputs;
+      system = pkgs.stdenv.hostPlatform.system;
+    };
+    sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
+    users.conao = import ./home.nix;
+  };
 
   networking.hostName = "conao-nixos-agent";
   fileSystems."/" = {
