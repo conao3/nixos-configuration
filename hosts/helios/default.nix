@@ -10,103 +10,14 @@ let
   cliProxyApiManagementCenterPackage =
     pkgs.callPackage ../../pkgs/cli-proxy-api-management-center.nix
       { };
-  portlessPackage = pkgs.callPackage ../../pkgs/portless.nix { };
-  codingAgentJobs = {
-    # systemd timerConfig.OnCalendar format, not cron syntax.
-    # Examples:
-    # - "*:0/5" = every 5 minutes (:00, :05, :10, ...)
-    # - "*:0/30" = every 30 minutes starting at :00 (:00, :30)
-    # - "*:10/30" = every 30 minutes starting at :10 (:10, :40)
-    # - "hourly" = every hour
-    # - "*-*-* 03:00:00" = every day at 03:00
-    agent-heartbeat = {
-      enabled = false;
-      schedule = "*:0/30";
-      target = "electrobunmacs-orchestrator:0.0";
-      input = "Orchestrator: heartbeat";
-      description = "Send heartbeat to Codex pane";
-      guard = "codex";
-    };
-    qa-heartbeat = {
-      enabled = false;
-      schedule = "*:10/30";
-      target = "electrobunmacs-qa:0.0";
-      input = "QA: heartbeat";
-      description = "Send heartbeat to QA Codex pane";
-      guard = "codex";
-    };
-    qa-claude-heartbeat = {
-      enabled = false;
-      schedule = "*:20/30";
-      target = "electrobunmacs-qa-claude:0.0";
-      input = "QA: heartbeat";
-      description = "Send heartbeat to QA Claude pane";
-      guard = "claude";
-    };
-  };
-  mkCodingAgentService =
-    name: job:
-    let
-      escapedInput = lib.escapeShellArg job.input;
-      escapedTarget = lib.escapeShellArg job.target;
-      escapedGuard = lib.escapeShellArg job.guard;
-      jobDescription = job.description or "Send input to tmux pane";
-    in
-    {
-      description = jobDescription;
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "coding-agent-${name}" ''
-                    set -euo pipefail
-
-                    target=${escapedTarget}
-                    input=${escapedInput}
-                    current_command=$(${pkgs.tmux}/bin/tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
-                    if [ -z "$current_command" ]; then
-                      exit 0
-                    fi
-
-                    if ! ${pkgs.gnugrep}/bin/grep -Fq -- ${escapedGuard} <<EOF
-          $current_command
-          EOF
-                    then
-                      exit 0
-                    fi
-
-                    for ((i = 0; i < ''${#input}; i++)); do
-                      ch="''${input:i:1}"
-                      case "$ch" in
-                        ' ')
-                          ${pkgs.tmux}/bin/tmux send-keys -t "$target" Space
-                          ;;
-                        *)
-                          ${pkgs.tmux}/bin/tmux send-keys -t "$target" "$ch"
-                          ;;
-                      esac
-                      sleep 0.02
-                    done
-                    ${pkgs.tmux}/bin/tmux send-keys -t "$target" Enter
-        ''}";
-      };
-    };
-  enabledCodingAgentJobs = lib.filterAttrs (_: job: job.enabled) codingAgentJobs;
-  codingAgentServices = lib.mapAttrs' (
-    name: job: lib.nameValuePair name (mkCodingAgentService name job)
-  ) enabledCodingAgentJobs;
-  codingAgentTimers = lib.mapAttrs' (
-    name: job:
-    lib.nameValuePair name {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnCalendar = job.schedule;
-        Persistent = true;
-      };
-    }
-  ) enabledCodingAgentJobs;
 in
 {
   imports = [
     ./hardware-configuration.nix
+    ./coding-agent.nix
+    ./kill-orphan.nix
+    ./memory.nix
+    ./portless.nix
   ];
 
   networking.hostName = "conao-nixos-helios";
@@ -160,21 +71,7 @@ in
       owner = "conao";
       path = "/home/conao/.local/share/dev-ca/rootCA-key.pem";
     };
-    secrets.portless-ca-key = {
-      owner = "root";
-      group = "root";
-      mode = "0600";
-      path = "/home/conao/.portless/ca-key.pem";
-    };
   };
-
-  system.activationScripts.portless-state = ''
-    mkdir -p /home/conao/.portless
-    chown conao:users /home/conao/.portless
-    chmod 755 /home/conao/.portless
-    cp -f ${../../secrets/portless-ca.crt} /home/conao/.portless/ca.pem
-    chmod 644 /home/conao/.portless/ca.pem
-  '';
 
   programs.zsh.interactiveShellInit = ''
     [ -f ${config.sops.templates."helios-env".path} ] && source ${
@@ -217,25 +114,10 @@ in
     };
   };
 
-  systemd.services.portless-proxy = {
-    description = "Portless HTTPS proxy (port 443)";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
-    environment.PORTLESS_STATE_DIR = "/home/conao/.portless";
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "${portlessPackage}/bin/portless proxy start --foreground --port 443 --https --skip-trust";
-      Restart = "always";
-      RestartSec = 3;
-    };
-  };
-
   security.pki.certificateFiles = [
     ../../secrets/dev-rootCA.pem
     ../../secrets/portless-ca.crt
   ];
-
-  zramSwap.enable = true;
 
   swapDevices = [
     {
@@ -243,22 +125,6 @@ in
       size = 16 * 1024;
     }
   ];
-
-  systemd.oomd = {
-    enable = true;
-    enableRootSlice = true;
-    enableSystemSlice = true;
-    enableUserSlices = true;
-    extraConfig = {
-      DefaultMemoryPressureLimit = "50%";
-      DefaultMemoryPressureDurationSec = "20s";
-      SwapUsedLimit = "80%";
-    };
-  };
-
-  systemd.slices."user".sliceConfig = {
-    MemoryHigh = "38G";
-  };
 
   systemd.user.services = {
     vm-agent-tunnel = {
@@ -286,20 +152,6 @@ in
         Restart = "always";
         RestartSec = "5";
         Environment = "AUTOSSH_GATETIME=0";
-      };
-    };
-
-    memory-alert = {
-      description = "Memory usage alert";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "memory-alert" ''
-          set -euxo pipefail -o posix
-          usage=$(${pkgs.gawk}/bin/awk '/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%d", (total - available) * 100 / total}' /proc/meminfo)
-          if [ "''${usage}" -ge 80 ]; then
-            ${pkgs.libnotify}/bin/notify-send -u critical "Memory Alert" "Memory usage: ''${usage}%"
-          fi
-        ''}";
       };
     };
 
@@ -350,125 +202,7 @@ in
         ];
       };
     };
-
-    kill-orphan-vitest = {
-      description = "Kill orphaned (PPID=1) or long-running (>30min) vitest processes";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "kill-orphan-vitest" ''
-          set -uo pipefail
-          MAX_ETIME=1800
-          for pid in $(${pkgs.procps}/bin/pgrep -f 'node_modules/\.bin/vitest run' || true); do
-            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            etime=$(${pkgs.procps}/bin/ps -o etimes= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            [ "$ppid" = 1 ] || { [ -n "$etime" ] && [ "$etime" -gt "$MAX_ETIME" ]; } || continue
-            ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
-            kill -9 "$pid" 2>/dev/null || true
-          done
-          for pid in $(${pkgs.procps}/bin/pgrep -f 'vitest/dist/workers/forks\.js' || true); do
-            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            etime=$(${pkgs.procps}/bin/ps -o etimes= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            [ "$ppid" = 1 ] || { [ -n "$etime" ] && [ "$etime" -gt "$MAX_ETIME" ]; } || continue
-            kill -9 "$pid" 2>/dev/null || true
-          done
-        ''}";
-      };
-    };
-
-    kill-orphan-portless = {
-      description = "Kill orphaned (PPID=1) portless CLI wrappers (skip system portless-proxy)";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "kill-orphan-portless" ''
-          set -uo pipefail
-          my_uid=$(${pkgs.coreutils}/bin/id -u)
-          for pid in $(${pkgs.procps}/bin/pgrep -u "$my_uid" -f 'portless/dist/cli\.js' || true); do
-            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            [ "$ppid" = 1 ] || continue
-            ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
-            kill -9 "$pid" 2>/dev/null || true
-          done
-        ''}";
-      };
-    };
-
-    kill-orphan-claude-print = {
-      description = "Kill orphaned (PPID=1) claude --print processes (claude-app-server crash residue)";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "kill-orphan-claude-print" ''
-          set -uo pipefail
-          my_uid=$(${pkgs.coreutils}/bin/id -u)
-          for pid in $(${pkgs.procps}/bin/pgrep -u "$my_uid" -f 'claude --print' || true); do
-            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            [ "$ppid" = 1 ] || continue
-            kill -9 "$pid" 2>/dev/null || true
-          done
-        ''}";
-      };
-    };
-
-    kill-orphan-lean = {
-      description = "Kill orphaned (PPID=1) lean --run processes";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.writeShellScript "kill-orphan-lean" ''
-          set -uo pipefail
-          my_uid=$(${pkgs.coreutils}/bin/id -u)
-          for pid in $(${pkgs.procps}/bin/pgrep -u "$my_uid" -f 'lean --run' || true); do
-            ppid=$(${pkgs.procps}/bin/ps -o ppid= -p "$pid" 2>/dev/null | ${pkgs.coreutils}/bin/tr -d ' ')
-            [ "$ppid" = 1 ] || continue
-            ${pkgs.procps}/bin/pkill -9 -P "$pid" || true
-            kill -9 "$pid" 2>/dev/null || true
-          done
-        ''}";
-      };
-    };
-  }
-  // codingAgentServices;
-
-  systemd.user.timers = {
-    memory-alert = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "1min";
-        OnUnitActiveSec = "1min";
-      };
-    };
-
-    kill-orphan-vitest = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "5min";
-      };
-    };
-
-    kill-orphan-portless = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "5min";
-      };
-    };
-
-    kill-orphan-claude-print = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "5min";
-      };
-    };
-
-    kill-orphan-lean = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "5min";
-      };
-    };
-  }
-  // codingAgentTimers;
+  };
 
   # systemd.user.timers.agent-memory-sync = {
   #   wantedBy = [ "timers.target" ];
