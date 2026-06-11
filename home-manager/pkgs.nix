@@ -124,7 +124,6 @@
         # keep-sorted start
         gnumake
         pngpaste
-        volta
         # keep-sorted end
       ];
 

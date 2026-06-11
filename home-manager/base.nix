@@ -16,7 +16,6 @@
     ++ (
       if pkgs.stdenv.isDarwin then
         [
-          "$HOME/.volta/bin"
           "$HOME/.anyenv/bin"
         ]
       else
