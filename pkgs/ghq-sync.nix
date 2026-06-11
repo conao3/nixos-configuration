@@ -5,6 +5,7 @@
   gh,
   git,
   gnugrep,
+  gnused,
   parallel,
   ghq,
 }:
@@ -74,6 +75,12 @@ writeShellScriptBin "ghq-sync" ''
 
   rc=0
   ${ghq}/bin/ghq list -p | ${gnugrep}/bin/grep "/$owner/" \
+    | while IFS= read -r r; do
+        ${git}/bin/git -C "$r" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
+      done \
+    | ${gnused}/bin/sed 's|/\.git$||' \
+    | ${gnugrep}/bin/grep -v '^$' \
+    | ${coreutils}/bin/sort -u \
     | ${parallel}/bin/parallel $bar_opt --tag --joblog "$log" "$0" --repo {} || rc=$?
 
   echo
