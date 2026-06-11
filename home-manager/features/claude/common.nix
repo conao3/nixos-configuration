@@ -63,6 +63,7 @@ let
   wrapperSpecs = map mkSpec [
     "claude.conao3"
     "claude.toyokumo"
+    "claude.recerqa"
     "claude.agent001"
     "claude.agent002"
     "claude.agent003"
