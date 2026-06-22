@@ -57,7 +57,7 @@ let
 
     registry_name="$owner-$repo"
     has_nix_app=0
-    if ${nix}/bin/nix registry list 2>/dev/null | ${gnugrep}/bin/grep -qE "^(global|user)[[:space:]]+$registry_name[[:space:]]"; then
+    if ${nix}/bin/nix registry list 2>/dev/null | ${gnugrep}/bin/grep -qE "^(global|user|system)[[:space:]]+(flake:)?$registry_name[[:space:]]"; then
       has_nix_app=1
     fi
 
