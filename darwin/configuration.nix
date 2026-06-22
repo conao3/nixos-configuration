@@ -83,6 +83,7 @@
       "claude"
       "cmux"
       "codex"
+      "codex-app"
       "corretto@11"
       "coteditor"
       "dbeaver-community"
