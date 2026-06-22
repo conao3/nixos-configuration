@@ -53,11 +53,17 @@ let
     language = "japanese";
     autoMemoryEnabled = false;
     autoMemoryDirectory = "~/.agents/share/auto-memory";
-    statusLine = {
-      type = "command";
-      command = "${statusLineScript}";
-    };
   };
+
+  statusLine = {
+    type = "command";
+    command = "${statusLineScript}";
+  };
+  statusLineJson = builtins.toJSON statusLine;
+  applyStatusLine = ''
+    ${pkgs.jq}/bin/jq --argjson statusLine '${statusLineJson}' '.statusLine = $statusLine' \
+      "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
+  '';
 
   flattenSettings =
     prefix: attrs:
@@ -193,6 +199,7 @@ in
       ${applyMcpServers}
       ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
       ${applyHooks}
+      ${applyStatusLine}
     '') claudeConfigDirs}
     ${lib.concatMapStringsSep "\n" (file: ''
       settingsTarget="${file}"
