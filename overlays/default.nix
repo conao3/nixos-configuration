@@ -1,7 +1,6 @@
 {
   common = [
     (import ./go.nix)
-    (import ./direnv.nix)
   ];
   linux = [
     (import ./cursor.nix)
