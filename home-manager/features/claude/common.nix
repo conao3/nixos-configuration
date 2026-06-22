@@ -28,6 +28,13 @@ let
     }
   ];
 
+  sakanaProfilePackages = [
+    (pkgs.writeShellScriptBin "codex.sakana.agent001" ''
+      export CODEX_HOME="$HOME/.agents/.codex.agent001"
+      exec ${codexBin} -p fugu "$@"
+    '')
+  ];
+
   mkSpec =
     name:
     let
@@ -190,6 +197,7 @@ in
     wrapperSpecs
     wrapperPackages
     cursorProfilePackages
+    sakanaProfilePackages
     agentDirs
     claudeSharedDir
     claudeSpecDirs

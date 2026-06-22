@@ -19,6 +19,7 @@ let
     aliasSpecs
     wrapperPackages
     cursorProfilePackages
+    sakanaProfilePackages
     ;
 in
 {
@@ -34,6 +35,7 @@ in
   home.packages =
     wrapperPackages
     ++ cursorProfilePackages
+    ++ sakanaProfilePackages
     ++ [
       inputs.nix-claude-code.packages.${system}.default
       llmAgents.codex

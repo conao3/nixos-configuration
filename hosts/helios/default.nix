@@ -50,6 +50,7 @@ in
         export ANTHROPIC_WORKER_URL=https://cli-proxy-api.sancode.dev
         export ANTHROPIC_WORKER_API_TOKEN=${config.sops.placeholder."cli-proxy-api-key"}
         export PENPOT_MCP_KEY=${config.sops.placeholder."penpot-mcp-key"}
+        export SAKANA_API_KEY=${config.sops.placeholder."sakana-api-key"}
       '';
     };
     templates."ollama-tunnel-script" = {
@@ -66,6 +67,7 @@ in
     secrets.n8n-api-key = { };
     secrets.cli-proxy-api-key = { };
     secrets.penpot-mcp-key = { };
+    secrets.sakana-api-key = { };
     secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
       owner = "conao";
