@@ -32,6 +32,8 @@
     {project_dir_canonical}_{YYYYMMDD}_{%03d}.md  # 長期記憶の提案
   projects/
     {project_dir_canonical}.md  # プロジェクト固有の情報
+    {project_dir_canonical}/    # フォルダ管理のプロジェクトメモ（モノレポ等で領域が多い場合）
+      {topic}.md
   notes/
     {foo}.md # 再利用可能な情報
   specs/  # 設計文書
@@ -87,7 +89,7 @@
 - `projects/{project_dir_canonical}.md`
 - `notes/{foo}.md`（トピックごとに `{foo}` を定める）
 
-ただし、プロジェクト固有メモ (`projects/{project_dir_canonical}.md`) については、ユーザーから別途禁止されていない限り、直接編集してよい。
+ただし、プロジェクト固有メモ (`projects/{project_dir_canonical}.md`) については、ユーザーから別途禁止されていない限り、直接編集してよい。フォルダ管理されているプロジェクトメモ (`projects/{project_dir_canonical}/` ディレクトリが存在する場合) は、そのディレクトリ配下の全ファイル (`projects/{project_dir_canonical}/*.md`) にも同じ自由編集ルールが適用される。ファイルの新規作成・削除・リネームも含む。
 
 - 長期記憶として書き出すファイル (`projects/{project_dir_canonical}.md`、`notes/{foo}.md`、`MEMORY_SUGGEST/` 配下) は日本語で記述する。
 - 直接編集したプロジェクト固有メモの内容は、記憶の提案ファイルには重複して書かない。
