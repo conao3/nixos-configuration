@@ -166,7 +166,9 @@
                 ./darwin/configuration.nix
                 ./darwin/home-manager.nix
                 ./darwin/portless.nix
+                ./darwin/sops.nix
                 { nixpkgs.overlays = overlaySets.common ++ overlaySets.darwin; }
+                inputs.sops-nix.darwinModules.sops
               ];
             };
           };
