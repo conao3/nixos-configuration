@@ -6,7 +6,10 @@
     awscli.enable = true;
     bat.enable = true;
     eza.enable = true;
-    fzf.enable = true;
+    fzf = {
+      enable = true;
+      historyWidget.command = "";
+    };
     gh = {
       enable = true;
       extensions = [ (pkgs.callPackage ../../pkgs/gh-poi.nix { }) ];
