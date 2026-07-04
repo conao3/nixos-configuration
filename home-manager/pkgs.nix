@@ -13,6 +13,7 @@
       };
       chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
+      cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
@@ -40,6 +41,7 @@
       commonPackages = with pkgs; [
         # keep-sorted start
         babashka
+        cosense-cli
         bottom
         chrome-devtools
         claude-app-server

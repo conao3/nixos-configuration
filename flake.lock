@@ -113,6 +113,23 @@
         "type": "github"
       }
     },
+    "cosense-cli": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783032541,
+        "narHash": "sha256-1lZnO4C2w74EAHFqXe6JtskxwfD1O+yyEkBgBuLfJ+I=",
+        "owner": "helpfeel",
+        "repo": "cosense-cli",
+        "rev": "036b1ea439e001d49cebd743a0a9b0200ec2005e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "helpfeel",
+        "ref": "v1.6.0",
+        "repo": "cosense-cli",
+        "type": "github"
+      }
+    },
     "devo": {
       "flake": false,
       "locked": {
@@ -663,6 +680,7 @@
         "agmsg": "agmsg",
         "claude-desktop": "claude-desktop",
         "clojure-mcp-light": "clojure-mcp-light",
+        "cosense-cli": "cosense-cli",
         "devo": "devo",
         "emacs-overlay": "emacs-overlay",
         "flake-parts": "flake-parts",

@@ -76,6 +76,10 @@
       url = "github:fujibee/agmsg/v1.1.5";
       flake = false;
     };
+    cosense-cli = {
+      url = "github:helpfeel/cosense-cli/v1.6.0";
+      flake = false;
+    };
     keg = {
       url = "github:conao3/keg.el";
       inputs.nixpkgs.follows = "nixpkgs";
