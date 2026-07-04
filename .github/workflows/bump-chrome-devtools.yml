@@ -1,0 +1,63 @@
+name: Bump chrome-devtools
+
+on:
+  schedule:
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+
+jobs:
+  bump:
+    name: Bump chrome-devtools pin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Check latest version
+        id: check
+        run: |
+          current=$(sed -n 's/^  version = "\(.*\)";$/\1/p' pkgs/chrome-devtools.nix)
+          latest=$(curl -fsSL -A "conao3-nixos-configuration-bump-bot" https://crates.io/api/v1/crates/chrome-devtools | jq -r .crate.max_stable_version)
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "chrome-devtools: current=$current latest=$latest"
+
+      - name: Update pin
+        if: steps.check.outputs.current != steps.check.outputs.latest
+        run: |
+          latest='${{ steps.check.outputs.latest }}'
+          hash=$(nix store prefetch-file --unpack --hash-type sha256 --json \
+            "https://static.crates.io/crates/chrome-devtools/chrome-devtools-${latest}.crate" | jq -r .hash)
+          sed -i "s|^  version = \".*\";$|  version = \"$latest\";|" pkgs/chrome-devtools.nix
+          sed -i "0,/hash = \"sha256-[^\"]*\";/s||hash = \"$hash\";|" pkgs/chrome-devtools.nix
+
+      - name: Build updated package
+        if: steps.check.outputs.current != steps.check.outputs.latest
+        run: |
+          NIXPKGS_ALLOW_UNFREE=1 nix build --impure --expr \
+            '(import <nixpkgs> { config.allowUnfree = true; }).callPackage ./pkgs/chrome-devtools.nix { }'
+
+      - name: Create pull request
+        if: steps.check.outputs.current != steps.check.outputs.latest
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bump-chrome-devtools
+          title: "pkgs/chrome-devtools: ${{ steps.check.outputs.current }} -> ${{ steps.check.outputs.latest }}"
+          commit-message: "pkgs/chrome-devtools: ${{ steps.check.outputs.current }} -> ${{ steps.check.outputs.latest }}"
+          body: |
+            Automated pin bump for chrome-devtools.
+
+            - upstream: https://github.com/conao3/rust-chrome-devtools/releases
+            - The updated package builds; its checkPhase runs the unit and integration test suites.
+          delete-branch: true
