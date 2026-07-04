@@ -72,6 +72,10 @@
       url = "github:conao3/nix-msb";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agmsg = {
+      url = "github:fujibee/agmsg/v1.1.5";
+      flake = false;
+    };
     keg = {
       url = "github:conao3/keg.el";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -122,6 +126,7 @@
             config.permittedInsecurePackages = [
               "googleearth-pro-7.3.7.1155"
               "electron-39.8.10"
+              "pnpm-10.29.2"
             ];
           };
 
