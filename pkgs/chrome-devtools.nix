@@ -23,6 +23,10 @@ rustPlatform.buildRustPackage rec {
     lockFile = "${src}/Cargo.lock";
   };
 
+  postPatch = ''
+    patchShebangs tests/fixtures
+  '';
+
   nativeBuildInputs = [ makeWrapper ];
 
   postInstall = ''
