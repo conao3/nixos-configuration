@@ -6,7 +6,12 @@
   nodejs,
   google-chrome,
   procps,
+  callPackage,
 }:
+
+let
+  chrome-devtools-mcp = callPackage ./chrome-devtools-mcp.nix { };
+in
 
 rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
@@ -31,6 +36,7 @@ rustPlatform.buildRustPackage rec {
 
   postInstall = ''
     wrapProgram "$out/bin/chrome-devtools" \
+      --set-default CHROME_DEVTOOLS_MCP_COMMAND ${lib.getExe chrome-devtools-mcp} \
       --prefix PATH : ${
         lib.makeBinPath [
           nodejs
