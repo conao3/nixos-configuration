@@ -193,6 +193,7 @@ in
   inherit
     llmAgents
     claudeBin
+    codexBin
     aliasSpecs
     wrapperSpecs
     wrapperPackages

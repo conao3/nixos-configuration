@@ -17,6 +17,7 @@ let
     })
     llmAgents
     aliasSpecs
+    codexBin
     wrapperPackages
     cursorProfilePackages
     sakanaProfilePackages
@@ -45,5 +46,13 @@ in
   programs.git.ignores = [
     ".claude"
     ".claude-dev"
+    ".codex"
   ];
+
+  programs.zsh.initContent = lib.mkAfter ''
+    codex() {
+      AGMSG_REAL_CODEX=${codexBin} \
+        "$HOME/.agents/skills/agmsg/scripts/drivers/types/codex/codex-shim.sh" "$@"
+    }
+  '';
 }
