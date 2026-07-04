@@ -10,13 +10,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
-  version = "0.3.1";
+  version = "0.3.2";
 
   src = fetchzip {
     name = "${pname}-${version}.tar.gz";
     url = "https://static.crates.io/crates/${pname}/${pname}-${version}.crate";
     extension = "tar.gz";
-    hash = "sha256-tkyYkiRRHiQKfGJWmIQcdfOk58Aeq+NnZJRFRGk49y8=";
+    hash = "sha256-WJKFZu0aLVzOWZD/zqJh6gWYncdj/F8knBJWsrSkFpE=";
   };
 
   cargoLock = {
