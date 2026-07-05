@@ -23,13 +23,16 @@ let
   statusLineScript = pkgs.writeShellScript "claude-statusline" ''
     set -euo pipefail -o posix
     input="$(${pkgs.coreutils}/bin/cat)"
+    email="$(${pkgs.jq}/bin/jq -r '.oauthAccount.emailAddress // empty' "''${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.claude.json" 2>/dev/null || true)"
     model="$(printf '%s' "$input" | ${pkgs.jq}/bin/jq -r '.model.display_name // empty')"
     used="$(printf '%s' "$input" | ${pkgs.jq}/bin/jq -r '.context_window.used_percentage // empty')"
+    dir="$(printf '%s' "$input" | ${pkgs.jq}/bin/jq -r '.workspace.current_dir // .cwd // empty')"
     if [ -n "$used" ]; then
-      printf '%s (%s%%)' "$model" "$used"
+      model_info="$(printf '%s (%s%%)' "$model" "$used")"
     else
-      printf '%s' "$model"
+      model_info="$model"
     fi
+    printf '%s | %s | %s' "$email" "$model_info" "$(${pkgs.coreutils}/bin/basename "$dir")"
   '';
 
   claudeSettings = {
