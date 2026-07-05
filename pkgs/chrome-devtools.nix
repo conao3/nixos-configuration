@@ -15,13 +15,13 @@ in
 
 rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
-  version = "0.6.1";
+  version = "0.6.2";
 
   src = fetchzip {
     name = "${pname}-${version}.tar.gz";
     url = "https://static.crates.io/crates/${pname}/${pname}-${version}.crate";
     extension = "tar.gz";
-    hash = "sha256-T9Y5mDuXPN+Tif7yAiz2LwZPf33nITMe435XxJF4qmE=";
+    hash = "sha256-SLWbxN5ADdSstXHkgnv0qqlKBCittf7s9Hq7tsSyjS4=";
   };
 
   cargoLock = {
