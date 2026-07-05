@@ -449,11 +449,11 @@
     "nix-flakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1783219677,
-        "narHash": "sha256-pgLZV4rcr1Q3fPSlZR58k6VK51I2Xesx/goEyaIuRbY=",
+        "lastModified": 1783262683,
+        "narHash": "sha256-HIxQeSs88PvJTVimBDe61+pMScbpZcbhmkgBh2t3Xa0=",
         "ref": "refs/heads/master",
-        "rev": "e31bb32ce1777983aab959a8d1aa81009d3f94db",
-        "revCount": 79,
+        "rev": "38e44ae908332c99054e8cb9880df2e87ec52fc6",
+        "revCount": 80,
         "type": "git",
         "url": "file:../nix-flakes"
       },
