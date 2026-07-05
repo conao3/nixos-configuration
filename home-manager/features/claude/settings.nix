@@ -45,7 +45,12 @@ let
       CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY = "1";
       CLAUDE_CODE_ENABLE_TELEMETRY = "0";
       DISABLE_ERROR_REPORTING = "1";
-      DISABLE_TELEMETRY = "1";
+      # DISABLE_TELEMETRY を設定すると GrowthBook の feature gate 取得が止まり、
+      # gate 付き機能 (Monitor ツール等) がデフォルト OFF に落ちるため空文字へ遷移させる
+      DISABLE_TELEMETRY = {
+        from = "1";
+        to = "";
+      };
       CDK_DISABLE_CLI_TELEMETRY = "true";
       SAM_CLI_TELEMETRY = "0";
       BASH_DEFAULT_TIMEOUT_MS = "300000";
