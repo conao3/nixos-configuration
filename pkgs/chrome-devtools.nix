@@ -1,5 +1,6 @@
 {
   lib,
+  stdenv,
   rustPlatform,
   fetchzip,
   makeWrapper,
@@ -15,13 +16,13 @@ in
 
 rustPlatform.buildRustPackage rec {
   pname = "chrome-devtools";
-  version = "0.6.7";
+  version = "0.6.8";
 
   src = fetchzip {
     name = "${pname}-${version}.tar.gz";
     url = "https://static.crates.io/crates/${pname}/${pname}-${version}.crate";
     extension = "tar.gz";
-    hash = "sha256-Ze91tavgLlqIajIFDvPcJPyZoNhtKm7hbUSSyi9ZRgI=";
+    hash = "sha256-VHuh2gUr5J54Hfo+sEgKNYPvKqwpBD2rY/GBsaBR8V0=";
   };
 
   cargoLock = {
@@ -31,6 +32,8 @@ rustPlatform.buildRustPackage rec {
   postPatch = ''
     patchShebangs tests/fixtures
   '';
+
+  cargoTestFlags = lib.optionals stdenv.hostPlatform.isDarwin [ "--bins" ];
 
   nativeBuildInputs = [ makeWrapper ];
 
