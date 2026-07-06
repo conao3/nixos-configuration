@@ -36,6 +36,9 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  documentation.doc.enable = false;
+  system.tools.darwin-uninstaller.enable = false;
+
   system = {
     primaryUser = username;
     stateVersion = 6;
