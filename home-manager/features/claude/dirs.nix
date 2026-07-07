@@ -74,11 +74,11 @@ in
     touch "$skill_dir/.agmsg"
 
     if [ ! -f "$skill_dir/db/messages.db" ]; then
-      ${pkgs.bash}/bin/bash "$skill_dir/scripts/internal/init-db.sh"
+      PATH="${lib.makeBinPath [ pkgs.sqlite ]}:$PATH" ${pkgs.bash}/bin/bash "$skill_dir/scripts/internal/init-db.sh"
     fi
 
     if [ ! -f "$skill_dir/db/config.yaml" ]; then
-      ${pkgs.bash}/bin/bash "$skill_dir/scripts/config.sh" show >/dev/null
+      PATH="${lib.makeBinPath [ pkgs.sqlite ]}:$PATH" ${pkgs.bash}/bin/bash "$skill_dir/scripts/config.sh" show >/dev/null
     fi
 
     shared_commands="$HOME/.agents/.claude/commands"
