@@ -172,6 +172,12 @@ let
   ];
 
   mcpServers = {
+    # drawio-mcp-server の常駐 service (claude/default.nix の systemd.user.services.drawio-mcp)
+    # を全エージェントで共有する。ブラウザ拡張は ws://localhost:3333 で同 service に接続する
+    drawio = {
+      type = "http";
+      url = "http://127.0.0.1:3733/mcp";
+    };
     linear = {
       type = "http";
       url = "https://mcp.linear.app/mcp";

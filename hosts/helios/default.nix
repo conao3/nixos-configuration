@@ -81,6 +81,17 @@ in
     }
   '';
 
+  # Chrome / Chromium 系ブラウザへの拡張 force-install ポリシー
+  # (/etc/opt/chrome/policies 等に配置され、ブラウザ再起動で反映される)
+  programs.chromium = {
+    enable = true;
+    extensions = [
+      # drawio-mcp-extension: drawio-mcp-server (ws://localhost:3333) と稼働中の
+      # draw.io エディタタブを仲介する
+      "okdbbjbbccdhhfaefmcmekalmmdjjide"
+    ];
+  };
+
   # cagent: disabled due to high memory usage (437M+), enable when needed
   # systemd.user.services.cagent = {
   #   description = "cagent server";
