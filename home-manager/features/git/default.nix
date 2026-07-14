@@ -58,6 +58,7 @@
 
   home.file.".config/git/hooks/pre-commit" = {
     executable = true;
+    force = true;
     text = ''
       #!/usr/bin/env bash
       set -euo pipefail

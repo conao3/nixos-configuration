@@ -107,6 +107,7 @@
         google-chrome
         googleearth-pro
         gparted
+        libreoffice
         lightpanda
         logseq
         microsandbox
