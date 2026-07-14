@@ -18,6 +18,7 @@ in
     ./kill-orphan.nix
     ./memory.nix
     ./portless.nix
+    ./tmux-server.nix
   ];
 
   networking.hostName = "conao-nixos-helios";
