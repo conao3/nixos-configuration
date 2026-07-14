@@ -17,7 +17,7 @@
         export TMUX_TMPDIR="$XDG_RUNTIME_DIR"
         exec ${pkgs.tmux}/bin/tmux -D
       ''}";
-      Restart = "on-failure";
+      Restart = "always";
     };
   };
 }
