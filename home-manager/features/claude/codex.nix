@@ -75,10 +75,17 @@ in
           codexFeatures = {
             goals = true;
           };
+          codexStatusLine = [
+            "thread-title"
+            "model-with-reasoning"
+            "context-remaining"
+            "current-dir"
+          ];
           codexBaseJson = builtins.toJSON {
             mcp_servers = codexMcpServers;
             features = codexFeatures;
             model_providers.sakana = fuguProvider;
+            tui.status_line = codexStatusLine;
           };
         in
         ''
@@ -99,10 +106,12 @@ in
                     --argjson servers '${builtins.toJSON codexMcpServers}' \
                     --argjson features '${builtins.toJSON codexFeatures}' \
                     --argjson provider '${builtins.toJSON fuguProvider}' \
+                    --argjson statusLine '${builtins.toJSON codexStatusLine}' \
                     'del(.profiles.fugu)
                      | .mcp_servers = $servers
                      | .features = $features
-                     | .model_providers.sakana = $provider' \
+                     | .model_providers.sakana = $provider
+                     | .tui.status_line = $statusLine' \
                 | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
                 && mv "$configTarget.tmp" "$configTarget"
             fi
