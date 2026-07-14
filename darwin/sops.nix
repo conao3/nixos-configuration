@@ -13,6 +13,8 @@
   };
 
   programs.zsh.interactiveShellInit = ''
-    [ -f ${config.sops.templates."darwin-env".path} ] && source ${config.sops.templates."darwin-env".path}
+    [ -f ${config.sops.templates."darwin-env".path} ] && source ${
+      config.sops.templates."darwin-env".path
+    }
   '';
 }

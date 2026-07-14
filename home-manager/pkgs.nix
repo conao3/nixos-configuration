@@ -41,7 +41,6 @@
       commonPackages = with pkgs; [
         # keep-sorted start
         babashka
-        cosense-cli
         bottom
         chrome-devtools
         claude-app-server
@@ -49,6 +48,7 @@
         clj-kondo
         clojure-mcp-light
         coreutils
+        cosense-cli
         dev
         dev-stop
         devenv
