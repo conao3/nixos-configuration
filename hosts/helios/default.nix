@@ -27,6 +27,14 @@ in
     "br-+"
   ];
 
+  networking.getaddrinfo.precedence = {
+    "::1/128" = 50;
+    "::/0" = 40;
+    "2002::/16" = 30;
+    "::/96" = 20;
+    "::ffff:0:0/96" = 100;
+  };
+
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
