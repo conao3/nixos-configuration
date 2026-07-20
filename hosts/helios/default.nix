@@ -27,6 +27,11 @@ in
     "br-+"
   ];
 
+  networking.hosts."160.79.104.10" = [
+    "api.anthropic.com"
+    "platform.claude.com"
+  ];
+
   networking.getaddrinfo.precedence = {
     "::1/128" = 50;
     "::/0" = 40;
