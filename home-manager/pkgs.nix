@@ -167,7 +167,6 @@
       )
       ++ (with inputs.llm-agents.packages.${system}; [
         # keep-sorted start
-        agent-browser
         agent-deck
         aperant
         catnip
