@@ -180,6 +180,18 @@ const PORT_CATALOG: PortCatalogEntry[] = [
     checkCurrentHostStatus: true,
   },
   {
+    id: "codex-desktop-webview",
+    port: "15175",
+    name: "Codex Desktop webview",
+    group: "helios",
+    state: "local",
+    purpose: "Local webview asset server for the Codex Desktop GUI while the app is running.",
+    source: "home-manager/features/codex-desktop.nix",
+    access: "http://127.0.0.1:15175/ (used internally by the Electron app)",
+    note: "CODEX_WEBVIEW_PORT baked into the launcher wrapper; the upstream default 5175 collides with react-router/vite dev servers.",
+    checkCurrentHostStatus: true,
+  },
+  {
     id: "cgit-http",
     port: "9405",
     name: "cgit",
