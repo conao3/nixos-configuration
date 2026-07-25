@@ -5,6 +5,7 @@
     ++ import ./full-gui.nix
     ++ [
       ../home-manager/features/cherry-studio.nix
+      ../home-manager/features/codex-desktop.nix
       ../home-manager/features/dev-ca.nix
     ];
 }
