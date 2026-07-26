@@ -153,6 +153,12 @@ in
     }
   ];
 
+  virtualisation.waydroid.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    weston
+  ];
+
   systemd.user.services = {
     vm-agent-tunnel = {
       description = "SSH tunnel to agent-vm";
