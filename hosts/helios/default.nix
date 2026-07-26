@@ -155,8 +155,19 @@ in
 
   virtualisation.waydroid.enable = true;
 
-  environment.systemPackages = with pkgs; [
-    weston
+  environment.systemPackages = [
+    pkgs.cage
+    pkgs.weston
+    (pkgs.writeShellApplication {
+      name = "waydroid-desktop";
+      runtimeInputs = [
+        pkgs.cage
+        pkgs.waydroid
+      ];
+      text = ''
+        exec cage -- waydroid show-full-ui
+      '';
+    })
   ];
 
   systemd.user.services = {
