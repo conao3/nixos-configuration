@@ -2,9 +2,7 @@
   common = [
     (import ./go.nix)
   ];
-  linux = [
-    (import ./waydroid-nftables.nix)
-  ];
+  linux = [ ];
   darwin = [
     (import ./crates-io-static.nix)
   ];

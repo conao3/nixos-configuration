@@ -153,23 +153,6 @@ in
     }
   ];
 
-  virtualisation.waydroid.enable = true;
-
-  environment.systemPackages = [
-    pkgs.cage
-    pkgs.weston
-    (pkgs.writeShellApplication {
-      name = "waydroid-desktop";
-      runtimeInputs = [
-        pkgs.cage
-        pkgs.waydroid
-      ];
-      text = ''
-        exec cage -- waydroid show-full-ui
-      '';
-    })
-  ];
-
   systemd.user.services = {
     vm-agent-tunnel = {
       description = "SSH tunnel to agent-vm";
