@@ -193,6 +193,10 @@ let
         Authorization = "Bearer \${DEVIN_API_KEY}";
       };
     };
+    freee = {
+      type = "http";
+      url = "https://mcp.freee.co.jp/mcp";
+    };
   };
 in
 {
