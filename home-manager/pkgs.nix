@@ -169,7 +169,6 @@
         # keep-sorted start
         agent-deck
         aperant
-        catnip
         ck
         claude-agent-acp
         codex-acp
