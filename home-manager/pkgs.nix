@@ -117,6 +117,7 @@
         slack
         steam-run
         telegram-desktop
+        tigervnc
         vlc
         xclip
         xsel

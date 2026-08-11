@@ -121,6 +121,27 @@ in
   #   };
   # };
 
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5900 ];
+
+  systemd.services.x11vnc = {
+    description = "x11vnc VNC server for physical display";
+    after = [ "display-manager.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = lib.concatStringsSep " " [
+        "${pkgs.x11vnc}/bin/x11vnc"
+        "-display WAIT:cmd=FINDDISPLAY"
+        "-auth guess"
+        "-forever"
+        "-shared"
+        "-nopw"
+        "-rfbport 5900"
+      ];
+      Restart = "always";
+      RestartSec = 5;
+    };
+  };
+
   systemd.services.ollama-tunnel = {
     wantedBy = [ "multi-user.target" ];
     after = [
