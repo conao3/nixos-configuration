@@ -32,7 +32,7 @@ let
 
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-s3TqOZuLd5B/axXNgGjAi7rLo0DT1OWI0S0R8aGsbBY=";
+    outputHash = "sha256-fO7w4eOdD1kaZTzmoW9Mijp9zUjbmqWesXU0IygFNnc=";
 
     NIX_SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
 
