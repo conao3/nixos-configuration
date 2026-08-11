@@ -130,8 +130,8 @@ in
     serviceConfig = {
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.x11vnc}/bin/x11vnc"
-        "-display WAIT:cmd=FINDDISPLAY"
-        "-auth guess"
+        "-display :0"
+        "-auth /home/conao/.Xauthority"
         "-forever"
         "-shared"
         "-nopw"
