@@ -115,6 +115,7 @@
         ollama
         pciutils
         qpdfview
+        seahorse
         slack
         steam-run
         telegram-desktop
