@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux";
-    hash = "sha256-i71NrdXnpMSZ3t1vBh9hvGBBtCKvWjlWvyReGO+XpqE=";
+    hash = "sha256-KVj1rvZg+KsK6OlQqM7zgiUtSCTVE3etLKaRpYIy1qQ=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook ];
