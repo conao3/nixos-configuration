@@ -97,6 +97,7 @@
         # keep-sorted start
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
         binutils
+        brave
         burpsuite
         chromium
         dbeaver-bin
