@@ -12,6 +12,8 @@
 
   networking.hostName = "conao-nixos-eos";
 
+  time.timeZone = lib.mkForce "America/Vancouver";
+
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
