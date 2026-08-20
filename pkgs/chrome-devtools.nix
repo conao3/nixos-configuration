@@ -1,6 +1,5 @@
 {
   lib,
-  stdenv,
   rustPlatform,
   fetchzip,
   makeWrapper,
@@ -33,7 +32,7 @@ rustPlatform.buildRustPackage rec {
     patchShebangs tests/fixtures
   '';
 
-  cargoTestFlags = lib.optionals stdenv.hostPlatform.isDarwin [ "--bins" ];
+  cargoTestFlags = [ "--bins" ];
 
   nativeBuildInputs = [ makeWrapper ];
 
