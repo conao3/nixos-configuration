@@ -17,7 +17,6 @@ in
     ./coding-agent.nix
     ./kill-orphan.nix
     ./memory.nix
-    ./portless.nix
     ./tmux-server.nix
   ];
 
@@ -164,7 +163,6 @@ in
 
   security.pki.certificateFiles = [
     ../../secrets/dev-rootCA.pem
-    ../../secrets/portless-ca.crt
   ];
 
   swapDevices = [

@@ -3,7 +3,7 @@
   ...
 }:
 let
-  portlessPackage = pkgs.callPackage ../../pkgs/portless.nix { };
+  portlessPackage = pkgs.callPackage ../pkgs/portless.nix { };
 in
 {
   sops.secrets.portless-ca-key = {
@@ -13,11 +13,13 @@ in
     path = "/home/conao/.portless/ca-key.pem";
   };
 
+  security.pki.certificateFiles = [ ../secrets/portless-ca.crt ];
+
   system.activationScripts.portless-state = ''
     mkdir -p /home/conao/.portless
     chown conao:users /home/conao/.portless
     chmod 755 /home/conao/.portless
-    cp -f ${../../secrets/portless-ca.crt} /home/conao/.portless/ca.pem
+    cp -f ${../secrets/portless-ca.crt} /home/conao/.portless/ca.pem
     chmod 644 /home/conao/.portless/ca.pem
   '';
 
