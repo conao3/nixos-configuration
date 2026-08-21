@@ -73,6 +73,8 @@ let
       fi
       if [ "$has_nix_app" = "1" ]; then
         exec ${nix}/bin/nix run "$registry_name#$app" "$@"
+      elif [ -f "$top/flake.nix" ]; then
+        exec ${nix}/bin/nix develop "$top" -c ${devo}/bin/devo run --attach --inherit-all-env
       else
         exec ${devo}/bin/devo run --attach
       fi
