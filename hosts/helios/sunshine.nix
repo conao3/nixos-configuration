@@ -3,12 +3,11 @@
 {
   services.sunshine = {
     enable = true;
-    capSysAdmin = true;
     settings = {
       sunshine_name = "helios";
       encoder = "vaapi";
       adapter_name = "/dev/dri/renderD129";
-      capture = "kms";
+      capture = "x11";
       origin_web_ui_allowed = "pc";
       min_log_level = "info";
     };
