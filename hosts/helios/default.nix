@@ -136,6 +136,8 @@ in
         "-shared"
         "-nopw"
         "-rfbport 5900"
+        "-wait 5"
+        "-defer 5"
       ];
       Restart = "always";
       RestartSec = 5;
