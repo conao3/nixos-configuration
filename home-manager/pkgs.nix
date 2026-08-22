@@ -112,6 +112,7 @@
         lightpanda
         logseq
         microsandbox
+        moonlight-qt
         ollama
         pciutils
         qpdfview

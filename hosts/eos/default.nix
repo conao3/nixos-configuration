@@ -19,6 +19,8 @@
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
   };
 
+  hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
+
   virtualisation.libvirtd.enable = lib.mkForce false;
 
   services.xserver.xkb.options = "ctrl:nocaps";

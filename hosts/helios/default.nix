@@ -17,6 +17,7 @@ in
     ./coding-agent.nix
     ./kill-orphan.nix
     ./memory.nix
+    ./sunshine.nix
     ./tmux-server.nix
   ];
 
