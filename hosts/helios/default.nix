@@ -67,14 +67,6 @@ in
         export SAKANA_API_KEY=${config.sops.placeholder."sakana-api-key"}
       '';
     };
-    templates."ollama-tunnel-script" = {
-      owner = "conao";
-      mode = "0500";
-      content = ''
-        #!/bin/sh
-        exec ${config.sops.placeholder."ollama-tunnel-exec"}
-      '';
-    };
     secrets.matterbridge-telegram-token = { };
     secrets.linear-api-key = { };
     secrets.devin-api-key = { };
@@ -82,7 +74,6 @@ in
     secrets.cli-proxy-api-key = { };
     secrets.penpot-mcp-key = { };
     secrets.sakana-api-key = { };
-    secrets.ollama-tunnel-exec = { };
     secrets.dev-ca-key = {
       owner = "conao";
       path = "/home/conao/.local/share/dev-ca/rootCA-key.pem";
@@ -141,26 +132,6 @@ in
       ];
       Restart = "always";
       RestartSec = 5;
-    };
-  };
-
-  systemd.services.ollama-tunnel = {
-    wantedBy = [ "multi-user.target" ];
-    after = [
-      "network-online.target"
-      "tailscaled.service"
-    ];
-    wants = [
-      "network-online.target"
-      "tailscaled.service"
-    ];
-    serviceConfig = {
-      Type = "simple";
-      User = "conao";
-      WorkingDirectory = "/home/conao";
-      ExecStart = "${pkgs.bash}/bin/bash ${config.sops.templates."ollama-tunnel-script".path}";
-      Restart = "always";
-      RestartSec = 30;
     };
   };
 
