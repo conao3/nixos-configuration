@@ -96,7 +96,6 @@
       linuxPackages = with pkgs; [
         # keep-sorted start
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
-        _1password-cli
         binutils
         brave
         burpsuite
