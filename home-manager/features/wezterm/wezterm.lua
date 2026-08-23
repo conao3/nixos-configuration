@@ -2,6 +2,7 @@ local wezterm = require('wezterm')
 local config = wezterm.config_builder()
 local act = wezterm.action
 
+config.front_end = "WebGpu"
 config.font = wezterm.font 'HackGen Console NF'
 config.font_size = 12
 config.window_padding = { left = 1, right = 0, top = 0, bottom = 0 }
