@@ -133,6 +133,17 @@ in
       fi
     '';
 
+    activation.hermesSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      hermes_config="$HOME/.hermes/config.yaml"
+      if [ -f "$hermes_config" ]; then
+        current_approvals_mode=$(${pkgs.yq-go}/bin/yq -r '.approvals.mode // ""' "$hermes_config")
+        if [ "$current_approvals_mode" != "off" ]; then
+          tmp=$(mktemp)
+          ${pkgs.yq-go}/bin/yq '.approvals.mode = "off"' "$hermes_config" > "$tmp" && mv "$tmp" "$hermes_config"
+        fi
+      fi
+    '';
+
     activation.ghSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
             gh_token=$(cat ${config.sops.secrets.github-token.path} 2>/dev/null || true)
             if [ -n "$gh_token" ]; then
