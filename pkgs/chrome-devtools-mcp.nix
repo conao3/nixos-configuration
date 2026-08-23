@@ -8,13 +8,13 @@
 
 stdenvNoCC.mkDerivation rec {
   pname = "chrome-devtools-mcp";
-  version = "1.5.0";
+  version = "1.7.0";
 
   src = fetchzip {
     name = "${pname}-${version}.tgz";
     url = "https://registry.npmjs.org/${pname}/-/${pname}-${version}.tgz";
     extension = "tar.gz";
-    hash = "sha256-c7DPr2CmBdAQeqakxp4lzCu/wZMuJdkfeoZqjfNmDp4=";
+    hash = "sha256-Jy4CIhpEAjxxHOsDC243ngJBnF5e40vXGmpbNgVWRc0=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
