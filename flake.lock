@@ -369,6 +369,22 @@
         "type": "github"
       }
     },
+    "idea-routine": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787909822,
+        "narHash": "sha256-u+rkvbsyudp+dhJKlEeqD9VvRK9jBnvMvNmu7YiAwac=",
+        "ref": "refs/heads/main",
+        "rev": "c9f907c7e17feb2796f85aebaae8d3bfb4ea27e9",
+        "revCount": 1,
+        "type": "git",
+        "url": "file:../rust-idea-routine"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:../rust-idea-routine"
+      }
+    },
     "keg": {
       "inputs": {
         "flake-parts": [
@@ -701,6 +717,7 @@
         "gitm": "gitm",
         "home-manager": "home-manager",
         "home-manager-worktrunk": "home-manager-worktrunk",
+        "idea-routine": "idea-routine",
         "keg": "keg",
         "llm-agents": "llm-agents",
         "nix-claude-code": "nix-claude-code",

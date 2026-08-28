@@ -64,6 +64,10 @@
       url = "github:conao3/rust-devo";
       flake = false;
     };
+    idea-routine = {
+      url = "git+file:../rust-idea-routine";
+      flake = false;
+    };
     nix-flakes = {
       url = "git+file:../nix-flakes";
       flake = false;

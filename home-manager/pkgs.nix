@@ -16,6 +16,7 @@
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
+      idea-routine = pkgs.callPackage ../pkgs/idea-routine.nix { src = inputs.idea-routine; };
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
         src = inputs.clojure-mcp-light;
       };
@@ -64,6 +65,7 @@
         git-secrets
         git-wt
         gogcli
+        idea-routine
         imagemagick
         inetutils
         libgccjit
