@@ -8,12 +8,14 @@
   # https://search.nixos.org/packages?channel=24.11
   home.packages =
     let
+      agent-friction = pkgs.callPackage ../pkgs/agent-friction.nix { src = inputs.agent-friction; };
       claude-desktop-with-fhs = pkgs.callPackage ../pkgs/claude-desktop-fhs.nix {
         src = inputs.claude-desktop;
       };
       chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
+      document-packet = pkgs.callPackage ../pkgs/document-packet.nix { src = inputs.document-packet; };
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
       idea-routine = pkgs.callPackage ../pkgs/idea-routine.nix { src = inputs.idea-routine; };
@@ -23,6 +25,9 @@
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
+      outbound-manifest = pkgs.callPackage ../pkgs/outbound-manifest.nix {
+        src = inputs.outbound-manifest;
+      };
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
@@ -41,6 +46,7 @@
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [
         # keep-sorted start
+        agent-friction
         babashka
         bottom
         chrome-devtools
@@ -55,6 +61,7 @@
         devenv
         diffutils
         dig
+        document-packet
         duckdb
         eask-cli
         ffmpeg
@@ -75,6 +82,7 @@
         ngrok
         nkf
         obsidian
+        outbound-manifest
         parallel
         portless
         postgresql

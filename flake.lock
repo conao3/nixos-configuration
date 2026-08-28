@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "agent-friction": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787912393,
+        "narHash": "sha256-nj9o1RNfTIdWqNkdHe5qoFIMd/uI17TB8nFPBU6+hRI=",
+        "ref": "refs/heads/main",
+        "rev": "4de1fb6a61d94f3e90ed95142c655ebeb61dbe03",
+        "revCount": 1,
+        "type": "git",
+        "url": "file:../rust-agent-friction"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:../rust-agent-friction"
+      }
+    },
     "agmsg": {
       "flake": false,
       "locked": {
@@ -140,6 +156,22 @@
         "owner": "conao3",
         "repo": "rust-devo",
         "type": "github"
+      }
+    },
+    "document-packet": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787911964,
+        "narHash": "sha256-vLDcnoV6YYTjeh9VNMwCWsbtCwTlfR0zgoFR9yW6KGU=",
+        "ref": "refs/heads/main",
+        "rev": "8dcbc845460d65c5a69014dce19c25f03aaf5a1a",
+        "revCount": 1,
+        "type": "git",
+        "url": "file:../rust-document-packet"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:../rust-document-packet"
       }
     },
     "emacs-overlay": {
@@ -682,6 +714,22 @@
         "type": "github"
       }
     },
+    "outbound-manifest": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787911964,
+        "narHash": "sha256-b00+kJ5YYZsnOhddkItQ6BmMnM+u4P8uCQ2Xvf99twM=",
+        "ref": "refs/heads/main",
+        "rev": "b4cbd32e39c8ac960eb9c1ca676e2679dff354f8",
+        "revCount": 1,
+        "type": "git",
+        "url": "file:../rust-outbound-manifest"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:../rust-outbound-manifest"
+      }
+    },
     "pype": {
       "inputs": {
         "flake-parts": "flake-parts_4",
@@ -706,12 +754,14 @@
     },
     "root": {
       "inputs": {
+        "agent-friction": "agent-friction",
         "agmsg": "agmsg",
         "claude-desktop": "claude-desktop",
         "clojure-mcp-light": "clojure-mcp-light",
         "codex-desktop-linux": "codex-desktop-linux",
         "cosense-cli": "cosense-cli",
         "devo": "devo",
+        "document-packet": "document-packet",
         "emacs-overlay": "emacs-overlay",
         "flake-parts": "flake-parts",
         "gitm": "gitm",
@@ -725,6 +775,7 @@
         "nix-flakes": "nix-flakes",
         "nix-msb": "nix-msb",
         "nixpkgs": "nixpkgs_2",
+        "outbound-manifest": "outbound-manifest",
         "pype": "pype",
         "rust-fetch-usage-limit": "rust-fetch-usage-limit",
         "rust-llm-quota": "rust-llm-quota",

@@ -64,8 +64,20 @@
       url = "github:conao3/rust-devo";
       flake = false;
     };
+    agent-friction = {
+      url = "git+file:../rust-agent-friction";
+      flake = false;
+    };
+    document-packet = {
+      url = "git+file:../rust-document-packet";
+      flake = false;
+    };
     idea-routine = {
       url = "git+file:../rust-idea-routine";
+      flake = false;
+    };
+    outbound-manifest = {
+      url = "git+file:../rust-outbound-manifest";
       flake = false;
     };
     nix-flakes = {
