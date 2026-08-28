@@ -3,10 +3,10 @@
     "agent-friction": {
       "flake": false,
       "locked": {
-        "lastModified": 1787912393,
-        "narHash": "sha256-nj9o1RNfTIdWqNkdHe5qoFIMd/uI17TB8nFPBU6+hRI=",
+        "lastModified": 1787947861,
+        "narHash": "sha256-JaPtf1MmdufAoG8LPvfPhXc0rjV6NWfVkYjND6K5rdo=",
         "ref": "refs/heads/main",
-        "rev": "4de1fb6a61d94f3e90ed95142c655ebeb61dbe03",
+        "rev": "a0bfbbe43348f1b98316f14ba79d274165e9d772",
         "revCount": 1,
         "type": "git",
         "url": "file:../rust-agent-friction"
@@ -717,10 +717,10 @@
     "outbound-manifest": {
       "flake": false,
       "locked": {
-        "lastModified": 1787911964,
-        "narHash": "sha256-b00+kJ5YYZsnOhddkItQ6BmMnM+u4P8uCQ2Xvf99twM=",
+        "lastModified": 1787947860,
+        "narHash": "sha256-JUYYBxfoIw8H1f0BGPyX4aTdrnNM1mYe/V5DTqHJXmQ=",
         "ref": "refs/heads/main",
-        "rev": "b4cbd32e39c8ac960eb9c1ca676e2679dff354f8",
+        "rev": "c999e9eadfc1d6efa81e92d0707963e3dcecc700",
         "revCount": 1,
         "type": "git",
         "url": "file:../rust-outbound-manifest"
