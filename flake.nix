@@ -65,20 +65,34 @@
       flake = false;
     };
     agent-friction = {
-      url = "git+file:../rust-agent-friction";
-      flake = false;
+      url = "git+ssh://git@github.com/conao3/rust-agent-friction.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
+    chrome-devtools = {
+      url = "github:conao3/rust-chrome-devtools";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
     };
     document-packet = {
-      url = "git+file:../rust-document-packet";
-      flake = false;
+      url = "github:conao3/rust-document-packet";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
     };
     idea-routine = {
-      url = "git+file:../rust-idea-routine";
-      flake = false;
+      url = "git+ssh://git@github.com/conao3/rust-idea-routine.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
     };
     outbound-manifest = {
-      url = "git+file:../rust-outbound-manifest";
-      flake = false;
+      url = "github:conao3/rust-outbound-manifest";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
     };
     nix-flakes = {
       url = "git+file:../nix-flakes";

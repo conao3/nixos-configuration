@@ -15,7 +15,7 @@ let
   hermesWebuiPackage = pkgs.callPackage ../../pkgs/hermes-webui.nix {
     hermes-agent = hermesAgentPackage;
   };
-  chromeDevtoolsPackage = pkgs.callPackage ../../pkgs/chrome-devtools.nix { };
+  chromeDevtoolsPackage = inputs.chrome-devtools.packages.${system}.default;
   birdPackage = pkgs.callPackage ../../pkgs/bird.nix { };
   birdConao3Package = pkgs.writeShellApplication {
     name = "bird-conao3";

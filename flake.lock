@@ -1,19 +1,29 @@
 {
   "nodes": {
     "agent-friction": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
       "locked": {
-        "lastModified": 1787947861,
-        "narHash": "sha256-JaPtf1MmdufAoG8LPvfPhXc0rjV6NWfVkYjND6K5rdo=",
+        "lastModified": 1787951771,
+        "narHash": "sha256-P3eRsEBmQR2WTx7sSgsUWw6wrou+hD0y7mjPsj5UuE0=",
         "ref": "refs/heads/main",
-        "rev": "a0bfbbe43348f1b98316f14ba79d274165e9d772",
-        "revCount": 1,
+        "rev": "001d581c3ea8b5936d01fa2ef4f71af7667845ac",
+        "revCount": 2,
         "type": "git",
-        "url": "file:../rust-agent-friction"
+        "url": "ssh://git@github.com/conao3/rust-agent-friction.git"
       },
       "original": {
         "type": "git",
-        "url": "file:../rust-agent-friction"
+        "url": "ssh://git@github.com/conao3/rust-agent-friction.git"
       }
     },
     "agmsg": {
@@ -63,6 +73,32 @@
       "original": {
         "owner": "nix-community",
         "repo": "bun2nix",
+        "type": "github"
+      }
+    },
+    "chrome-devtools": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787951902,
+        "narHash": "sha256-zKw1K5OTVdHq1HvrJXAP6TVbBEPTjihEHpF4ARJdfIw=",
+        "owner": "conao3",
+        "repo": "rust-chrome-devtools",
+        "rev": "7ab2a67fc7cdd2b2323b3e9e4f572a37581593f6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "rust-chrome-devtools",
         "type": "github"
       }
     },
@@ -159,19 +195,29 @@
       }
     },
     "document-packet": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
       "locked": {
-        "lastModified": 1787913883,
-        "narHash": "sha256-FZ79IHFeFhRWweK+Xka+N+qH3+6CbIm1RYg07E5IeUQ=",
-        "ref": "refs/heads/main",
-        "rev": "c468c5cfdb7a11ac4539cc289491085e8ab94c78",
-        "revCount": 2,
-        "type": "git",
-        "url": "file:../rust-document-packet"
+        "lastModified": 1787951771,
+        "narHash": "sha256-c/2sr25f5Yp3fADsKDcedeZeaIoxNEEiDpPn/9oegak=",
+        "owner": "conao3",
+        "repo": "rust-document-packet",
+        "rev": "4040904bf8ad6bed30b2c8f3232a9b75d0a1287c",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:../rust-document-packet"
+        "owner": "conao3",
+        "repo": "rust-document-packet",
+        "type": "github"
       }
     },
     "emacs-overlay": {
@@ -402,19 +448,29 @@
       }
     },
     "idea-routine": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
       "locked": {
-        "lastModified": 1787910522,
-        "narHash": "sha256-JlmCVl5yA1CseGd+W5zLOT5c5cTShV7FKNinvT6ZL9M=",
+        "lastModified": 1787951771,
+        "narHash": "sha256-mXdFwzY/eELzIxdPQXhKIWMhTponcMs/Id3CO7oh/Kw=",
         "ref": "refs/heads/main",
-        "rev": "51641d0996ff44c9461da9280e59b445a64587a2",
-        "revCount": 3,
+        "rev": "c7d6b35aa123ddde145e9deaaaf579f0ffdb2203",
+        "revCount": 4,
         "type": "git",
-        "url": "file:../rust-idea-routine"
+        "url": "ssh://git@github.com/conao3/rust-idea-routine.git"
       },
       "original": {
         "type": "git",
-        "url": "file:../rust-idea-routine"
+        "url": "ssh://git@github.com/conao3/rust-idea-routine.git"
       }
     },
     "keg": {
@@ -715,19 +771,29 @@
       }
     },
     "outbound-manifest": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
       "locked": {
-        "lastModified": 1787947860,
-        "narHash": "sha256-JUYYBxfoIw8H1f0BGPyX4aTdrnNM1mYe/V5DTqHJXmQ=",
-        "ref": "refs/heads/main",
-        "rev": "c999e9eadfc1d6efa81e92d0707963e3dcecc700",
-        "revCount": 1,
-        "type": "git",
-        "url": "file:../rust-outbound-manifest"
+        "lastModified": 1787951771,
+        "narHash": "sha256-mldl6Thdnvq4p6vuuO0wrhW6CgohQGYh2xe4d/mac1k=",
+        "owner": "conao3",
+        "repo": "rust-outbound-manifest",
+        "rev": "bf6ce2cea56cfcbd226026ee3ffefcad71e091a1",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:../rust-outbound-manifest"
+        "owner": "conao3",
+        "repo": "rust-outbound-manifest",
+        "type": "github"
       }
     },
     "pype": {
@@ -756,6 +822,7 @@
       "inputs": {
         "agent-friction": "agent-friction",
         "agmsg": "agmsg",
+        "chrome-devtools": "chrome-devtools",
         "claude-desktop": "claude-desktop",
         "clojure-mcp-light": "clojure-mcp-light",
         "codex-desktop-linux": "codex-desktop-linux",

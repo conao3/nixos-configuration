@@ -8,26 +8,24 @@
   # https://search.nixos.org/packages?channel=24.11
   home.packages =
     let
-      agent-friction = pkgs.callPackage ../pkgs/agent-friction.nix { src = inputs.agent-friction; };
+      agent-friction = inputs.agent-friction.packages.${system}.default;
       claude-desktop-with-fhs = pkgs.callPackage ../pkgs/claude-desktop-fhs.nix {
         src = inputs.claude-desktop;
       };
-      chrome-devtools = pkgs.callPackage ../pkgs/chrome-devtools.nix { };
+      chrome-devtools = inputs.chrome-devtools.packages.${system}.default;
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
-      document-packet = pkgs.callPackage ../pkgs/document-packet.nix { src = inputs.document-packet; };
+      document-packet = inputs.document-packet.packages.${system}.default;
       ghq = pkgs.callPackage ../pkgs/ghq.nix { };
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
-      idea-routine = pkgs.callPackage ../pkgs/idea-routine.nix { src = inputs.idea-routine; };
+      idea-routine = inputs.idea-routine.packages.${system}.default;
       clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
         src = inputs.clojure-mcp-light;
       };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
-      outbound-manifest = pkgs.callPackage ../pkgs/outbound-manifest.nix {
-        src = inputs.outbound-manifest;
-      };
+      outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
