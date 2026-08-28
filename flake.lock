@@ -372,11 +372,11 @@
     "idea-routine": {
       "flake": false,
       "locked": {
-        "lastModified": 1787909822,
-        "narHash": "sha256-u+rkvbsyudp+dhJKlEeqD9VvRK9jBnvMvNmu7YiAwac=",
+        "lastModified": 1787910035,
+        "narHash": "sha256-5kcYAtzNpWIbOWJVRR9qSf1zSx19iV35qNxhAEFOLxM=",
         "ref": "refs/heads/main",
-        "rev": "c9f907c7e17feb2796f85aebaae8d3bfb4ea27e9",
-        "revCount": 1,
+        "rev": "7a2142764d91bf003d25dd192c4b5b40daab3eea",
+        "revCount": 2,
         "type": "git",
         "url": "file:../rust-idea-routine"
       },
