@@ -1,5 +1,5 @@
 {
-  ghostscript,
+  poppler-utils,
   lib,
   makeWrapper,
   rustPlatform,
@@ -16,7 +16,7 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [ makeWrapper ];
 
   postInstall = ''
-    wrapProgram "$out/bin/document-packet" --prefix PATH : ${lib.makeBinPath [ ghostscript ]}
+    wrapProgram "$out/bin/document-packet" --prefix PATH : ${lib.makeBinPath [ poppler-utils ]}
   '';
 
   meta = {

@@ -161,11 +161,11 @@
     "document-packet": {
       "flake": false,
       "locked": {
-        "lastModified": 1787911964,
-        "narHash": "sha256-vLDcnoV6YYTjeh9VNMwCWsbtCwTlfR0zgoFR9yW6KGU=",
+        "lastModified": 1787913883,
+        "narHash": "sha256-FZ79IHFeFhRWweK+Xka+N+qH3+6CbIm1RYg07E5IeUQ=",
         "ref": "refs/heads/main",
-        "rev": "8dcbc845460d65c5a69014dce19c25f03aaf5a1a",
-        "revCount": 1,
+        "rev": "c468c5cfdb7a11ac4539cc289491085e8ab94c78",
+        "revCount": 2,
         "type": "git",
         "url": "file:../rust-document-packet"
       },
