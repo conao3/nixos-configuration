@@ -65,7 +65,7 @@
       flake = false;
     };
     idea-routine = {
-      url = "path:../rust-idea-routine";
+      url = "git+file:../rust-idea-routine";
       flake = false;
     };
     nix-flakes = {
