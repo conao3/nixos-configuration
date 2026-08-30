@@ -43,6 +43,12 @@
 {agent_home}/
 ```
 
+## 共有ドキュメントの参照表記
+
+- 指示や会話に現れる `MEMORY.md` / `projects/...` / `notes/...` / `specs/...` は、絶対パスが指定されていない限り `{agent_global_home}` からの相対パスとして解決する。
+- `playbook/{name}` は `{agent_global_home}/notes/playbook/{name}.md` を表す。ユーザーから `do playbook/{name}` と指示された場合は、タスクの操作を始める前に当該 playbook を全文読み、そこから直接参照される規約・手順も読んだうえで、承認待ちを含む記載順と完了条件に従う。
+- `{agent_global_home}` 直下の共有ディレクトリは symlink である。参照先を探索するときは symlink を追跡する方法（例: `rg --files -L`）を使い、symlink を辿らない検索結果だけを根拠にファイルが存在しないと判断しない。既知の参照表記は、探索より先に上記の規則で直接パスへ解決する。
+
 ## 毎セッション開始時
 
 以下の順で読み込む。許可を求めず実行する。
