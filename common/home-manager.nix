@@ -21,7 +21,7 @@
     sharedModules = [
       {
         home.homeDirectory = lib.mkForce "${
-          if pkgs.stdenv.isDarwin then "/Users" else "/home"
+          if pkgs.stdenv.hostPlatform.isDarwin then "/Users" else "/home"
         }/${homeProfile.user}";
       }
     ];

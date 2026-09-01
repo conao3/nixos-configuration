@@ -6,7 +6,10 @@
     awscli.enable = true;
     bat.enable = true;
     eza.enable = true;
-    fzf.enable = true;
+    fzf = {
+      enable = true;
+      historyWidget.command = "";
+    };
     gh = {
       enable = true;
       extensions = [ (pkgs.callPackage ../../pkgs/gh-poi.nix { }) ];
@@ -23,14 +26,16 @@
       prefix = "C-q";
       keyMode = "emacs";
       extraConfig = ''
-        set -s copy-command '${if pkgs.stdenv.isDarwin then "pbcopy" else "xsel -i --clipboard"}'
+        set -s copy-command '${
+          if pkgs.stdenv.hostPlatform.isDarwin then "pbcopy" else "xsel -i --clipboard"
+        }'
         set -g mouse on
         bind -n WheelUpPane if -F "#{mouse_any_flag}" "send-keys -M" "copy-mode -e"
         bind -n WheelDownPane select-pane \; send-keys -M
       '';
     };
     vim.enable = true;
-    vscode.enable = !pkgs.stdenv.isDarwin;
-    zed-editor.enable = !pkgs.stdenv.isDarwin;
+    vscode.enable = !pkgs.stdenv.hostPlatform.isDarwin;
+    zed-editor.enable = !pkgs.stdenv.hostPlatform.isDarwin;
   };
 }

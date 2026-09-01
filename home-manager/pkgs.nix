@@ -170,7 +170,7 @@
         pkgs.pnpm_10
       ]
       ++ (
-        if pkgs.stdenv.isDarwin then
+        if pkgs.stdenv.hostPlatform.isDarwin then
           [ ]
         else
           [
@@ -198,7 +198,7 @@
 
     in
     commonPackages
-    ++ (if pkgs.stdenv.isDarwin then macPackages else linuxPackages)
+    ++ (if pkgs.stdenv.hostPlatform.isDarwin then macPackages else linuxPackages)
     ++ languageServers
     ++ inputPackages
     ++ shogiPackages;

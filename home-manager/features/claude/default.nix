@@ -58,7 +58,7 @@ in
   # drawio-mcp-server 常駐 service。各エージェントは common.nix の mcpServers.drawio
   # (http://127.0.0.1:3733/mcp) でこの 1 プロセスを共有する。stdio でセッションごとに
   # spawn すると拡張用 WebSocket ポート 3333 が衝突するため常駐にしている
-  systemd.user.services.drawio-mcp = lib.mkIf pkgs.stdenv.isLinux {
+  systemd.user.services.drawio-mcp = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     Unit.Description = "Draw.io MCP server (shared, http transport)";
     Service = {
       ExecStart = "${

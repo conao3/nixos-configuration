@@ -169,7 +169,7 @@ in
   '';
 
   services.dunst = {
-    enable = !pkgs.stdenv.isDarwin;
+    enable = !pkgs.stdenv.hostPlatform.isDarwin;
     settings = {
       global = {
         # Use a fixed monitor for stable placement.
@@ -204,12 +204,12 @@ in
   '';
 
   xsession = {
-    enable = !pkgs.stdenv.isDarwin;
+    enable = !pkgs.stdenv.hostPlatform.isDarwin;
     initExtra = "xset r rate 200 50 && xset s off -dpms";
   };
 
   xfconf = {
-    enable = !pkgs.stdenv.isDarwin;
+    enable = !pkgs.stdenv.hostPlatform.isDarwin;
     settings = xfconfNonNullSettings;
   };
 
