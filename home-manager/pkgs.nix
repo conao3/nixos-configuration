@@ -28,6 +28,7 @@
       outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
+      texassolver = pkgs.callPackage ../pkgs/texassolver.nix { };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
       gogcli = pkgs.callPackage ../pkgs/gogcli.nix { inherit system; };
       devo = pkgs.rustPlatform.buildRustPackage {
@@ -129,6 +130,7 @@
         slack
         steam-run
         telegram-desktop
+        texassolver
         tigervnc
         vlc
         xclip
