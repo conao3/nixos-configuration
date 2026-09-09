@@ -2,7 +2,7 @@
 let
   setRate = pkgs.writeShellApplication {
     name = "internal-panel-120hz";
-    runtimeInputs = [ pkgs.xorg.xrandr ];
+    runtimeInputs = [ pkgs.xrandr ];
     text = ''
       sleep 5
       xrandr --output eDP-1 --mode 2560x1600 --rate 120
