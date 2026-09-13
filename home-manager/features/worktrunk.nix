@@ -1,7 +1,5 @@
-{ inputs, ... }:
+{ ... }:
 {
-  imports = [ (inputs.home-manager-worktrunk + "/modules/programs/worktrunk.nix") ];
-
   programs.worktrunk.enable = true;
 
   # 新規 worktree 作成時に primary worktree のローカル独自版 (CLAUDE.md, AGENTS.md,
