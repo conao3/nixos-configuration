@@ -125,6 +125,7 @@
         moonlight-qt
         ollama
         pciutils
+        qdirstat
         qpdfview
         seahorse
         slack
