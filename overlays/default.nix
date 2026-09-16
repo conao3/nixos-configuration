@@ -3,7 +3,9 @@
     (import ./curl-cffi.nix)
     (import ./go.nix)
   ];
-  linux = [ ];
+  linux = [
+    (import ./tigervnc.nix)
+  ];
   darwin = [
     (import ./crates-io-static.nix)
   ];

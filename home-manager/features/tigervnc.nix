@@ -6,6 +6,5 @@
     QualityLevel=6
     CompressLevel=2
     Shared=1
-    RemoteResize=0
   '';
 }
