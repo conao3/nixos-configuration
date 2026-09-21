@@ -63,6 +63,8 @@ let
     attribution = {
       commit = "";
       pr = "";
+      # web / Remote Control セッションの commit・PR 本文へ付く Claude-Session トレーラーを外す
+      sessionUrl = false;
     };
     language = "japanese";
     autoMemoryEnabled = false;
