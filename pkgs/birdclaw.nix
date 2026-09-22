@@ -11,7 +11,7 @@ buildNpmPackage {
   version = "0.7.0";
 
   src = ./birdclaw;
-  npmDepsHash = "sha256-TPQX/YQYbuOV7C9yLGj7Bh9vFjRT+S21QOG1Z4NAACY=";
+  npmDepsHash = "sha256-AEPegPuBRJ840+AEYCVeOfFoABBVI/1FEz5J30P5Bh8=";
 
   nodejs = nodejs_26;
   nativeBuildInputs = [ makeWrapper ];
