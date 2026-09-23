@@ -1,6 +1,7 @@
 {
   common = [
     (import ./curl-cffi.nix)
+    (import ./git-wt.nix)
     (import ./go.nix)
   ];
   linux = [
