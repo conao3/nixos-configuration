@@ -767,11 +767,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787951771,
-        "narHash": "sha256-mldl6Thdnvq4p6vuuO0wrhW6CgohQGYh2xe4d/mac1k=",
+        "lastModified": 1789974817,
+        "narHash": "sha256-MW5N1acIv2dKOwbGVqFJ4FszaXHgnpCl22mC9XKple8=",
         "owner": "conao3",
         "repo": "rust-outbound-manifest",
-        "rev": "bf6ce2cea56cfcbd226026ee3ffefcad71e091a1",
+        "rev": "320b9f4a20b53a9fc43c117a83e820854b48b389",
         "type": "github"
       },
       "original": {
