@@ -120,10 +120,12 @@
         gparted
         libreoffice
         lightpanda
+        livecaptions
         logseq
         microsandbox
         moonlight-qt
         ollama
+        pavucontrol
         pciutils
         qdirstat
         qpdfview

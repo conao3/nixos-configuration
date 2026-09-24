@@ -4,6 +4,7 @@
     (import ./go.nix)
   ];
   linux = [
+    (import ./livecaptions.nix)
     (import ./tigervnc.nix)
   ];
   darwin = [
