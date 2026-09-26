@@ -21,6 +21,8 @@
 
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
 
+  boot.kernelParams = [ "i915.enable_psr=0" ];
+
   virtualisation.libvirtd.enable = lib.mkForce false;
 
   services.xserver.xkb.options = "ctrl:nocaps";
