@@ -33,8 +33,8 @@
     fsType = "vfat";
   };
 
-  fileSystems."/mnt/old-root" = {
-    device = "/dev/disk/by-uuid/93ed96fd-6359-47d8-a3fe-abed8627a49e";
+  fileSystems."/data" = {
+    device = "/dev/disk/by-uuid/ff712f6c-3e86-438b-a5bf-2908d2a006ee";
     fsType = "ext4";
     options = [ "nofail" ];
   };
