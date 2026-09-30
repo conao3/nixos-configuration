@@ -235,11 +235,13 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  # 1Password CLI の承認 (op の呼び出しごとに出るログインパスワードのプロンプト) を、
-  # conao のローカルでアクティブなセッションに限って自動で許可する。アプリの unlock は対象外。
+  # 1Password のシステム認証 (op の CLI 承認ダイアログで Authorize を押すたびに出る
+  # ログインパスワードのプロンプト) を、conao のローカルでアクティブなセッションに限って自動で許可する。
+  # Authorize は unlock アクションで認証する。1Password アプリの承認ダイアログ自体は polkit の外なので残る。
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
-      if (action.id == "com.1password.1Password.authorizeCLI"
+      if ((action.id == "com.1password.1Password.unlock"
+           || action.id == "com.1password.1Password.authorizeCLI")
           && subject.user == "conao" && subject.local && subject.active) {
         return polkit.Result.YES;
       }
