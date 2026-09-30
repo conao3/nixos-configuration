@@ -810,11 +810,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790727234,
-        "narHash": "sha256-w1DRYhIHm5hHiTHjBetD70f+ar4njgMEg42/Va0qH8I=",
+        "lastModified": 1790746826,
+        "narHash": "sha256-6q1NADK1K/IsAHd+h9pzQxey+G604UZ9idr+DMztJeg=",
         "owner": "conao3",
         "repo": "rust-overhear",
-        "rev": "4916ed78a77d6b0c9d1e997b282ad6a3d467a5e4",
+        "rev": "fba73fc16942c5ea4d81b1e5b83259a6b21f96a8",
         "type": "github"
       },
       "original": {
