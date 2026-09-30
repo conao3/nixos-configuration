@@ -7,7 +7,23 @@
 let
   llmAgents = inputs.llm-agents.packages.${system};
   claudeBin = "${inputs.nix-claude-code.packages.${system}.default}/bin/claude";
-  codexBin = "${llmAgents.codex}/bin/codex";
+  # codex 0.158 の TUI は常駐 app-server daemon を要求するが、nix package は
+  # standalone installer 形式ではないため起動に失敗する。対話起動と resume / fork には
+  # --no-daemon を足す (exec など他のサブコマンドはこの flag を受け付けない)。
+  codexBin = "${
+    pkgs.writeShellScript "codex-no-daemon" ''
+      real=${llmAgents.codex}/bin/codex
+      case "''${1-}" in
+        "" | -*) exec "$real" --no-daemon "$@" ;;
+        resume | fork)
+          sub=$1
+          shift
+          exec "$real" "$sub" --no-daemon "$@"
+          ;;
+        *) exec "$real" "$@" ;;
+      esac
+    ''
+  }";
   piBin = "${llmAgents.pi}/bin/pi";
   cursorAgentPkg = llmAgents.cursor-agent;
   cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
