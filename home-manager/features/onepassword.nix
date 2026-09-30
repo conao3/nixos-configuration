@@ -19,10 +19,12 @@ let
       dir=$(mktemp -d "''${XDG_RUNTIME_DIR:-/tmp}/op-agent.XXXXXX")
       trap 'rm -rf "$dir"' EXIT
 
-      if [ -t 0 ]; then
-        : >"$dir/in"
-      else
+      # 標準入力はパイプかファイルのときだけ渡す。エージェントの Bash は端末でもパイプでもない
+      # 開きっぱなしの stdin を持つので、それを cat すると EOF が来ずに固まる
+      if [ -p /dev/stdin ] || [ -f /dev/stdin ]; then
         cat >"$dir/in"
+      else
+        : >"$dir/in"
       fi
 
       # 引数 (秘密を含みうる) は pane のシェル履歴に残さず、0700 の一時ディレクトリのスクリプトに置く
