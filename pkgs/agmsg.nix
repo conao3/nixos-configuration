@@ -10,6 +10,8 @@ stdenvNoCC.mkDerivation {
 
   inherit src;
 
+  patches = [ ./agmsg-codex-worktree-hooks.patch ];
+
   installPhase = ''
     runHook preInstall
 

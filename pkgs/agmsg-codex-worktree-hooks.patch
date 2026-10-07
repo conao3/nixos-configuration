@@ -1,0 +1,76 @@
+diff --git a/scripts/delivery.sh b/scripts/delivery.sh
+index 9ae0e94d..f348f3dd 100755
+--- a/scripts/delivery.sh
++++ b/scripts/delivery.sh
+@@ -77,6 +77,11 @@ resolve_hooks_file() {
+   case "$rel" in
+     /*|*..*) echo "Invalid hooks_file for $type: $rel" >&2; return 1 ;;
+   esac
++  if [ "$type" = codex ] && git -C "$project" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
++    local common_dir
++    common_dir=$(git -C "$project" rev-parse --path-format=absolute --git-common-dir) || return 1
++    project=$(dirname "$common_dir")
++  fi
+   echo "$project/$rel"
+ }
+ 
+@@ -124,6 +129,9 @@ agmsg_delivery_apply_default() {
+       ;;
+     turn)
+       local cmd="'$SKILL_DIR/scripts/check-inbox.sh' '$type' '$project'"
++      if [ "$type" = codex ]; then
++        cmd="'$SKILL_DIR/scripts/check-inbox.sh' '$type' \"\$PWD\""
++      fi
+       add_event_entry_file "$tmp_state" "Stop" "$cmd" "$ww"
+       ;;
+     both)
+diff --git a/tests/test_delivery.bats b/tests/test_delivery.bats
+index a307e2a5..356c3243 100644
+--- a/tests/test_delivery.bats
++++ b/tests/test_delivery.bats
+@@ -1806,3 +1806,45 @@ JSON
+   run bash "$SCRIPTS/delivery.sh" status grok-build "$TEST_PROJECT"
+   [[ "$output" =~ "mode: turn" ]]
+ }
++
++@test "codex turn hooks are shared by linked worktrees and resolve the runtime cwd" {
++  git -C "$TEST_PROJECT" init -q
++  git -C "$TEST_PROJECT" -c user.name=Test -c user.email=test@example.com commit -qm initial --allow-empty
++  local linked="$TEST_PROJECT/linked tree" other="$TEST_PROJECT/other tree" command
++  git -C "$TEST_PROJECT" worktree add -qb linked "$linked"
++  git -C "$TEST_PROJECT" worktree add -qb other "$other"
++  mkdir -p "$TEST_PROJECT/.codex"
++  printf '%s' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"echo keep"}]}]}}' > "$TEST_PROJECT/.codex/hooks.json"
++  bash "$SCRIPTS/delivery.sh" set turn codex "$linked"
++  [ -f "$TEST_PROJECT/.codex/hooks.json" ]
++  [ ! -e "$linked/.codex/hooks.json" ]
++  bash "$SCRIPTS/delivery.sh" set turn codex "$other"
++  bash "$SCRIPTS/delivery.sh" set turn codex "$TEST_PROJECT"
++  [ "$(sqlite_mem "SELECT json_array_length(json_extract(readfile('$(rf "$TEST_PROJECT/.codex/hooks.json")'), '$.hooks.Stop'));")" = 2 ]
++  grep -q 'echo keep' "$TEST_PROJECT/.codex/hooks.json"
++  command=$(sqlite_mem "SELECT json_extract(value, '$.hooks[0].command') FROM json_each(json_extract(readfile('$(rf "$TEST_PROJECT/.codex/hooks.json")'), '$.hooks.Stop')) WHERE value LIKE '%check-inbox.sh%';")
++  [[ "$command" == *'"$PWD"'* ]]
++  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$2"\n' > "$SCRIPTS/check-inbox.sh"
++  run bash -c 'cd "$1" && eval "$2"' _ "$linked" "$command"
++  [ "$status" -eq 0 ]
++  [ "$output" = "$linked" ]
++  run bash -c 'cd "$1" && eval "$2"' _ "$other" "$command"
++  [ "$status" -eq 0 ]
++  [ "$output" = "$other" ]
++  run bash "$SCRIPTS/delivery.sh" status codex "$linked"
++  [ "$status" -eq 0 ]
++  [[ "$output" == *"mode: turn"* ]]
++  bash "$SCRIPTS/delivery.sh" set off codex "$linked"
++  ! has_check_inbox "$TEST_PROJECT/.codex/hooks.json"
++  grep -q 'echo keep' "$TEST_PROJECT/.codex/hooks.json"
++}
++
++@test "claude-code hooks remain local to a linked worktree" {
++  git -C "$TEST_PROJECT" init -q
++  git -C "$TEST_PROJECT" -c user.name=Test -c user.email=test@example.com commit -qm initial --allow-empty
++  local linked="$TEST_PROJECT/linked"
++  git -C "$TEST_PROJECT" worktree add -qb linked "$linked"
++  bash "$SCRIPTS/delivery.sh" set turn claude-code "$linked"
++  has_check_inbox "$linked/.claude/settings.local.json"
++  [ ! -e "$TEST_PROJECT/.claude/settings.local.json" ]
++}
