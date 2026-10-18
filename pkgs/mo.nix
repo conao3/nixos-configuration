@@ -5,15 +5,15 @@
   unzip,
 }:
 let
-  version = "1.0.0";
+  version = "1.6.9";
   sources = {
     x86_64-linux = {
       url = "https://github.com/k1LoW/mo/releases/download/v${version}/mo_v${version}_linux_amd64.tar.gz";
-      hash = "sha256-4V1aMLO+CJ7KuFqWLsMb0l+QZKQEHTc551KFLMkV3cg=";
+      hash = "sha256-1pp5Y8x76U3u2rszWuWleAydwDjn9la0Cs5peHbKCWE=";
     };
     aarch64-darwin = {
       url = "https://github.com/k1LoW/mo/releases/download/v${version}/mo_v${version}_darwin_arm64.zip";
-      hash = "sha256-wdoO2q96sbWdylEjfaCnlsb8bYoJLqasaukej1m+cx0=";
+      hash = "sha256-lNqJG0WjiJvxu7kI5OEsyv0fFit2DOfrnEceG0U1RbU=";
     };
   };
 in
