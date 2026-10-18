@@ -100,10 +100,6 @@
       url = "git+file:../nix-flakes";
       flake = false;
     };
-    clojure-mcp-light = {
-      url = "github:bhauman/clojure-mcp-light/v0.2.2";
-      flake = false;
-    };
     nix-msb = {
       url = "github:conao3/nix-msb";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -16,12 +16,8 @@
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       document-packet = inputs.document-packet.packages.${system}.default;
-      ghq = pkgs.callPackage ../pkgs/ghq.nix { };
-      ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { inherit ghq; };
+      ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { };
       idea-routine = inputs.idea-routine.packages.${system}.default;
-      clojure-mcp-light = pkgs.callPackage ../pkgs/clojure-mcp-light.nix {
-        src = inputs.clojure-mcp-light;
-      };
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
@@ -31,7 +27,6 @@
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       texassolver = pkgs.callPackage ../pkgs/texassolver.nix { };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
-      gogcli = pkgs.callPackage ../pkgs/gogcli.nix { inherit system; };
       devo = pkgs.rustPlatform.buildRustPackage {
         pname = "devo";
         version = "0.1.0";

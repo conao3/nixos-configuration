@@ -124,23 +124,6 @@
         "type": "github"
       }
     },
-    "clojure-mcp-light": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1773510090,
-        "narHash": "sha256-PzYQ6WBlApjGbiAy+FS7QC+Mriqr9Jq6d5cr0LZ2Unk=",
-        "owner": "bhauman",
-        "repo": "clojure-mcp-light",
-        "rev": "cf48cc6ab1d79809a97a74355492d44ee3bbc4ba",
-        "type": "github"
-      },
-      "original": {
-        "owner": "bhauman",
-        "ref": "v0.2.2",
-        "repo": "clojure-mcp-light",
-        "type": "github"
-      }
-    },
     "codex-desktop-linux": {
       "inputs": {
         "flake-utils": "flake-utils_2",
@@ -867,7 +850,6 @@
         "agmsg": "agmsg",
         "chrome-devtools": "chrome-devtools",
         "claude-desktop": "claude-desktop",
-        "clojure-mcp-light": "clojure-mcp-light",
         "codex-desktop-linux": "codex-desktop-linux",
         "cosense-cli": "cosense-cli",
         "devo": "devo",

@@ -12,7 +12,7 @@
     };
     gh = {
       enable = true;
-      extensions = [ (pkgs.callPackage ../../pkgs/gh-poi.nix { }) ];
+      extensions = [ pkgs.gh-poi ];
     };
     go.enable = true;
     gpg.enable = true;

@@ -24,7 +24,7 @@ let
   ''}";
   piBin = "${llmAgents.pi}/bin/pi";
   cursorAgentPkg = llmAgents.cursor-agent;
-  cursorExe = lib.getExe ((pkgs.callPackage ../../../pkgs/code-cursor.nix { }).fhs);
+  cursorExe = lib.getExe (pkgs.code-cursor-fhs);
   agentExe = lib.getExe cursorAgentPkg;
 
   aliasSpecs = [
