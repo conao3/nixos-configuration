@@ -169,7 +169,7 @@
         inputs.pype.packages.${system}.default
         inputs.rust-llm-quota.packages.${system}.default
         devo
-        pkgs.nodejs_24 # vibe-kanban requires npx
+        pkgs.nodejs_24
         pkgs.pnpm_10
       ]
       ++ (
@@ -194,7 +194,6 @@
         happy-coder
         # TODO: https://github.com/Dicklesworthstone/mcp_agent_mail
         # TODO: https://github.com/steveyegge/efrit
-        vibe-kanban
         workmux
         # keep-sorted end
       ]);
