@@ -26,6 +26,7 @@
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       texassolver = pkgs.callPackage ../pkgs/texassolver.nix { };
+      voice-type = pkgs.callPackage ../pkgs/voice-type.nix { };
       claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
       devo = pkgs.rustPlatform.buildRustPackage {
         pname = "devo";
@@ -133,6 +134,7 @@
         texassolver
         tigervnc
         vlc
+        voice-type
         xclip
         xsel
         # keep-sorted end

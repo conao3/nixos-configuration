@@ -7,6 +7,8 @@
 let
   xfconfSettings = {
     xfce4-keyboard-shortcuts = {
+      # マイクで話した内容をローカルの whisper.cpp で文字起こしし、フォーカス中のウィンドウへ打ち込む (pkgs/voice-type.nix)
+      "/commands/custom/F9" = "${pkgs.callPackage ../../pkgs/voice-type.nix { }}/bin/voice-type";
       "/commands/custom/<Alt>F1" = null;
       "/commands/custom/<Alt>F2" = null;
       "/commands/custom/<Alt>F2/startup-notify" = null;
