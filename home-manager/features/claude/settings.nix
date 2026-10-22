@@ -37,6 +37,8 @@ let
 
   claudeSettings = {
     theme = "dark";
+    # spinner・shimmer・flash を減らし、端末 (wezterm の Software 描画) の再描画負荷を下げる
+    prefersReducedMotion = true;
     defaultMode = "acceptEdits";
     skipDangerousModePermissionPrompt = true;
     cleanupPeriodDays = 9999;
