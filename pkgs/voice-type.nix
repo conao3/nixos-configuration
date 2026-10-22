@@ -49,6 +49,16 @@ writeShellApplication {
       notify-send --app-name=voice-type --expire-time=3000 "$@" || true
     }
 
+    # キーの自動リピートや二重押しで続けて呼ばれたときは無視する (前回の呼び出しから 1.5 秒以内)。
+    # 無視した呼び出しも時刻を更新するので、押しっぱなしの間は最後まで無視される。
+    last_file="$runtime_dir/voice-type.last"
+    now_ms="$(date +%s%3N)"
+    last_ms="$(cat "$last_file" 2>/dev/null || echo 0)"
+    echo "$now_ms" > "$last_file"
+    if [ $((now_ms - last_ms)) -lt 1500 ]; then
+      exit 0
+    fi
+
     # 同時に 1 つだけ動かす (flock。プロセスが死ねば自動で解放される)。
     # 動作中にもう一度呼ばれたら、録音中なら録音を止め (文字起こしは先に起動した側が進める)、
     # 認識中なら何もしない。
@@ -80,15 +90,16 @@ writeShellApplication {
       rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
       silence 1 0.1 "$threshold" 1 "$silence" "$threshold" trim 0 "$max_seconds" 9>&- &
     rec_pid=$!
-    # 診断用: しきい値で切り取られる前の、録音開始から 4 秒間の最大音量を測る (マイクが音を拾えているかの確認)
-    rec -q -r 16000 -c 1 -n trim 0 4 stat 2> "$work/level.txt" 9>&- &
+    # 診断用: しきい値で切り取られる前の、録音全体の最大音量を測る (マイクが音を拾えているかの確認)
+    timeout -s INT "$((max_seconds + 30))" rec -q -r 16000 -c 1 -n stat 2> "$work/level.txt" 9>&- &
     level_pid=$!
     echo "$rec_pid" > "$rec_pid_file"
     wait "$rec_pid" || true
     rm -f "$rec_pid_file"
     log "rec finished"
+    kill -INT "$level_pid" 2>/dev/null || true
     wait "$level_pid" 2>/dev/null || true
-    log "mic level (first 4 s): $(grep -E 'Maximum amplitude|RMS     amplitude' "$work/level.txt" | tr -s ' ' | tr '\n' ' ')"
+    log "mic level (whole recording, before the silence gate): $(grep -E 'Maximum amplitude|RMS     amplitude' "$work/level.txt" | tr -s ' ' | tr '\n' ' ')"
 
     # 無音や極端に短い録音は、Whisper が "you" のような幻覚を出すので認識しない
     duration="$(soxi -D "$work/in.wav" 2>/dev/null || echo 0)"
