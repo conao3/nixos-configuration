@@ -14,6 +14,8 @@ else
 	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | $(NOM) --json
 	systemctl --user daemon-reload || true
 	systemctl --user restart timers.target || true
+	# xfce4-appfinder は起動時の desktop エントリ (Exec の store path) を保持し続け、switch 後も古い版のアプリを起動する。止めて次回起動時に読み直させる
+	-pkill -x xfce4-appfinder
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
 endif
 
