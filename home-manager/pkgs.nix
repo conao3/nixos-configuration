@@ -24,6 +24,7 @@
       outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
+      speak = pkgs.callPackage ../pkgs/speak.nix { };
       symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       texassolver = pkgs.callPackage ../pkgs/texassolver.nix { };
       voice-type = pkgs.callPackage ../pkgs/voice-type.nix { };
@@ -129,6 +130,7 @@
         rec-audio
         seahorse
         slack
+        speak
         steam-run
         telegram-desktop
         texassolver
