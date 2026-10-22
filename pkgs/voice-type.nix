@@ -78,11 +78,14 @@ writeShellApplication {
     work="$(mktemp -d)"
     trap 'rm -rf "$work"; rm -f "$rec_pid_file"' EXIT
 
-    # 診断用に、直近 1 回分の録音・認識結果・ログを残す
-    state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/voice-type"
+    # 診断用に、直近 20 回分の録音・認識結果・ログを残す (runs/<日時>/、最新は last への symlink)
+    base_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/voice-type"
+    state_dir="$base_dir/runs/$(date +%Y%m%d-%H%M%S)"
     mkdir -p "$state_dir"
-    rm -f "$state_dir"/last.*
-    log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/last.log"; }
+    ln -sfn "$state_dir" "$base_dir/last"
+    # shellcheck disable=SC2012
+    ls -1dt "$base_dir"/runs/* | tail -n +21 | xargs -r rm -rf
+    log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/log"; }
     log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold"
 
     notify "録音中" "話してください。無音が続くと自動で止まります。"
@@ -114,14 +117,15 @@ writeShellApplication {
 
     # 短い発話でも認識されやすいよう、前に 0.3 秒・後ろに 1 秒の無音を足す
     sox "$work/in.wav" "$work/padded.wav" pad 0.3 1.0
-    cp "$work/padded.wav" "$state_dir/last.wav"
-    log "recorded $duration s (padded wav: $state_dir/last.wav)"
+    cp "$work/padded.wav" "$state_dir/audio.wav"
+    log "recorded peak=$(soxi -V0 "$work/in.wav" >/dev/null 2>&1; sox "$work/in.wav" -n stat 2>&1 | awk '/Maximum amplitude/ {print $3}') (after gain)"
+    log "recorded $duration s (padded wav: $state_dir/audio.wav)"
 
     notify "認識中"
-    if ! whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/last.whisper.log" 2>&1; then
-      log "whisper-cli failed (see last.whisper.log)"
+    if ! whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/whisper.log" 2>&1; then
+      log "whisper-cli failed (see whisper.log)"
     fi
-    cp "$work/out.txt" "$state_dir/last.raw.txt" 2>/dev/null || true
+    cp "$work/out.txt" "$state_dir/raw.txt" 2>/dev/null || true
     text="$(tr '\n' ' ' < "$work/out.txt" 2>/dev/null | sed -e 's/\[BLANK_AUDIO\]//g' -e 's/  */ /g' -e 's/^ //' -e 's/ $//')"
     log "text=[$text]"
 
