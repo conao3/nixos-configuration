@@ -31,16 +31,16 @@ writeShellApplication {
   text = ''
     # マイクで話した内容を whisper.cpp でローカルに文字起こしし、フォーカス中のウィンドウへ打ち込む (X11)。
     # Claude Code の /voice は認識言語が `language` 設定と共有で英語にできないため、その代わりに使う。
-    # 押す (F9) → 話す → 無音が続くと自動で録音を止める → 文字起こし → 入力。Enter は送らない。
+    # 押す (F9) → 話す → 無音が 3 秒続くと自動で録音を止める (F9 でいつでも手動停止) → 文字起こし → 入力。Enter は送らない。
     # 録音中にもう一度押すと、その時点で録音を止めて文字起こしに進む。
     #
     # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en)、
-    #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 1.5)、VOICE_TYPE_MAX (最長秒数、既定 60)、
+    #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 3。考えながら話しても途切れにくい長さ)、VOICE_TYPE_MAX (最長秒数、既定 60)、
     #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、増幅後で既定 2%)、
     #   VOICE_TYPE_GAIN (録音時の増幅、dB、既定 12)
     model="''${VOICE_TYPE_MODEL:-${model}}"
     lang="''${VOICE_TYPE_LANG:-en}"
-    silence="''${VOICE_TYPE_SILENCE:-1.5}"
+    silence="''${VOICE_TYPE_SILENCE:-3}"
     max_seconds="''${VOICE_TYPE_MAX:-60}"
     threshold="''${VOICE_TYPE_THRESHOLD:-2%}"
     # EarPods のマイクは入力が小さい (声のピークが 0.02〜0.2 程度) ので、録音時に増幅してから無音を判定する (dB、limiter 付き)
@@ -104,7 +104,7 @@ writeShellApplication {
     log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/log"; }
     log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold"
 
-    notify "録音中" "話してください。無音が続くと自動で止まります。"
+    notify "録音中" "話してください。無音が $silence 秒続くと自動で止まります (F9 で今すぐ停止)。"
     # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。
     # timeout は何も話さずに放置された場合の打ち切りで、INT は子 (rec) へ中継される。
     # ロックの fd (9) は子プロセスへ引き継がない
