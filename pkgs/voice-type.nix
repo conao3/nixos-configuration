@@ -44,6 +44,20 @@ writeShellApplication {
     # EarPods のマイクは入力が小さい (声のピークが 0.02〜0.2 程度) ので、録音時に増幅してから無音を判定する (dB、limiter 付き)
     gain="''${VOICE_TYPE_GAIN:-12}"
 
+    # voice-type --history [件数]: 直近の実行の「日時・録音の長さ・認識結果・音声ファイル」を一覧する (再生は `play <audio.wav>`)
+    if [ "''${1:-}" = "--history" ]; then
+      runs_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/voice-type/runs"
+      # shellcheck disable=SC2012
+      for dir in $(ls -1dt "$runs_dir"/* 2>/dev/null | head -n "''${2:-10}"); do
+        printf '%s  %s\n  text : %s\n  audio: %s\n' \
+          "$(basename "$dir")" \
+          "$(grep -E 'recorded [0-9.]+ s|no audio recorded' "$dir/log" | tail -1 | cut -d' ' -f2- | sed -E 's/ \(padded.*//')" \
+          "$(tr '\n' ' ' < "$dir/raw.txt" 2>/dev/null || echo '(認識なし)')" \
+          "$dir/audio.wav"
+      done
+      exit 0
+    fi
+
     runtime_dir="''${XDG_RUNTIME_DIR:-/tmp}"
     lock_file="$runtime_dir/voice-type.lock"
     rec_pid_file="$runtime_dir/voice-type.rec"
