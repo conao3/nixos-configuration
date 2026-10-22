@@ -149,12 +149,40 @@
   <p>T3 Code 自体は認証を持たず、マシンに入っているエージェント CLI のログインを使う。少なくとも 1 つ認証済みなら使い始められる。</p>
   <table>
     <tr><th>プロバイダ</th><th>認証</th><th>この環境の状態</th></tr>
-    <tr><td>Claude</td><td><code>claude auth login</code></td><td>ログイン済み (claude.ai)</td></tr>
-    <tr><td>Codex</td><td><code>codex login</code> もしくは Settings → Providers の「Connect with ChatGPT」</td><td><strong>未ログイン</strong>。使うならユーザー自身の ChatGPT ログインが要る</td></tr>
+    <tr><td>Claude</td><td><code>claude auth login</code></td><td>ログイン済み (conao3 / agent001 をインスタンスとして登録)</td></tr>
+    <tr><td>Codex</td><td><code>codex login</code> もしくは Settings → Providers の「Connect with ChatGPT」</td><td>agent001 / agent002 をインスタンスとして登録 (既定の <code>~/.codex</code> は未ログイン)</td></tr>
     <tr><td>Cursor</td><td><code>agent login</code></td><td>未確認</td></tr>
     <tr><td>OpenCode</td><td><code>opencode auth login</code></td><td>未確認</td></tr>
   </table>
   <p>アプリの <strong>Settings → Providers</strong> で使うプロバイダを有効にする。プロジェクトを選んでいるときのスイッチは、そのプロジェクトだけの有効・無効になる (Reset で全体設定に戻る)。</p>
+
+  <h3>1b. マルチアカウント (プロバイダインスタンス)</h3>
+  <p>
+    同じプロバイダを設定ディレクトリ違いで複数登録できる。Settings → Providers の「Add instance」か、
+    <code>~/.t3/userdata/settings.json</code> の <code>providerInstances</code> で宣言する。
+    スレッドのモデルピッカーでアカウントを選べ、同じ設定ディレクトリのインスタンス間なら既存スレッドの途中で切り替えられる。
+  </p>
+  <table>
+    <tr><th>ドライバ</th><th>設定ディレクトリの項目</th><th>対応する環境変数</th></tr>
+    <tr><td><code>claudeAgent</code></td><td><code>homePath</code></td><td><code>CLAUDE_CONFIG_DIR</code></td></tr>
+    <tr><td><code>codex</code></td><td><code>homePath</code> (任意で <code>shadowHomePath</code>)</td><td><code>CODEX_HOME</code></td></tr>
+  </table>
+  <p>この環境で登録済みのインスタンス (各エージェント用の設定ディレクトリを指す。<code>codex.agent001</code> 等のラッパーと同じ <code>CODEX_HOME</code>):</p>
+<pre><code>{
+  "providerInstances": {
+    "claude_conao3":   { "driver": "claudeAgent", "displayName": "Claude conao3",   "config": { "homePath": "/home/conao/.agents/.claude.conao3" } },
+    "claude_agent001": { "driver": "claudeAgent", "displayName": "Claude agent001", "config": { "homePath": "/home/conao/.agents/.claude.agent001" } },
+    "codex_agent001":  { "driver": "codex", "displayName": "Codex agent001", "config": { "homePath": "/home/conao/.agents/.codex.agent001" } },
+    "codex_agent002":  { "driver": "codex", "displayName": "Codex agent002", "config": { "homePath": "/home/conao/.agents/.codex.agent002" } }
+  }
+}</code></pre>
+  <div class="note">
+    <code>homePath</code> を空にした既定インスタンス (<code>claude</code> / <code>codex</code>) は、アプリを起動したシェルの
+    <code>CLAUDE_CONFIG_DIR</code> と <code>~/.codex</code> を使う。メニューから起動すると環境変数が違うので、
+    アカウントを固定したいときは上のようにパスを明示したインスタンスを使う。設定ファイルはアプリが書き換えるので、
+    編集するときはアプリを終了してから行う。
+  </div>
+  <p>Codex だけで共有したい場合 (履歴や設定を共有しつつ auth.json だけ分ける) は <code>shadowHomePath</code> を使う。詳細は上流の <code>docs/user/providers-codex.md</code>。</p>
 
   <h3>2. プロジェクトの追加</h3>
   <p>アプリのサイドバーから追加するか、CLI で追加する。</p>
