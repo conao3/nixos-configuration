@@ -40,6 +40,8 @@ in
     ++ [
       inputs.nix-claude-code.packages.${system}.default
       llmAgents.codex
+      # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
+      pkgs.sox
     ]
     ++ map (spec: pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"'') aliasSpecs;
 
