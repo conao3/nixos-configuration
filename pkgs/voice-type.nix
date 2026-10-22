@@ -34,12 +34,15 @@ writeShellApplication {
     #
     # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en)、
     #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 1.5)、VOICE_TYPE_MAX (最長秒数、既定 60)、
-    #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、既定 1.5%)
+    #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、増幅後で既定 2%)、
+    #   VOICE_TYPE_GAIN (録音時の増幅、dB、既定 12)
     model="''${VOICE_TYPE_MODEL:-${model}}"
     lang="''${VOICE_TYPE_LANG:-en}"
     silence="''${VOICE_TYPE_SILENCE:-1.5}"
     max_seconds="''${VOICE_TYPE_MAX:-60}"
-    threshold="''${VOICE_TYPE_THRESHOLD:-1.5%}"
+    threshold="''${VOICE_TYPE_THRESHOLD:-2%}"
+    # EarPods のマイクは入力が小さい (声のピークが 0.02〜0.2 程度) ので、録音時に増幅してから無音を判定する (dB、limiter 付き)
+    gain="''${VOICE_TYPE_GAIN:-12}"
 
     runtime_dir="''${XDG_RUNTIME_DIR:-/tmp}"
     lock_file="$runtime_dir/voice-type.lock"
@@ -80,7 +83,7 @@ writeShellApplication {
     mkdir -p "$state_dir"
     rm -f "$state_dir"/last.*
     log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/last.log"; }
-    log "start model=$model lang=$lang silence=$silence"
+    log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold"
 
     notify "録音中" "話してください。無音が続くと自動で止まります。"
     # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。
@@ -88,7 +91,7 @@ writeShellApplication {
     # ロックの fd (9) は子プロセスへ引き継がない
     timeout -s INT "$((max_seconds + 30))" \
       rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
-      silence 1 0.1 "$threshold" 1 "$silence" "$threshold" trim 0 "$max_seconds" 9>&- &
+      gain -l "$gain" silence 1 0.1 "$threshold" 1 "$silence" "$threshold" trim 0 "$max_seconds" 9>&- &
     rec_pid=$!
     # 診断用: しきい値で切り取られる前の、録音全体の最大音量を測る (マイクが音を拾えているかの確認)
     timeout -s INT "$((max_seconds + 30))" rec -q -r 16000 -c 1 -n stat 2> "$work/level.txt" 9>&- &
