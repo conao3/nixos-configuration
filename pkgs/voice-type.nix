@@ -6,6 +6,7 @@
   libnotify,
   sox,
   whisper-cpp,
+  xclip,
   xdotool,
 }:
 let
@@ -24,10 +25,11 @@ writeShellApplication {
     libnotify
     sox
     whisper-cpp
+    xclip
     xdotool
   ];
   text = ''
-    # マイクで話した内容を whisper.cpp でローカルに文字起こしし、フォーカス中のウィンドウへ打ち込む (X11)。
+    # マイクで話した内容を whisper.cpp でローカルに文字起こしし、フォーカス中のウィンドウへ貼り付ける (X11)。
     # Claude Code の /voice は認識言語が `language` 設定と共有で英語にできないため、その代わりに使う。
     # 押す (F9) → 話す → 無音が続くと自動で録音を止める → 文字起こし → 入力。Enter は送らない。
     # 録音中にもう一度押すと、その時点で録音を止めて文字起こしに進む。
@@ -148,7 +150,17 @@ writeShellApplication {
       exit 0
     fi
 
-    xdotool type --clearmodifiers --delay 2 -- "$text" || log "xdotool type failed"
-    log "typed"
+    # xdotool type で打つと、日本語入力 (fcitx5) がローマ字をかなに変換してしまう。
+    # IME を通らないよう、クリップボードと PRIMARY に入れて Shift+Insert で貼り付ける
+    # (xterm・wezterm は PRIMARY、GTK・Qt・ブラウザはクリップボードを貼る)。元のクリップボードは復元する。
+    saved_clip="$(xclip -selection clipboard -o 2>/dev/null || true)"
+    printf '%s' "$text" | xclip -selection clipboard -i
+    printf '%s' "$text" | xclip -selection primary -i
+    xdotool key --clearmodifiers shift+Insert || log "xdotool key failed"
+    sleep 0.3
+    if [ -n "$saved_clip" ]; then
+      printf '%s' "$saved_clip" | xclip -selection clipboard -i
+    fi
+    log "pasted"
   '';
 }
