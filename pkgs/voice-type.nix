@@ -10,11 +10,12 @@
   xdotool,
 }:
 let
-  # overhear (conao3/rust-overhear) の flake と同じモデル
+  # base.en (148MB) は録音が小さい・訛りがあるときに誤認識が多く、small.en (465MB) の方が安定する
+  # (実測: 7.9 秒の録音で base.en 約 1.3 秒、small.en 約 5 秒。8 スレッド)
   model = fetchurl {
-    name = "ggml-base.en.bin";
-    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
-    hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
+    name = "ggml-small.en.bin";
+    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin";
+    hash = "sha256-xhONbVjsyDIgl+D5h8MvG+i7ChhTKj+I9zTRu/nEHl0=";
   };
 in
 writeShellApplication {
@@ -37,14 +38,25 @@ writeShellApplication {
     # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en)、
     #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 3。考えながら話しても途切れにくい長さ)、VOICE_TYPE_MAX (最長秒数、既定 60)、
     #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、増幅後で既定 2%)、
-    #   VOICE_TYPE_GAIN (録音時の増幅、dB、既定 12)
+    #   VOICE_TYPE_GAIN (録音時の増幅、dB、既定 12)、VOICE_TYPE_THREADS (既定 8)、
+    #   VOICE_TYPE_PROMPT (語彙のヒント。~/.config/voice-type/prompt.txt があればそちらを優先)
     model="''${VOICE_TYPE_MODEL:-${model}}"
     lang="''${VOICE_TYPE_LANG:-en}"
-    silence="''${VOICE_TYPE_SILENCE:-3}"
+    # sox の silence は、小数点のない数 (3) をサンプル数と解釈する。秒で渡すため、必ず小数にする (3 → 3.0)
+    silence="$(printf '%.1f' "''${VOICE_TYPE_SILENCE:-3}")"
     max_seconds="''${VOICE_TYPE_MAX:-60}"
     threshold="''${VOICE_TYPE_THRESHOLD:-2%}"
     # EarPods のマイクは入力が小さい (声のピークが 0.02〜0.2 程度) ので、録音時に増幅してから無音を判定する (dB、limiter 付き)
     gain="''${VOICE_TYPE_GAIN:-12}"
+    threads="''${VOICE_TYPE_THREADS:-8}"
+    # 語彙のヒント (Whisper の initial prompt)。話題に出てくる固有名詞や専門語を書いておくと、そのつづりで認識されやすい。
+    # ~/.config/voice-type/prompt.txt があればその内容を使う (話題に合わせて書き換える)。
+    prompt_file="''${XDG_CONFIG_HOME:-$HOME/.config}/voice-type/prompt.txt"
+    if [ -s "$prompt_file" ]; then
+      prompt="$(tr '\n' ' ' < "$prompt_file")"
+    else
+      prompt="''${VOICE_TYPE_PROMPT:-This is an English conversation about the Clojure programming language, Lisp, the JVM, macros, immutable data structures, ClojureScript, and the REPL.}"
+    fi
 
     # voice-type --history [件数]: 直近の実行の「日時・録音の長さ・認識結果・音声ファイル」を一覧する (再生は `play <audio.wav>`)
     if [ "''${1:-}" = "--history" ]; then
@@ -102,7 +114,8 @@ writeShellApplication {
     # shellcheck disable=SC2012
     ls -1dt "$base_dir"/runs/* | tail -n +21 | xargs -r rm -rf
     log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/log"; }
-    log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold"
+    log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold threads=$threads"
+    log "prompt=[$prompt]"
 
     notify "録音中" "話してください。無音が $silence 秒続くと自動で止まります (F9 で今すぐ停止)。"
     # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。
@@ -131,14 +144,15 @@ writeShellApplication {
       exit 0
     fi
 
-    # 短い発話でも認識されやすいよう、前に 0.3 秒・後ろに 1 秒の無音を足す
-    sox "$work/in.wav" "$work/padded.wav" pad 0.3 1.0
+    # 短い発話でも認識されやすいよう、前に 0.3 秒・後ろに 1 秒の無音を足す。
+    # 音量は norm -3 で正規化する (声が小さくても、Whisper には一定の音量で渡す)
+    sox "$work/in.wav" "$work/padded.wav" pad 0.3 1.0 norm -3
     cp "$work/padded.wav" "$state_dir/audio.wav"
     log "recorded peak=$(soxi -V0 "$work/in.wav" >/dev/null 2>&1; sox "$work/in.wav" -n stat 2>&1 | awk '/Maximum amplitude/ {print $3}') (after gain)"
     log "recorded $duration s (padded wav: $state_dir/audio.wav)"
 
     notify "認識中"
-    if ! whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/whisper.log" 2>&1; then
+    if ! whisper-cli -m "$model" -l "$lang" -t "$threads" -nt -np --prompt "$prompt" -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/whisper.log" 2>&1; then
       log "whisper-cli failed (see whisper.log)"
     fi
     cp "$work/out.txt" "$state_dir/raw.txt" 2>/dev/null || true
