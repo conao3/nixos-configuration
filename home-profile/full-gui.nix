@@ -2,6 +2,7 @@
   ../home-manager/features/onepassword.nix
   ../home-manager/features/overhear.nix
   ../home-manager/features/tigervnc.nix
+  ../home-manager/features/voice-type.nix
   ../home-manager/features/xdg.nix
   ../home-manager/features/xfce.nix
 ]

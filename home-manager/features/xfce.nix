@@ -7,10 +7,6 @@
 let
   xfconfSettings = {
     xfce4-keyboard-shortcuts = {
-      # マイクで話した内容をローカルの whisper.cpp で文字起こしし、フォーカス中のウィンドウへ打ち込む (pkgs/voice-type.nix)
-      # profile の絶対パスで指定する。store path だと世代が変わっても xfsettingsd が古い版を呼び続け、
-      # コマンド名だけだと xfsettingsd は PATH を探さず起動しない
-      "/commands/custom/F9" = "${config.home.profileDirectory}/bin/voice-type";
       "/commands/custom/<Alt>F1" = null;
       "/commands/custom/<Alt>F2" = null;
       "/commands/custom/<Alt>F2/startup-notify" = null;
