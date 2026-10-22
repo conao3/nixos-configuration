@@ -1,6 +1,7 @@
 {
   writeShellApplication,
   fetchurl,
+  bc,
   coreutils,
   libnotify,
   sox,
@@ -18,6 +19,7 @@ in
 writeShellApplication {
   name = "voice-type";
   runtimeInputs = [
+    bc
     coreutils
     libnotify
     sox
@@ -38,20 +40,28 @@ writeShellApplication {
     max_seconds="''${VOICE_TYPE_MAX:-60}"
 
     runtime_dir="''${XDG_RUNTIME_DIR:-/tmp}"
-    pid_file="$runtime_dir/voice-type.pid"
+    lock_file="$runtime_dir/voice-type.lock"
+    rec_pid_file="$runtime_dir/voice-type.rec"
 
     notify() {
       notify-send --app-name=voice-type --expire-time=3000 "$@" || true
     }
 
-    # 録音中に再度呼ばれたら、録音を止めて終わる (文字起こしは先に起動した側が進める)
-    if [ -f "$pid_file" ] && kill -0 "$(cat "$pid_file")" 2>/dev/null; then
-      kill -INT "$(cat "$pid_file")"
+    # 同時に 1 つだけ動かす (flock。プロセスが死ねば自動で解放される)。
+    # 動作中にもう一度呼ばれたら、録音中なら録音を止め (文字起こしは先に起動した側が進める)、
+    # 認識中なら何もしない。
+    exec 9>"$lock_file"
+    if ! flock -n 9; then
+      if [ -s "$rec_pid_file" ] && kill -0 "$(cat "$rec_pid_file")" 2>/dev/null; then
+        kill -INT "$(cat "$rec_pid_file")"
+      else
+        notify "処理中です" "前の認識が終わるまでお待ちください。"
+      fi
       exit 0
     fi
 
     work="$(mktemp -d)"
-    trap 'rm -rf "$work"; rm -f "$pid_file"' EXIT
+    trap 'rm -rf "$work"; rm -f "$rec_pid_file"' EXIT
 
     # 診断用に、直近 1 回分の録音・認識結果・ログを残す
     state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/voice-type"
@@ -61,19 +71,22 @@ writeShellApplication {
     log "start model=$model lang=$lang silence=$silence"
 
     notify "録音中" "話してください。無音が続くと自動で止まります。"
-    # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、${"$"}{silence} 秒の無音で止める。trim で最長を抑える
-    rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
-      silence 1 0.1 3% 1 "$silence" 3% trim 0 "$max_seconds" &
-    echo $! > "$pid_file"
-    # 何も話さずに放置された場合の打ち切り
-    ( sleep 30; kill -INT "$(cat "$pid_file" 2>/dev/null)" 2>/dev/null || true ) &
-    watchdog=$!
-    wait "$(cat "$pid_file")" || true
-    kill "$watchdog" 2>/dev/null || true
-    rm -f "$pid_file"
+    # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。
+    # timeout は何も話さずに放置された場合の打ち切りで、INT は子 (rec) へ中継される。
+    # ロックの fd (9) は子プロセスへ引き継がない
+    timeout -s INT "$((max_seconds + 30))" \
+      rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
+      silence 1 0.1 3% 1 "$silence" 3% trim 0 "$max_seconds" 9>&- &
+    rec_pid=$!
+    echo "$rec_pid" > "$rec_pid_file"
+    wait "$rec_pid" || true
+    rm -f "$rec_pid_file"
+    log "rec finished"
 
-    if [ ! -s "$work/in.wav" ]; then
-      log "no audio recorded"
+    # 無音や極端に短い録音は、Whisper が "you" のような幻覚を出すので認識しない
+    duration="$(soxi -D "$work/in.wav" 2>/dev/null || echo 0)"
+    if [ ! -s "$work/in.wav" ] || [ "$(echo "$duration < 0.3" | bc -l 2>/dev/null || echo 1)" = 1 ]; then
+      log "no audio recorded (duration=$duration)"
       notify "音声が録音されませんでした"
       exit 0
     fi
@@ -81,7 +94,7 @@ writeShellApplication {
     # 短い発話でも認識されやすいよう、前に 0.3 秒・後ろに 1 秒の無音を足す
     sox "$work/in.wav" "$work/padded.wav" pad 0.3 1.0
     cp "$work/padded.wav" "$state_dir/last.wav"
-    log "recorded $(soxi -D "$work/in.wav" 2>/dev/null || echo '?') s (padded wav: $state_dir/last.wav)"
+    log "recorded $duration s (padded wav: $state_dir/last.wav)"
 
     notify "認識中"
     if ! whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/last.whisper.log" 2>&1; then
