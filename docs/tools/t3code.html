@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T3 Code — コーディングエージェントのコントロールサーフェス</title>
+  <style>
+    :root {
+      --color-canvas: #faf9f5;
+      --color-surface-soft: #f5f0e8;
+      --color-surface-card: #efe9de;
+      --color-surface-dark: #181715;
+      --color-hairline: #e6dfd8;
+      --color-ink: #141413;
+      --color-body: #3d3d3a;
+      --color-muted: #6c6a64;
+      --color-on-dark: #faf9f5;
+      --color-primary: #cc785c;
+      --color-accent-teal: #5db8a6;
+      --color-accent-amber: #e8a55a;
+      --rounded-md: 8px;
+      --rounded-lg: 12px;
+      --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+      --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans CJK JP", sans-serif;
+      --font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color-scheme: light;
+      font-family: var(--font-body);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(110deg, rgba(204, 120, 92, 0.08), transparent 32%),
+        linear-gradient(180deg, var(--color-canvas) 0%, var(--color-canvas) 48%, var(--color-surface-soft) 100%);
+      color: var(--color-ink);
+      line-height: 1.7;
+    }
+    main { max-width: 980px; margin: 0 auto; padding: 72px 24px 96px; }
+    .eyebrow { color: var(--color-primary); font-weight: 800; margin: 0 0 12px; }
+    h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 3.4rem;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .lead { color: var(--color-muted); font-size: 1.1rem; margin: 20px 0 0; max-width: 720px; }
+    h2 {
+      margin: 64px 0 16px;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 500;
+      border-bottom: 1px solid var(--color-hairline);
+      padding-bottom: 8px;
+    }
+    h3 { margin: 28px 0 8px; font-size: 1.05rem; }
+    p, li { color: var(--color-body); }
+    code {
+      font-family: var(--font-code);
+      font-size: 0.88em;
+      background: var(--color-surface-card);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    pre {
+      background: var(--color-surface-dark);
+      color: var(--color-on-dark);
+      padding: 16px 18px;
+      border-radius: var(--rounded-lg);
+      overflow-x: auto;
+      font-family: var(--font-code);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    pre code { background: none; padding: 0; color: inherit; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--color-hairline); vertical-align: top; }
+    th { background: var(--color-surface-soft); font-weight: 700; }
+    .note {
+      border-left: 4px solid var(--color-accent-amber);
+      background: var(--color-surface-soft);
+      padding: 12px 16px;
+      border-radius: 0 var(--rounded-md) var(--rounded-md) 0;
+      margin: 16px 0;
+    }
+    .note.ok { border-left-color: var(--color-accent-teal); }
+    nav ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0; }
+    nav a {
+      display: inline-block;
+      padding: 6px 14px;
+      border: 1px solid var(--color-hairline);
+      border-radius: 9999px;
+      background: var(--color-surface-card);
+      color: var(--color-ink);
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+    nav a:hover { border-color: var(--color-primary); }
+    footer { margin-top: 72px; color: var(--color-muted); font-size: 0.9rem; }
+    a { color: var(--color-primary); }
+    @media (max-width: 640px) { h1 { font-size: 2.4rem; } main { padding-top: 40px; } }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">nixos-configuration / docs / tools</p>
+  <h1>T3 Code</h1>
+  <p class="lead">
+    マシン上のコーディングエージェント (Codex / Claude / Cursor / Grok Build / OpenCode / Antigravity) を、
+    デスクトップ・Web・スマホから操作する「エージェントハーネスのコントロールサーフェス」。
+    サブスクリプションの契約済みエージェントをそのまま使い、T3 Code 自体は課金しない
+    (<a href="https://github.com/pingdotgg/t3code">pingdotgg/t3code</a>、v0.1 系でまだ初期段階)。
+  </p>
+  <nav>
+    <ul>
+      <li><a href="#install">この環境の導入</a></li>
+      <li><a href="#setup">初期設定</a></li>
+      <li><a href="#basic">基本の使い方</a></li>
+      <li><a href="#perm">権限モード</a></li>
+      <li><a href="#keys">キーバインド</a></li>
+      <li><a href="#cli">t3 コマンド</a></li>
+      <li><a href="#remote">リモートアクセス</a></li>
+      <li><a href="#mcp">MCP 連携</a></li>
+      <li><a href="#refs">参照</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="install">この環境での導入</h2>
+  <p>
+    llm-agents flake input の <code>t3code</code> (CLI) と <code>t3code-desktop</code> (Electron アプリ) を
+    <code>home-manager/features/t3code.nix</code> で入れ、<code>home-profile/full-gui.nix</code> 経由で GUI ホスト
+    (eos / helios) に配る。nixpkgs の <code>t3</code> は別物 (tee) なので注意。
+  </p>
+  <table>
+    <tr><th>コマンド</th><th>用途</th></tr>
+    <tr><td><code>t3code-desktop</code></td><td>デスクトップアプリ。メニューの「T3 Code」(<code>t3code.desktop</code>) からも起動できる</td></tr>
+    <tr><td><code>t3</code></td><td>CLI / サーバ。<code>t3code</code> というコマンド名は無い</td></tr>
+  </table>
+  <div class="note">
+    公式のインストーラ (<code>curl … | sh</code>) や <code>t3 update</code> / <code>t3 uninstall</code> は
+    <code>~/.local/bin</code> を書き換える前提なので、nix 管理のこの環境では使わない。更新は
+    <code>make update</code> で llm-agents を上げて <code>make switch</code> する。
+  </div>
+  <p>データは <code>~/.t3/</code> に作られる (<code>userdata/</code> に DB・設定・<code>keybindings.json</code>、<code>worktrees/</code> に git worktree)。</p>
+
+  <h2 id="setup">初期設定</h2>
+  <h3>1. プロバイダの認証</h3>
+  <p>T3 Code 自体は認証を持たず、マシンに入っているエージェント CLI のログインを使う。少なくとも 1 つ認証済みなら使い始められる。</p>
+  <table>
+    <tr><th>プロバイダ</th><th>認証</th><th>この環境の状態</th></tr>
+    <tr><td>Claude</td><td><code>claude auth login</code></td><td>ログイン済み (claude.ai)</td></tr>
+    <tr><td>Codex</td><td><code>codex login</code> もしくは Settings → Providers の「Connect with ChatGPT」</td><td><strong>未ログイン</strong>。使うならユーザー自身の ChatGPT ログインが要る</td></tr>
+    <tr><td>Cursor</td><td><code>agent login</code></td><td>未確認</td></tr>
+    <tr><td>OpenCode</td><td><code>opencode auth login</code></td><td>未確認</td></tr>
+  </table>
+  <p>アプリの <strong>Settings → Providers</strong> で使うプロバイダを有効にする。プロジェクトを選んでいるときのスイッチは、そのプロジェクトだけの有効・無効になる (Reset で全体設定に戻る)。</p>
+
+  <h3>2. プロジェクトの追加</h3>
+  <p>アプリのサイドバーから追加するか、CLI で追加する。</p>
+<pre><code>t3 project add ~/ghq/github.com/conao3/nixos-configuration
+t3 project rename &lt;id&gt; &lt;title&gt;
+t3 project remove &lt;id&gt;</code></pre>
+  <p>追加済み: <code>nixos-configuration</code>。ターミナルから「今いるディレクトリ」で開くなら、アプリ起動中に <code>t3 app</code> (パス指定可)。</p>
+
+  <h3>3. 推奨しておく設定</h3>
+  <ul>
+    <li><strong>Settings → General → New threads → Permissions</strong>: 初期値は <strong>Full access</strong>。慎重に始めるなら Supervised か Auto に変える (プロジェクトごとの上書きも可)。</li>
+    <li><strong>Settings → Source Control → Worktree branch naming</strong>: 自動命名される worktree ブランチの接頭辞 (既定 <code>t3/</code>)。</li>
+    <li><strong>Settings → Keybindings</strong>: 後述。<code>~/.t3/userdata/keybindings.json</code> を直接編集してもよい。</li>
+  </ul>
+
+  <h2 id="basic">基本の使い方</h2>
+  <ol>
+    <li>プロジェクトを選び、<strong>新しい thread</strong> を作る (thread = 1 つのエージェントとの会話・作業単位)。</li>
+    <li>コンポーザでプロバイダ / モデル / effort / 権限モードを選んでメッセージを送る。</li>
+    <li>エージェントが承認を求めたら、会話内で承認・拒否する。質問が来たら質問パネルで答える。</li>
+    <li>右パネルで diff と PR を確認する。thread は worktree で並列に走らせられる (<code>mod+shift+l</code> で直前の worktree を再利用)。</li>
+    <li>ターミナルを thread に開ける。止めたいときは <code>thread.stop</code> (既定のショートカットなし、Settings で割り当て)。</li>
+  </ol>
+  <p>設定 → Scheduled tasks では定期実行タスクと、外部サービス (GitHub の PR・CI 失敗など) から URL を叩いて起動する webhook タスクも作れる。</p>
+
+  <h2 id="perm">権限モード</h2>
+  <table>
+    <tr><th>モード</th><th>挙動</th></tr>
+    <tr><td>Supervised</td><td>コマンドとファイル変更のたびに承認を求める</td></tr>
+    <tr><td>Auto-accept edits</td><td>ファイル編集は自動承認、その他は承認が要りうる</td></tr>
+    <tr><td>Auto</td><td>プロバイダの自動レビューで定型の操作を承認し、他は確認する</td></tr>
+    <tr><td>Full access</td><td>承認なしでコマンドと編集を実行する</td></tr>
+  </table>
+  <p>モードは thread 単位で、コンポーザで選ぶ。Claude は自身の設定で bypass が無効なら Full access でも確認を出すことがある。</p>
+
+  <h2 id="keys">キーバインド</h2>
+  <p><code>mod</code> は Linux では Ctrl。デスクトップアプリでは次が既定。</p>
+  <table>
+    <tr><th>キー</th><th>動作</th></tr>
+    <tr><td><code>mod+1</code> … <code>mod+9</code></td><td>先頭 9 つの thread へ移動 (モデルピッカー表示中はモデルを選択)</td></tr>
+    <tr><td><code>mod+f</code></td><td>thread 内検索 (diff 内では diff の検索)</td></tr>
+    <tr><td><code>mod+z</code></td><td><code>thread.undo</code></td></tr>
+    <tr><td><code>mod+shift+l</code></td><td>直前の worktree を再利用して新規 thread</td></tr>
+    <tr><td><code>mod+shift+up</code> / <code>down</code></td><td>モデルピッカーでプロバイダを切り替え</td></tr>
+    <tr><td><code>mod+shift+c</code> / <code>mod+shift+k</code></td><td>開いている PR の URL / 番号 (<code>#</code> 付き) をコピー</td></tr>
+  </table>
+  <p>設定ファイル <code>~/.t3/userdata/keybindings.json</code> は規則の JSON 配列で、後に書いた規則が優先される。</p>
+<pre><code>[
+  { "key": "mod+g", "command": "terminal.toggle" },
+  { "key": "mod+shift+g", "command": "terminal.new", "when": "terminalFocus" }
+]</code></pre>
+  <p><code>when</code> で使える文脈: <code>terminalFocus</code> <code>terminalOpen</code> <code>composerFocus</code> <code>turnRunning</code> <code>isWeb</code> <code>isDesktop</code> など。<code>!</code> <code>&amp;&amp;</code> <code>||</code> と括弧で組み合わせる。プロジェクトのスクリプトは <code>script.{id}.run</code>。</p>
+
+  <h2 id="cli">t3 コマンド</h2>
+  <table>
+    <tr><th>コマンド</th><th>用途</th></tr>
+    <tr><td><code>t3</code> / <code>t3 start</code></td><td>サーバを起動して Web アプリを開く (既に起動中ならそちらへ接続)</td></tr>
+    <tr><td><code>t3 serve</code></td><td>ブラウザを開かずに起動し、ヘッドレス用のペアリング情報を出す</td></tr>
+    <tr><td><code>t3 app [path]</code></td><td>起動中のデスクトップアプリでそのディレクトリの新規 thread を開く</td></tr>
+    <tr><td><code>t3 project add|remove|rename</code></td><td>プロジェクト管理</td></tr>
+    <tr><td><code>t3 pair</code></td><td>起動中サーバへの接続用ペアリングトークンを QR コードで出す</td></tr>
+    <tr><td><code>t3 service install|restart|status|uninstall</code></td><td>バックグラウンドサービス化 (ここでは未使用。常駐が要るなら home-manager の systemd user service で宣言する)</td></tr>
+    <tr><td><code>t3 thread start|send</code></td><td>ホスト上のスクリプトから thread を作る・送る (サインイン不要)</td></tr>
+    <tr><td><code>--port</code> <code>--host</code> <code>--base-dir</code></td><td>待受ポート・バインド先・データディレクトリ (<code>T3CODE_HOME</code> 相当)</td></tr>
+  </table>
+
+  <h2 id="remote">リモートアクセス</h2>
+  <p>エージェントはサーバのあるマシンで動き、スマホ (iOS / Android) や別のブラウザ・デスクトップから操作できる。ホストは起動し続けている必要がある。</p>
+  <ul>
+    <li><strong>T3 Connect</strong>: ポート開放なし。デスクトップは Settings → Connections で有効化、CLI は <code>t3 connect</code>。</li>
+    <li><strong>LAN / tailnet のペアリング</strong>: <code>t3 serve --host &lt;private-ip&gt;</code>、起動済みなら <code>t3 pair</code> で QR を出してスマホで読む。<code>127.0.0.1</code> は同一端末からしか届かない。</li>
+    <li><strong>Tailscale HTTPS</strong>: <code>--tailscale-serve</code> でサーバを tailnet に HTTPS で出せる。</li>
+  </ul>
+  <div class="note">tailnet や T3 Connect で出すと、そのマシンのエージェントを動かせる経路が増える。ペアリングは端末ごとに新しい一回限りのリンクを使い、権限モードも合わせて見直す。</div>
+
+  <h2 id="mcp">MCP 連携</h2>
+  <p>T3 Code が起動していない手元の Claude Code / Codex / ChatGPT からも、環境の MCP サーバ (<code>…/mcp</code>) 経由で thread の読み取りや起動ができる。サインインは初回に承認し、権限は Read only (既定) から Full access まで選ぶ。Settings → Connections の「Copy MCP URL」で URL を取る。</p>
+<pre><code>claude mcp add --transport http t3 https://&lt;environment-address&gt;/mcp
+claude mcp login t3
+
+codex mcp add t3 --url https://&lt;environment-address&gt;/mcp
+codex mcp login t3</code></pre>
+  <p>エージェントが認証情報を送るのは <code>https</code> か <code>localhost</code> のみ。平文 http の LAN アドレスでは存在の検出まででサインインを終えられない。</p>
+
+  <h2 id="refs">参照</h2>
+  <ul>
+    <li><a href="https://github.com/pingdotgg/t3code">pingdotgg/t3code</a> と同リポジトリの <code>docs/user/</code> (install / permission-modes / keybindings / project-settings / remote-access / outside-agents / providers-codex / providers-claude / background-service / source-control)</li>
+    <li><a href="https://t3.codes">t3.codes</a> (デスクトップアプリ) ・ <a href="https://app.t3.codes">app.t3.codes</a> (Web アプリ)</li>
+    <li>この環境の導入: <code>home-manager/features/t3code.nix</code></li>
+  </ul>
+  <footer>2026-10-22 時点 (T3 Code v0.1.2)。上流は初期段階で変化が速いので、挙動が合わなければ上流の docs を優先する。</footer>
+</main>
+</body>
+</html>
