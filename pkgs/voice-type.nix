@@ -33,11 +33,13 @@ writeShellApplication {
     # 録音中にもう一度押すと、その時点で録音を止めて文字起こしに進む。
     #
     # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en)、
-    #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 1.5)、VOICE_TYPE_MAX (最長秒数、既定 60)
+    #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 1.5)、VOICE_TYPE_MAX (最長秒数、既定 60)、
+    #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、既定 1.5%)
     model="''${VOICE_TYPE_MODEL:-${model}}"
     lang="''${VOICE_TYPE_LANG:-en}"
     silence="''${VOICE_TYPE_SILENCE:-1.5}"
     max_seconds="''${VOICE_TYPE_MAX:-60}"
+    threshold="''${VOICE_TYPE_THRESHOLD:-1.5%}"
 
     runtime_dir="''${XDG_RUNTIME_DIR:-/tmp}"
     lock_file="$runtime_dir/voice-type.lock"
@@ -76,12 +78,17 @@ writeShellApplication {
     # ロックの fd (9) は子プロセスへ引き継がない
     timeout -s INT "$((max_seconds + 30))" \
       rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
-      silence 1 0.1 3% 1 "$silence" 3% trim 0 "$max_seconds" 9>&- &
+      silence 1 0.1 "$threshold" 1 "$silence" "$threshold" trim 0 "$max_seconds" 9>&- &
     rec_pid=$!
+    # 診断用: しきい値で切り取られる前の、録音開始から 4 秒間の最大音量を測る (マイクが音を拾えているかの確認)
+    rec -q -r 16000 -c 1 -n trim 0 4 stat 2> "$work/level.txt" 9>&- &
+    level_pid=$!
     echo "$rec_pid" > "$rec_pid_file"
     wait "$rec_pid" || true
     rm -f "$rec_pid_file"
     log "rec finished"
+    wait "$level_pid" 2>/dev/null || true
+    log "mic level (first 4 s): $(grep -E 'Maximum amplitude|RMS     amplitude' "$work/level.txt" | tr -s ' ' | tr '\n' ' ')"
 
     # 無音や極端に短い録音は、Whisper が "you" のような幻覚を出すので認識しない
     duration="$(soxi -D "$work/in.wav" 2>/dev/null || echo 0)"
