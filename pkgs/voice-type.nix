@@ -53,6 +53,13 @@ writeShellApplication {
     work="$(mktemp -d)"
     trap 'rm -rf "$work"; rm -f "$pid_file"' EXIT
 
+    # 診断用に、直近 1 回分の録音・認識結果・ログを残す
+    state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/voice-type"
+    mkdir -p "$state_dir"
+    rm -f "$state_dir"/last.*
+    log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$state_dir/last.log"; }
+    log "start model=$model lang=$lang silence=$silence"
+
     notify "録音中" "話してください。無音が続くと自動で止まります。"
     # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、${"$"}{silence} 秒の無音で止める。trim で最長を抑える
     rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
@@ -66,19 +73,30 @@ writeShellApplication {
     rm -f "$pid_file"
 
     if [ ! -s "$work/in.wav" ]; then
+      log "no audio recorded"
       notify "音声が録音されませんでした"
       exit 0
     fi
 
+    # 短い発話でも認識されやすいよう、前に 0.3 秒・後ろに 1 秒の無音を足す
+    sox "$work/in.wav" "$work/padded.wav" pad 0.3 1.0
+    cp "$work/padded.wav" "$state_dir/last.wav"
+    log "recorded $(soxi -D "$work/in.wav" 2>/dev/null || echo '?') s (padded wav: $state_dir/last.wav)"
+
     notify "認識中"
-    whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/in.wav" -otxt -of "$work/out" >/dev/null 2>&1 || true
+    if ! whisper-cli -m "$model" -l "$lang" -t 4 -nt -np -f "$work/padded.wav" -otxt -of "$work/out" > "$state_dir/last.whisper.log" 2>&1; then
+      log "whisper-cli failed (see last.whisper.log)"
+    fi
+    cp "$work/out.txt" "$state_dir/last.raw.txt" 2>/dev/null || true
     text="$(tr '\n' ' ' < "$work/out.txt" 2>/dev/null | sed -e 's/\[BLANK_AUDIO\]//g' -e 's/  */ /g' -e 's/^ //' -e 's/ $//')"
+    log "text=[$text]"
 
     if [ -z "$text" ]; then
-      notify "認識できませんでした"
+      notify "認識できませんでした" "録音と結果は $state_dir に残してあります"
       exit 0
     fi
 
-    xdotool type --clearmodifiers --delay 2 -- "$text"
+    xdotool type --clearmodifiers --delay 2 -- "$text" || log "xdotool type failed"
+    log "typed"
   '';
 }
