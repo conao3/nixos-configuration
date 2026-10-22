@@ -1,6 +1,7 @@
 [
   ../home-manager/features/onepassword.nix
   ../home-manager/features/overhear.nix
+  ../home-manager/features/t3code.nix
   ../home-manager/features/tigervnc.nix
   ../home-manager/features/voice-type.nix
   ../home-manager/features/xdg.nix
