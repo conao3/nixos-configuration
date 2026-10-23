@@ -175,7 +175,11 @@
     };
     tailscale = {
       enable = true;
-      extraSetFlags = [ "--ssh" ];
+      extraSetFlags = [
+        "--ssh"
+        # sudo なしで tailscale serve を使う (T3 Code の Tailscale HTTPS が serve を設定する)
+        "--operator=conao"
+      ];
     };
     # open-webui = {
     #   enable = true;
