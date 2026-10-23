@@ -256,6 +256,15 @@ t3 project remove &lt;id&gt;</code></pre>
     <li><strong>LAN / tailnet のペアリング</strong>: <code>t3 serve --host &lt;private-ip&gt;</code>、起動済みなら <code>t3 pair</code> で QR を出してスマホで読む。<code>127.0.0.1</code> は同一端末からしか届かない。</li>
     <li><strong>Tailscale HTTPS</strong>: <code>--tailscale-serve</code> でサーバを tailnet に HTTPS で出せる。</li>
   </ul>
+  <h3>この環境の設定 (Tailscale HTTPS)</h3>
+  <ul>
+    <li><code>nixos/configuration.nix</code> で tailscale の <code>--operator=conao</code> を指定済み (sudo なしで <code>tailscale serve</code> を設定できる)。</li>
+    <li>eos の <code>*:443</code> は portless proxy (<code>nixos/portless.nix</code>) が使っていて、tailscale の 443 を横取りして <code>TRAEFIK DEFAULT CERT</code> の証明書エラーになる。そのため <strong>8443</strong> で公開する: <code>tailscale serve --https=8443 --bg http://127.0.0.1:3773</code> (設定済み・再起動後も残る)。</li>
+    <li>URL: <code>https://conao-nixos-eos.tail6dd115.ts.net:8443/</code> (tailnet 内だけ。Funnel は使っていない)。</li>
+    <li>端末のペアリング: eos で <code>t3 pair --tailscale --tailscale-serve-port 8443 --label phone</code> を実行し、出た QR / URL を端末で開く (トークンは 5 分で失効、端末ごとに発行する)。</li>
+    <li>止める: <code>tailscale serve --https=8443 off</code>。接続済みの端末の取り消しは <code>t3 auth session list</code> / <code>t3 auth session revoke &lt;id&gt;</code>。</li>
+    <li>サーバはデスクトップアプリが持っているので、eos でアプリが起動していないとつながらない。</li>
+  </ul>
   <div class="note">tailnet や T3 Connect で出すと、そのマシンのエージェントを動かせる経路が増える。ペアリングは端末ごとに新しい一回限りのリンクを使い、権限モードも合わせて見直す。</div>
 
   <h2 id="mcp">MCP 連携</h2>
