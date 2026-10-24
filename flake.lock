@@ -13,11 +13,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787951771,
-        "narHash": "sha256-P3eRsEBmQR2WTx7sSgsUWw6wrou+hD0y7mjPsj5UuE0=",
+        "lastModified": 1792829785,
+        "narHash": "sha256-6ISjc12j0AwBM7FsdOP3iJCGKxuzqL1ZTaLyoBVgEOI=",
         "ref": "refs/heads/main",
-        "rev": "001d581c3ea8b5936d01fa2ef4f71af7667845ac",
-        "revCount": 2,
+        "rev": "3a63708816e44c0440492286d3716066f959fec8",
+        "revCount": 3,
         "type": "git",
         "url": "ssh://git@github.com/conao3/rust-agent-friction.git"
       },
@@ -90,11 +90,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788768160,
-        "narHash": "sha256-6+focus5C5IFIZJumzx2uJZfH0RMqXykD+Nqvr3g45M=",
+        "lastModified": 1792832072,
+        "narHash": "sha256-WouvddtIE++oUJUhhuySOPZ7ahouW4WdvQXbUIiH9As=",
         "owner": "conao3",
         "repo": "rust-chrome-devtools",
-        "rev": "51b34bd28d8eb9b86b78e9ef723a309c3b8d45e9",
+        "rev": "0f7fcc69610447484083651e96750bb76a92bada",
         "type": "github"
       },
       "original": {
