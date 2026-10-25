@@ -8,10 +8,10 @@
 
 buildNpmPackage {
   pname = "birdclaw";
-  version = "0.7.0";
+  version = "0.16.3";
 
   src = ./birdclaw;
-  npmDepsHash = "sha256-AEPegPuBRJ840+AEYCVeOfFoABBVI/1FEz5J30P5Bh8=";
+  npmDepsHash = "sha256-zCK/vZmUgbFh5CELEMofXEuZ2pRdL/d5hhAfLmDTCpk=";
 
   nodejs = nodejs_26;
   nativeBuildInputs = [ makeWrapper ];
@@ -20,35 +20,12 @@ buildNpmPackage {
   dontNpmBuild = true;
 
   preBuild = ''
-    substituteInPlace node_modules/birdclaw/src/cli.ts \
-      --replace-fail '"node_modules/vite/bin/vite.js",' '"./server-runner.mjs",'
-
-    substituteInPlace node_modules/birdclaw/src/lib/bird.ts \
+    substituteInPlace node_modules/birdclaw/dist/cli/birdclaw.js \
       --replace-quiet '"/bin/bash"' '"${bash}/bin/bash"'
-
-    cat > node_modules/birdclaw/src/lib/seed.ts <<'SEEDEOF'
-    import type { Database } from "./sqlite";
-
-    export function seedDemoData(db: Database) {
-      const accountCount = db
-        .prepare("select count(*) as count from accounts")
-        .get() as { count: number };
-      if (accountCount.count > 0) {
-        return;
-      }
-      const now = new Date().toISOString();
-      db.prepare(
-        "insert into accounts (id, name, handle, external_user_id, transport, is_default, created_at) values (?, ?, ?, ?, ?, ?, ?)"
-      ).run("acct_conao3", "Conao3", "@conao_3", "238967719", "bird", 1, now);
-    }
-    SEEDEOF
-    sed -i 's/^    //' node_modules/birdclaw/src/lib/seed.ts
   '';
 
   buildPhase = ''
     runHook preBuild
-    ln -sfn .. node_modules/birdclaw/node_modules
-    ( cd node_modules/birdclaw && ${nodejs_26}/bin/node node_modules/vite/bin/vite.js build )
     runHook postBuild
   '';
 
