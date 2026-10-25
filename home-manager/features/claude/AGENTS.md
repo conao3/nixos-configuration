@@ -57,7 +57,11 @@
 2. `projects/{project_dir_canonical}.md`
    - 当該パスにファイルが無い場合、`projects/ghq-github-com-OWNER-REPO.md`（`git remote get-url origin` に対応する名前）を読む。
    - 本ファイルに `notes/` への参照があれば従う。
-3. `notes/ghq.md` と `notes/specs.md` を読む。
+
+以降の note は該当する作業の前に読む。
+
+- `notes/ghq.md`: ghq の操作、clone、ghq-sync、fork の運用を扱うとき。
+- `notes/specs.md`: spec (設計文書) を作成・更新・参照するとき。
 
 ## 別レポジトリへ作業を広げるとき
 
