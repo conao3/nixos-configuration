@@ -39,7 +39,7 @@ let
     theme = "dark";
     # spinner・shimmer・flash を減らし、端末 (wezterm の Software 描画) の再描画負荷を下げる
     prefersReducedMotion = true;
-    defaultMode = "acceptEdits";
+    permissions.defaultMode = "bypassPermissions";
     skipDangerousModePermissionPrompt = true;
     cleanupPeriodDays = 9999;
     env = {
@@ -193,6 +193,7 @@ in
         echo '{}' > "$settingsTarget"
       fi
       ${applyMcpServers}
+      ${pkgs.jq}/bin/jq 'del(.defaultMode)' "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
       ${lib.concatMapStringsSep "\n" applyPatch settingsPatches}
       ${applyHooks}
       ${applyStatusLine}

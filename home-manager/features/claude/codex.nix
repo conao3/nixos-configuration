@@ -82,6 +82,8 @@ in
             "current-dir"
           ];
           codexBaseJson = builtins.toJSON {
+            approval_policy = "never";
+            sandbox_mode = "danger-full-access";
             mcp_servers = codexMcpServers;
             features = codexFeatures;
             model_providers.sakana = fuguProvider;
@@ -108,6 +110,8 @@ in
                     --argjson provider '${builtins.toJSON fuguProvider}' \
                     --argjson statusLine '${builtins.toJSON codexStatusLine}' \
                     'del(.profiles.fugu)
+                     | .approval_policy = "never"
+                     | .sandbox_mode = "danger-full-access"
                      | .mcp_servers = $servers
                      | .features = $features
                      | .model_providers.sakana = $provider
