@@ -53,7 +53,11 @@
 
 以下の順で読み込む。許可を求めず実行する。
 
-1. `{agent_global_home}/MEMORY.md`
+本ファイルと各リポジトリの `AGENTS.md` で、行頭が `@` で始まるパスだけの行は、そのファイルを読み込む指示である。Claude Code は起動時に自動で展開する。展開されないエージェントは自分で読む。内容がすでにコンテキストにあるファイルは読み直さない。
+
+@~/.agents/share/MEMORY.md
+
+1. `{agent_global_home}/MEMORY.md` (上の `@` 行が展開されていれば読み込み済み)
 2. `projects/{project_dir_canonical}.md`
    - 当該パスにファイルが無い場合、`projects/ghq-github-com-OWNER-REPO.md`（`git remote get-url origin` に対応する名前）を読む。
    - 本ファイルに `notes/` への参照があれば従う。
