@@ -167,28 +167,6 @@ let
         ];
       }
     ];
-    PreCompact = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "echo AGENTS.mdの「Compaction前」セクションの指示に従い、日次ログに作業状態を書き出してください。";
-          }
-        ];
-      }
-    ];
-    SessionEnd = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "echo AGENTS.mdの「セッション終了時」セクションの指示に従い、個人記憶とチーム共通知識を見直してください。";
-          }
-        ];
-      }
-    ];
   };
 
   hooksJson = builtins.toJSON hooks;
