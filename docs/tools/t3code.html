@@ -219,22 +219,155 @@ t3 project remove &lt;id&gt;</code></pre>
   <p>モードは thread 単位で、コンポーザで選ぶ。Claude は自身の設定で bypass が無効なら Full access でも確認を出すことがある。</p>
 
   <h2 id="keys">キーバインド</h2>
-  <p><code>mod</code> は Linux では Ctrl。デスクトップアプリでは次が既定。</p>
+  <p>
+    <code>mod</code> は Linux では Ctrl (macOS では Cmd)。以下はデスクトップアプリの既定で、
+    <code>~/.t3/userdata/keybindings.json</code> に書き出されている内容 (この環境では既定のまま、独自の変更なし) と上流の既定定義を突き合わせて載せている。
+    Settings → Keybindings でコマンド ID と現在の割り当てを検索・変更できる。
+    「条件」は規則の <code>when</code> で、<code>!terminalFocus</code> が付くものはターミナルに入力中は効かない。
+  </p>
+
+  <h3>ナビゲーション・画面</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+b</code></td><td>サイドバーの開閉</td><td></td></tr>
+    <tr><td><code>mod+[</code> / <code>mod+]</code></td><td>履歴の戻る / 進む (ブラウザの戻る・進むと同じ)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+[</code> / <code>mod+shift+]</code></td><td>前 / 次の thread へ移動</td><td></td></tr>
+    <tr><td><code>mod+1</code> … <code>mod+9</code></td><td>先頭 9 つの thread へ移動 (一覧のフィルタと並び順に従う)。モデルピッカー表示中はモデルを選択</td><td>isDesktop</td></tr>
+    <tr><td><code>mod+k</code></td><td>コマンドパレット (コマンド・プロジェクト・thread を検索。先頭に <code>&gt;</code> でアクションだけ)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+p</code></td><td>ファイルピッカー</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+f</code></td><td>プロジェクト内検索</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+f</code></td><td>thread 内検索 (メッセージと提案プラン。Enter / Shift+Enter で前後、Escape で閉じる)</td><td>!terminalFocus &amp;&amp; !previewFocus</td></tr>
+    <tr><td><code>mod+u</code></td><td>Usage ページを開く</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+o</code></td><td>お気に入りに設定したエディタで開く</td><td></td></tr>
+  </table>
+
+  <h3>パネル・タブ</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+j</code></td><td>ターミナルの開閉</td><td></td></tr>
+    <tr><td><code>mod+alt+b</code></td><td>右パネルの開閉</td><td></td></tr>
+    <tr><td><code>mod+shift+b</code></td><td>thread パネルの開閉</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+d</code></td><td>diff パネルの開閉</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+t</code></td><td>右パネルに新しいタブ</td><td>rightPanelOpen &amp;&amp; !terminalFocus</td></tr>
+    <tr><td><code>mod+w</code></td><td>右パネルのアクティブなタブを閉じる (何も閉じるものが無ければウィンドウを閉じる)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+t</code></td><td>直前に閉じたタブ (ファイル・diff・PR・ブラウザ・デバイス) を閉じた順に開き直す。削除した作業は戻らない</td><td></td></tr>
+    <tr><td><code>mod+shift+j</code></td><td>プレビュー (ブラウザ) パネルの開閉</td><td></td></tr>
+    <tr><td><code>mod+alt+shift+t</code></td><td>テーマエディタの開閉</td><td></td></tr>
+  </table>
+
+  <h3>ターミナル</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+d</code> / <code>mod+shift+d</code></td><td>ペインを左右 / 上下に分割</td><td>terminalFocus</td></tr>
+    <tr><td><code>mod+n</code></td><td>新しいターミナル</td><td>terminalFocus</td></tr>
+    <tr><td><code>mod+w</code></td><td>フォーカス中のターミナルを閉じる</td><td>terminalFocus</td></tr>
+  </table>
+
+  <h3>プレビュー (ブラウザ) パネル</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+r</code></td><td>再読み込み</td><td>previewFocus</td></tr>
+    <tr><td><code>mod+l</code></td><td>URL 欄にフォーカス</td><td>previewFocus</td></tr>
+    <tr><td><code>mod+=</code> / <code>mod++</code></td><td>拡大</td><td>previewFocus</td></tr>
+    <tr><td><code>mod+-</code></td><td>縮小</td><td>previewFocus</td></tr>
+    <tr><td><code>mod+0</code></td><td>ズームのリセット</td><td>previewFocus</td></tr>
+  </table>
+
+  <h3>新規 thread・送信</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+n</code> / <code>mod+shift+o</code></td><td>新しい thread (プロジェクトが複数あれば選択を求める)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+n</code></td><td>新しい thread (プロジェクト選択を省略)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+alt+n</code></td><td>プロジェクトなしで新しい thread</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+enter</code></td><td>実行中は「キュー / ステア」の既定と逆の動作で 1 通送る。新規 thread では送信してバックグラウンドで走らせる</td><td>composerFocus &amp;&amp; turnRunning / draftThreadRoute</td></tr>
+    <tr><td><code>mod+alt+enter</code></td><td>送信してその thread をバックグラウンドで走らせ、新規 thread のコンポーザを開く (新規 thread 上ではバックグラウンド送信)</td><td>composerFocus</td></tr>
+    <tr><td><code>mod+shift+enter</code></td><td>キューの先頭メッセージをステアとして送る</td><td>!terminalFocus</td></tr>
+    <tr><td><code>alt+arrowup</code></td><td>キューの最後のメッセージを編集</td><td>composerFocus</td></tr>
+    <tr><td><code>mod+s</code></td><td>プロンプトの退避 (添付付き。コンポーザが空なら退避したものを復元・一覧表示)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>shift+enter</code></td><td>コンポーザで改行 (固定。Settings → General → Send shortcut で Enter の挙動を選ぶ)</td><td></td></tr>
+  </table>
+
+  <h3>コンポーザの選択メニュー</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+shift+m</code></td><td>モデルピッカー</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+up</code> / <code>down</code></td><td>モデルピッカーでプロバイダを前 / 次へ (検索を空にする)</td><td>modelPickerOpen</td></tr>
+    <tr><td><code>mod+shift+h</code></td><td>ホスト (どのマシンで動かすか) の選択</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+e</code></td><td>effort の選択</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+a</code></td><td>アクセスモード (権限モード) の選択</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+x</code></td><td>ワークスペース (現在のチェックアウト / 新規 worktree / 直前の worktree)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+g</code></td><td>Git ブランチの選択</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+l</code></td><td>直前の worktree を再利用</td><td>!terminalFocus</td></tr>
+  </table>
+
+  <h3>thread の操作</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+z</code></td><td>サイドバー下の通知にある直前の操作 (ピン解除・settle・スヌーズ・アーカイブ・下書き破棄) を取り消す。取り消し通知は 5 秒間有効</td><td>!terminalFocus &amp;&amp; !editableFocus (直後はコンポーザでも効く)</td></tr>
+    <tr><td><code>mod+shift+s</code></td><td>thread を settle (完了扱いにして Settled へ移す)</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+p</code></td><td>thread のピン留め / 解除</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+c</code></td><td>開いている PR の URL (または thread ID) をコピー</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+shift+k</code></td><td>開いている PR の番号 (<code>#</code> 付き) をコピー</td><td>!terminalFocus</td></tr>
+  </table>
+
+  <h3>外観</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>mod+alt+a</code></td><td>テーマピッカーを開く</td><td>!terminalFocus</td></tr>
+    <tr><td><code>mod+alt+shift+a</code></td><td>外観 (System / Light / Dark) を順に切り替える</td><td>!terminalFocus</td></tr>
+  </table>
+
+  <h3>Usage ページ</h3>
+  <table>
+    <tr><th>キー</th><th>動作</th><th>条件</th></tr>
+    <tr><td><code>c</code> / <code>t</code> / <code>l</code></td><td>指標を Cost / Tokens / Limits に切り替え</td><td>usagePageOpen</td></tr>
+    <tr><td><code>mod+shift+1</code> … <code>4</code></td><td>期間を日 / 週 / 月 / 四半期に切り替え</td><td>usagePageOpen</td></tr>
+  </table>
+
+  <h3>固定のショートカット</h3>
   <table>
     <tr><th>キー</th><th>動作</th></tr>
-    <tr><td><code>mod+1</code> … <code>mod+9</code></td><td>先頭 9 つの thread へ移動 (モデルピッカー表示中はモデルを選択)</td></tr>
-    <tr><td><code>mod+f</code></td><td>thread 内検索 (diff 内では diff の検索)</td></tr>
-    <tr><td><code>mod+z</code></td><td><code>thread.undo</code></td></tr>
-    <tr><td><code>mod+shift+l</code></td><td>直前の worktree を再利用して新規 thread</td></tr>
-    <tr><td><code>mod+shift+up</code> / <code>down</code></td><td>モデルピッカーでプロバイダを切り替え</td></tr>
-    <tr><td><code>mod+shift+c</code> / <code>mod+shift+k</code></td><td>開いている PR の URL / 番号 (<code>#</code> 付き) をコピー</td></tr>
+    <tr><td><code>mod+f</code> (diff 内)</td><td>Diff パネルまたは PR の Code タブの diff をクリックして押すと、折りたたまれたファイルや隠れた未変更行を含む全ファイルを検索する。Enter / Shift+Enter で前後、Escape で閉じる。割り当ては変えられない (読み込み済みのファイルだけが対象)</td></tr>
+    <tr><td><code>Ctrl+Q</code></td><td>アプリを終了。既定の Hold モードでは 1.2 秒押し続けるか、500 ミリ秒以内に 2 回押す (Settings → General → Confirmations → Quit shortcut で Direct / Double press に変更できる)</td></tr>
+    <tr><td>モデルピッカー内の操作</td><td>Left (検索欄が空) か Shift+Tab でプロバイダ一覧へ、Up / Down で移動、Enter で決定、Right でモデル検索へ戻る</td></tr>
   </table>
-  <p>設定ファイル <code>~/.t3/userdata/keybindings.json</code> は規則の JSON 配列で、後に書いた規則が優先される。</p>
+
+  <h3>既定で未割り当てのコマンド</h3>
+  <p>Settings → Keybindings で割り当てると使える。</p>
+  <table>
+    <tr><th>コマンド</th><th>動作</th></tr>
+    <tr><td><code>thread.stop</code></td><td>フォーカス中の thread の実行中のターンを中断する</td></tr>
+    <tr><td><code>composer.cycleHost</code></td><td>新規 thread のホストを次のマシンへ送る (メニューを開かない)</td></tr>
+    <tr><td><code>composer.increaseEffort</code> / <code>composer.decreaseEffort</code></td><td>effort を 1 段階上げる / 下げる (端で反対側へ循環)</td></tr>
+    <tr><td><code>rightPanel.toggleMaximized</code></td><td>右パネルの最大化の切り替え</td></tr>
+    <tr><td><code>script.{id}.run</code></td><td>プロジェクトのスクリプトを実行 (<code>{id}</code> は英小文字・数字・<code>-</code>、24 文字まで)</td></tr>
+  </table>
+
+  <h3>設定ファイルの書き方</h3>
+  <p>
+    <code>~/.t3/userdata/keybindings.json</code> は規則の JSON 配列。T3 Code が既定の規則でファイルを作り、更新で増えた既定は次回起動時に追記される
+    (自分で変えたコマンドの割り当ては上書きされない)。不正な規則は無視され、ファイルが読めなければ既定に戻る。
+    <strong>最後に書いた、キーと条件の両方が合う規則が勝つ</strong> (別のコマンドのものでも同じ)。
+    同じキーの既定を上書きするときは、後ろに規則を足す。
+  </p>
 <pre><code>[
   { "key": "mod+g", "command": "terminal.toggle" },
   { "key": "mod+shift+g", "command": "terminal.new", "when": "terminalFocus" }
 ]</code></pre>
-  <p><code>when</code> で使える文脈: <code>terminalFocus</code> <code>terminalOpen</code> <code>composerFocus</code> <code>turnRunning</code> <code>isWeb</code> <code>isDesktop</code> など。<code>!</code> <code>&amp;&amp;</code> <code>||</code> と括弧で組み合わせる。プロジェクトのスクリプトは <code>script.{id}.run</code>。</p>
+  <p>
+    キーは <code>+</code> でつなぐ (<code>mod+shift+d</code> など)。修飾キーは <code>mod</code> / <code>cmd</code> (<code>meta</code>) / <code>ctrl</code> (<code>control</code>) /
+    <code>alt</code> (<code>option</code>) / <code>shift</code>。<code>when</code> で使える文脈:
+    <code>terminalFocus</code> <code>terminalOpen</code> <code>previewFocus</code> <code>previewOpen</code> <code>modelPickerOpen</code> <code>usagePageOpen</code>
+    <code>composerFocus</code> <code>composerDraft</code> <code>turnRunning</code> <code>editableFocus</code> <code>isWeb</code> <code>isDesktop</code>
+    (未知の名前は false)。<code>!</code> <code>&amp;&amp;</code> <code>||</code> と括弧で組み合わせる。
+  </p>
+  <div class="note">
+    <code>mod+1</code>〜<code>9</code> の thread 移動は、ブラウザのタブ切り替えを奪わないよう <code>isDesktop</code> が付いている。
+    ブラウザ版で使うなら Settings で条件を外す。ブラウザでは <code>mod+w</code> がブラウザのタブを閉じ、<code>mod+shift+t</code> もブラウザが先に取ることがあるので、
+    <code>rightPanel.close</code> と <code>terminal.close</code> を <code>alt+w</code> などに付け替える。
+    Linux のデスクトップ環境側のショートカットと被る場合も、Settings で別のキーを選ぶ。
+  </div>
+  <p>出典: 上流の <code>docs/user/keybindings.md</code> と <code>packages/shared/src/keybindings.ts</code> の <code>DEFAULT_KEYBINDINGS</code>。</p>
 
   <h2 id="cli">t3 コマンド</h2>
   <table>
