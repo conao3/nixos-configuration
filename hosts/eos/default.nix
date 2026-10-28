@@ -94,9 +94,4 @@
     "cni0"
     "flannel.1"
   ];
-
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
-    8081
-    8787
-  ];
 }
