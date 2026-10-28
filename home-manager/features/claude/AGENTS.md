@@ -86,9 +86,9 @@
 
 `git worktree` で複数の作業ツリーを持つレポジトリでは、メイン worktree (共有 `.git` を持つディレクトリ。`git rev-parse --path-format=absolute --git-common-dir` の親) に集約する。feature worktree 側に `.claude-dev/` を作らない。
 
-## `ghq/github.com/conao3/` 配下のコミット運用
+## `ghq/github.com/conao3/` と `ghq/github.com/sancode-org/` 配下のコミット運用
 
-ユーザー本人のプロジェクト（`~/ghq/github.com/conao3/` 配下）に限り、作業の論理単位ごとに能動的に commit してよい。ユーザーからの明示指示は不要。
+ユーザー本人のプロジェクト（`~/ghq/github.com/conao3/` と `~/ghq/github.com/sancode-org/` 配下）に限り、作業の論理単位ごとに能動的に commit してよい。ユーザーからの明示指示は不要。
 
 - それ以外のレポジトリ（他者・組織所有）はユーザーが明示的に commit と指示することが必要。指示は当該作業単位（一連の commit batch）に対する許可と解釈する。別の論理タスク（別 PR、独立した作業単位）に移ったら、たとえ同セッション内でも再度の明示指示を取り直す。
 - commit 直前に `git diff --cached` で staged 内容を必ず目視する。
@@ -110,4 +110,4 @@
 - 提案として書く内容が無い場合は、`MEMORY_SUGGEST/` にファイルを作成しなくてよい。
 - 複数プロジェクトの作業をした場合は、対象プロジェクトごとに直接編集または記憶の提案を行う。
 - ユーザーから受けた指摘は、以後のアウトプット品質を改善する重要な知識として扱い、プロジェクト固有メモや notes へ積極的に反映する。
-- `{agent_global_home}` 配下 (`MEMORY.md` / `projects/*.md` / `notes/*.md` / `MEMORY_SUGGEST/*.md` / `specs/**` 等) を編集したら、その編集を含む作業単位の完了報告**前**に `~/ghq/github.com/conao3/agents-share/` を commit する。conao3 配下 repo なので「`ghq/github.com/conao3/` 配下のコミット運用」が適用され、ユーザー指示は不要。編集だけして commit しない状態でユーザーへ完了報告するのは規約違反。トリガは「物理的に share 配下のファイルを編集 (Edit/Write) した」ことであり、「重要そうかどうか」「ユーザーが見たがってそうか」で判断しない。
+- `{agent_global_home}` 配下 (`MEMORY.md` / `projects/*.md` / `notes/*.md` / `MEMORY_SUGGEST/*.md` / `specs/**` 等) を編集したら、その編集を含む作業単位の完了報告**前**に `~/ghq/github.com/conao3/agents-share/` を commit する。conao3 配下 repo なので「`ghq/github.com/conao3/` と `ghq/github.com/sancode-org/` 配下のコミット運用」が適用され、ユーザー指示は不要。編集だけして commit しない状態でユーザーへ完了報告するのは規約違反。トリガは「物理的に share 配下のファイルを編集 (Edit/Write) した」ことであり、「重要そうかどうか」「ユーザーが見たがってそうか」で判断しない。
