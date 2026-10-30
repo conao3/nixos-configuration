@@ -4,9 +4,10 @@
   bc,
   coreutils,
   libnotify,
+  pipewire,
   sox,
   fcitx5,
-  whisper-cpp,
+  whisper-cpp-vulkan,
   xdotool,
 }:
 let
@@ -17,6 +18,11 @@ let
     url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin";
     hash = "sha256-xhONbVjsyDIgl+D5h8MvG+i7ChhTKj+I9zTRu/nEHl0=";
   };
+  modelJa = fetchurl {
+    name = "ggml-large-v3-turbo-q5_0.bin";
+    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin";
+    hash = "sha256-OUIhcJzVrR9AxG5gMcphvOiJMebgiMGIKUxtWlX/p+I=";
+  };
 in
 writeShellApplication {
   name = "voice-type";
@@ -24,24 +30,38 @@ writeShellApplication {
     bc
     coreutils
     libnotify
+    pipewire
     sox
     fcitx5
-    whisper-cpp
+    whisper-cpp-vulkan
     xdotool
   ];
   text = ''
     # マイクで話した内容を whisper.cpp でローカルに文字起こしし、フォーカス中のウィンドウへ打ち込む (X11)。
     # Claude Code の /voice は認識言語が `language` 設定と共有で英語にできないため、その代わりに使う。
-    # 押す (F9) → 話す → 無音が 3 秒続くと自動で録音を止める (F9 でいつでも手動停止) → 文字起こし → 入力。Enter は送らない。
+    # 押す (F9、日本語は Shift+F9 で --ja) → 話す → 無音が 3 秒続くと自動で録音を止める (F9 / Shift+F9 でいつでも手動停止) → 文字起こし → 入力。Enter は送らない。
     # 録音中にもう一度押すと、その時点で録音を止めて文字起こしに進む。
     #
-    # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en)、
+    # 環境変数: VOICE_TYPE_MODEL (モデル)、VOICE_TYPE_LANG (既定 en、--ja では ja)、
     #   VOICE_TYPE_SILENCE (止まるまでの無音秒数、既定 3。考えながら話しても途切れにくい長さ)、VOICE_TYPE_MAX (最長秒数、既定 60)、
     #   VOICE_TYPE_THRESHOLD (話し始め・終わりと判定する音量、増幅後で既定 2%)、
     #   VOICE_TYPE_GAIN (録音時の増幅、dB、既定 12)、VOICE_TYPE_THREADS (既定 8)、
     #   VOICE_TYPE_PROMPT (語彙のヒント。~/.config/voice-type/prompt.txt があればそちらを優先)
-    model="''${VOICE_TYPE_MODEL:-${model}}"
-    lang="''${VOICE_TYPE_LANG:-en}"
+    if [ "''${1:-}" = "--ja" ]; then
+      model="''${VOICE_TYPE_MODEL:-${modelJa}}"
+      lang="''${VOICE_TYPE_LANG:-ja}"
+      prompt_name=prompt.ja.txt
+      default_prompt="Claude Code、Codex、README、リポジトリ、Nix、flake、make switch、tmux、dev サーバー、Clojure、TypeScript、null、関数、引数、例外、コミット、プルリクエスト。"
+      join='\0'
+      type_delay=12
+    else
+      model="''${VOICE_TYPE_MODEL:-${model}}"
+      lang="''${VOICE_TYPE_LANG:-en}"
+      prompt_name=prompt.txt
+      default_prompt="This is an English conversation about the Clojure programming language, Lisp, the JVM, macros, immutable data structures, ClojureScript, and the REPL."
+      join=' '
+      type_delay=2
+    fi
     # sox の silence は、小数点のない数 (3) をサンプル数と解釈する。秒で渡すため、必ず小数にする (3 → 3.0)
     silence="$(printf '%.1f' "''${VOICE_TYPE_SILENCE:-3}")"
     max_seconds="''${VOICE_TYPE_MAX:-60}"
@@ -50,12 +70,12 @@ writeShellApplication {
     gain="''${VOICE_TYPE_GAIN:-12}"
     threads="''${VOICE_TYPE_THREADS:-8}"
     # 語彙のヒント (Whisper の initial prompt)。話題に出てくる固有名詞や専門語を書いておくと、そのつづりで認識されやすい。
-    # ~/.config/voice-type/prompt.txt があればその内容を使う (話題に合わせて書き換える)。
-    prompt_file="''${XDG_CONFIG_HOME:-$HOME/.config}/voice-type/prompt.txt"
+    # ~/.config/voice-type/prompt.txt (--ja では prompt.ja.txt) があればその内容を使う (話題に合わせて書き換える)。
+    prompt_file="''${XDG_CONFIG_HOME:-$HOME/.config}/voice-type/$prompt_name"
     if [ -s "$prompt_file" ]; then
-      prompt="$(tr '\n' ' ' < "$prompt_file")"
+      prompt="$(paste -sd "$join" < "$prompt_file")"
     else
-      prompt="''${VOICE_TYPE_PROMPT:-This is an English conversation about the Clojure programming language, Lisp, the JVM, macros, immutable data structures, ClojureScript, and the REPL.}"
+      prompt="''${VOICE_TYPE_PROMPT:-$default_prompt}"
     fi
 
     # voice-type --history [件数]: 直近の実行の「日時・録音の長さ・認識結果・音声ファイル」を一覧する (再生は `play <audio.wav>`)
@@ -117,24 +137,29 @@ writeShellApplication {
     log "start model=$model lang=$lang silence=$silence gain=$gain threshold=$threshold threads=$threads"
     log "prompt=[$prompt]"
 
-    notify "録音中" "話してください。無音が $silence 秒続くと自動で止まります (F9 で今すぐ停止)。"
-    # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。
-    # timeout は何も話さずに放置された場合の打ち切りで、INT は子 (rec) へ中継される。
+    notify "録音中" "話してください。無音が $silence 秒続くと自動で止まります (もう一度押すと今すぐ停止)。"
+    # silence: 音が出るまで待ち (1 回 0.1 秒・3%)、''${silence} 秒の無音で止める。trim で最長を抑える。sox が止まると pw-record も止める。
+    # timeout は何も話さずに放置された場合の打ち切りで、INT は子 (pw-record) へ中継される。pw-record の出力は FIFO で sox へ渡す。
     # ロックの fd (9) は子プロセスへ引き継がない
-    timeout -s INT "$((max_seconds + 30))" \
-      rec -q -r 16000 -c 1 -b 16 "$work/in.wav" \
+    mkfifo "$work/pcm"
+    sox -q -t raw -r 16000 -e signed -b 16 -c 1 "$work/pcm" "$work/in.wav" \
       gain -l "$gain" silence 1 0.1 "$threshold" 1 "$silence" "$threshold" trim 0 "$max_seconds" 9>&- &
+    sox_pid=$!
+    timeout -s INT "$((max_seconds + 30))" \
+      pw-record --rate 16000 --channels 1 --format s16 - > "$work/pcm" 9>&- &
     rec_pid=$!
     # 診断用: しきい値で切り取られる前の、録音全体の最大音量を測る (マイクが音を拾えているかの確認)
-    timeout -s INT "$((max_seconds + 30))" rec -q -r 16000 -c 1 -n stat 2> "$work/level.txt" 9>&- &
+    timeout -s INT "$((max_seconds + 30))" pw-record --rate 16000 --channels 1 --format s16 "$work/level.wav" 9>&- &
     level_pid=$!
     echo "$rec_pid" > "$rec_pid_file"
-    wait "$rec_pid" || true
+    wait "$sox_pid" || true
     rm -f "$rec_pid_file"
+    kill -INT "$rec_pid" 2>/dev/null || true
+    wait "$rec_pid" 2>/dev/null || true
     log "rec finished"
     kill -INT "$level_pid" 2>/dev/null || true
     wait "$level_pid" 2>/dev/null || true
-    log "mic level (whole recording, before the silence gate): $(grep -E 'Maximum amplitude|RMS     amplitude' "$work/level.txt" | tr -s ' ' | tr '\n' ' ')"
+    log "mic level (whole recording, before the silence gate): $(sox "$work/level.wav" -n stat 2>&1 | grep -E 'Maximum amplitude|RMS     amplitude' | tr -s ' ' | tr '\n' ' ')"
 
     # 無音や極端に短い録音は、Whisper が "you" のような幻覚を出すので認識しない
     duration="$(soxi -D "$work/in.wav" 2>/dev/null || echo 0)"
@@ -156,7 +181,7 @@ writeShellApplication {
       log "whisper-cli failed (see whisper.log)"
     fi
     cp "$work/out.txt" "$state_dir/raw.txt" 2>/dev/null || true
-    text="$(tr '\n' ' ' < "$work/out.txt" 2>/dev/null | sed -e 's/\[BLANK_AUDIO\]//g' -e 's/  */ /g' -e 's/^ //' -e 's/ $//')"
+    text="$(paste -sd "$join" < "$work/out.txt" 2>/dev/null | sed -e 's/\[BLANK_AUDIO\]//g' -e 's/  */ /g' -e 's/^ //' -e 's/ $//')"
     log "text=[$text]"
 
     if [ -z "$text" ]; then
@@ -174,7 +199,7 @@ writeShellApplication {
       fcitx5-remote -c || true
       sleep 0.2
     fi
-    xdotool type --clearmodifiers --delay 2 -- "$text" || log "xdotool type failed"
+    xdotool type --clearmodifiers --delay "$type_delay" -- "$text" || log "xdotool type failed"
     if [ "$ime_state" = 2 ]; then
       sleep 0.2
       fcitx5-remote -o || true
