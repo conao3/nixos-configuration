@@ -178,7 +178,7 @@ let
 
   mcpServersJson = builtins.toJSON mcpServers;
   applyMcpServers = ''
-    ${pkgs.jq}/bin/jq --argjson servers '${mcpServersJson}' '.mcpServers = $servers' \
+    ${pkgs.jq}/bin/jq --argjson servers ${lib.escapeShellArg mcpServersJson} '.mcpServers = $servers' \
       "$settingsTarget" > "$settingsTarget.tmp" && mv "$settingsTarget.tmp" "$settingsTarget"
   '';
 in

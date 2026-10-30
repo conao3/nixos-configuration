@@ -22,6 +22,7 @@
     '';
     envExtra = ''
       [[ -s "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+      [[ -r "$HOME/.config/flovia/key" ]] && export FLOVIA_KEY="$(<"$HOME/.config/flovia/key")"
     '';
   };
 }

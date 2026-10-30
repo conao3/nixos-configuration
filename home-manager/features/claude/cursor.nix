@@ -33,7 +33,7 @@ let
         args = srv.args or [ ];
       }
       // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
-  ) mcpServers;
+  ) (lib.filterAttrs (_: srv: !(srv ? headersHelper)) mcpServers);
 in
 {
   # Same MCP servers as Claude/Codex; Cursor profile dir == CURSOR_HOME (--user-data-dir).

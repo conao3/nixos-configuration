@@ -41,7 +41,7 @@ let
         args = srv.args or [ ];
       }
       // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
-  ) mcpServers;
+  ) (lib.filterAttrs (_: srv: !(srv ? headersHelper)) mcpServers);
   fuguCatalog = ./fugu/fugu.json;
   fuguProvider = {
     name = "Sakana API";

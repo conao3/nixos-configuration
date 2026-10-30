@@ -211,6 +211,11 @@ let
       type = "http";
       url = "https://mcp.freee.co.jp/mcp";
     };
+    flovia = {
+      type = "http";
+      url = "https://api.flovia.dev/mcp";
+      headersHelper = "printf '{\"Authorization\":\"Bearer %s\"}' \"$(tr -d ' \\t\\r\\n' < ~/.config/flovia/key)\"";
+    };
   };
 in
 {
