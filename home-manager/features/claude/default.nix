@@ -41,6 +41,8 @@ in
           enable = true;
           exclude = [
             ".claude.json"
+            ".claude.json.tmp"
+            ".claude.json.*"
             ".credentials.json"
           ];
           discard = [ "settings.json" ];

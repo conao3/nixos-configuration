@@ -56,7 +56,7 @@ home-manager 本体の `programs.claude-code` / `programs.codex` / `programs.mcp
 | `agentsLib.delete` | キーを消す |
 | `agentsLib.migrate { from; to; }` | `from` なら `to` に書き換える。`to` なら何もしない。それ以外は残して警告する |
 
-attrset は再帰し、list と scalar は葉として扱う。対象が無い、空、symlink のときは `{}` から始める。TOML は yq で JSON にしてから当て、remarshal で TOML に戻す。JSON / TOML として読めないファイルは activation をエラーで止める。
+attrset は再帰し、list と scalar は葉として扱う。対象が無いか空のときは `{}` から始める。対象が symlink のときはリンク先の内容から始め、結果を実ファイルとして置く (リンク先は書き換えない)。書き込みは同じディレクトリに `mktemp` で作った新しいファイルを `mv` で置き換える。TOML は yq で JSON にしてから当て、remarshal で TOML に戻す。JSON / TOML として読めないファイルは activation をエラーで止める。
 
 警告は `warningsFile` に `WARN: <type> settings: <file>: .<path>: expected <from> or <to>, got <current>, skipping` の形で書く。ファイルは毎回の activation で作り直す。
 
@@ -66,7 +66,7 @@ attrset は再帰し、list と scalar は葉として扱う。対象が無い�
 
 `share.enable` の type ごとに、共有に入るインスタンスのディレクトリ (名前順) を走査する。
 
-- `share.exclude` の名前はインスタンスに残す。
+- `share.exclude` の名前はインスタンスに残す。共有ディレクトリを指す symlink になっていれば、リンク先の内容を写した実ファイルに戻す (リンク先が無ければ消す)。
 - symlink は共有側を指すように張り直す。
 - ディレクトリは共有側へ移す。共有側に既にあれば上書きせずに中身を足す。
 - ファイルは `<共有ディレクトリ>.backup-<日時>/` へ控えてから共有側へ寄せる。

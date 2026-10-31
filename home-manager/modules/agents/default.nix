@@ -76,7 +76,7 @@ let
     label=$4
     warnFile=$5
     ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$target")"
-    if [ ! -f "$target" ] || [ -L "$target" ] || [ ! -s "$target" ]; then
+    if [ ! -f "$target" ] || [ ! -s "$target" ]; then
       current='{}'
     elif [ "$format" = toml ]; then
       current=$(${lib.getExe pkgs.yq-go} -p toml -o json "$target")
@@ -85,17 +85,19 @@ let
     fi
     out=$(printf '%s' "$current" \
       | ${lib.getExe pkgs.jq} --slurpfile ops "$ops" --arg label "$label" --arg target "$target" -f ${./merge.jq})
+    tmp=$(${pkgs.coreutils}/bin/mktemp "$(${pkgs.coreutils}/bin/dirname "$target")/.agents-merge.XXXXXX")
     warnings=$(printf '%s' "$out" | ${lib.getExe pkgs.jq} -r '.warnings[]')
     if [ -n "$warnings" ]; then
       printf '%s\n' "$warnings" >> "$warnFile"
     fi
     if [ "$format" = toml ]; then
       printf '%s' "$out" | ${lib.getExe pkgs.jq} '.result' \
-        | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$target.tmp"
+        | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$tmp"
     else
-      printf '%s' "$out" | ${lib.getExe pkgs.jq} '.result' > "$target.tmp"
+      printf '%s' "$out" | ${lib.getExe pkgs.jq} '.result' > "$tmp"
     fi
-    ${pkgs.coreutils}/bin/mv "$target.tmp" "$target"
+    ${pkgs.coreutils}/bin/chmod 0644 "$tmp"
+    ${pkgs.coreutils}/bin/mv -T "$tmp" "$target"
   '';
 
   activationFor =

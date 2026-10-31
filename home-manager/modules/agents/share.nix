@@ -30,7 +30,19 @@ in
     for path in "$p"/*; do
       e="$(${coreutils}/basename "$path")"
       case "$e" in
-        ${excludeCase}) continue ;;
+        ${excludeCase})
+          if [ -L "$path" ]; then
+            link="$(${coreutils}/readlink "$path")"
+            if [ "''${link#"$shared"/}" != "$link" ]; then
+              if [ -f "$path" ]; then
+                ${coreutils}/cp --remove-destination "$link" "$path"
+              else
+                ${coreutils}/rm -f "$path"
+              fi
+            fi
+          fi
+          continue
+          ;;
       esac
       target="$shared/$e"
       if [ -L "$path" ]; then
