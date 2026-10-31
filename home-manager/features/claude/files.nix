@@ -1,24 +1,4 @@
-{
-  pkgs,
-  lib,
-  inputs,
-  system,
-  ...
-}:
-let
-  inherit
-    (import ./common.nix {
-      inherit
-        pkgs
-        lib
-        inputs
-        system
-        ;
-    })
-    claudeBin
-    agentInstructionFileEntries
-    ;
-in
+{ config, ... }:
 {
   home.file = {
     ".claude" = {
@@ -30,7 +10,7 @@ in
         globalShortcut = "Alt+Cmd+Space";
         mcpServers = {
           claude-code = {
-            command = claudeBin;
+            command = config.programs.agents.types.claude.executable;
             args = [
               "mcp"
               "serve"
@@ -39,13 +19,5 @@ in
         };
       };
     };
-  }
-  // builtins.listToAttrs (
-    map (entry: {
-      name = entry.name;
-      value = {
-        source = entry.template;
-      };
-    }) agentInstructionFileEntries
-  );
+  };
 }

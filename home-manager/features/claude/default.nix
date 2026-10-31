@@ -1,73 +1,110 @@
 {
   pkgs,
-  lib,
   inputs,
   system,
   ...
 }:
 let
-  inherit
-    (import ./common.nix {
-      inherit
-        pkgs
-        lib
-        inputs
-        system
-        ;
-    })
-    llmAgents
-    aliasSpecs
-    codexBin
-    wrapperPackages
-    cursorProfilePackages
-    sakanaProfilePackages
-    ;
+  llmAgents = inputs.llm-agents.packages.${system};
 in
 {
   imports = [
-    ./files.nix
-    ./dirs.nix
-    ./settings.nix
-    ./share.nix
+    ../../modules/agents
+    ./agmsg.nix
     ./codex.nix
     ./cursor.nix
+    ./files.nix
+    ./mcp.nix
+    ./settings.nix
   ];
 
-  home.packages =
-    wrapperPackages
-    ++ cursorProfilePackages
-    ++ sakanaProfilePackages
-    ++ [
-      inputs.nix-claude-code.packages.${system}.default
-      llmAgents.codex
-      # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
-      pkgs.sox
-    ]
-    ++ map (spec: pkgs.writeShellScriptBin spec.executableName ''exec ${spec.target} "$@"'') aliasSpecs;
+  programs.agents = {
+    enable = true;
+    instructions = ./AGENTS.md;
+    common = {
+      ensureFiles = [ "MEMORY.md" ];
+      directories = [
+        "MEMORY_SUGGEST"
+        "projects"
+        "notes"
+      ];
+    };
+    warningsFile = ".claude/settings-warnings.log";
+
+    types = {
+      claude = {
+        package = inputs.nix-claude-code.packages.${system}.default;
+        envVar = "CLAUDE_CONFIG_DIR";
+        homeDir = ".claude";
+        instructionsFile = "CLAUDE.md";
+        share = {
+          enable = true;
+          exclude = [
+            ".claude.json"
+            ".credentials.json"
+          ];
+          discard = [ "settings.json" ];
+        };
+      };
+      codex = {
+        package = llmAgents.codex;
+        envVar = "CODEX_HOME";
+        homeDir = ".codex";
+        share = {
+          enable = true;
+          exclude = [ "auth.json" ];
+          history.sortKey = ".ts";
+        };
+      };
+      pi = {
+        executable = "${llmAgents.pi}/bin/pi";
+        envVar = "PI_CODING_AGENT_DIR";
+      };
+      cursor-agent = {
+        executable = pkgs.lib.getExe llmAgents.cursor-agent;
+        envVar = "CURSOR_HOME";
+      };
+    };
+
+    instances = {
+      "claude.conao3" = { };
+      "claude.toyokumo" = { };
+      "claude.recerqa" = { };
+      "claude.agent001" = { };
+      "claude.agent002" = { };
+      "claude.agent003" = { };
+      "claude.yui" = { };
+      "claude.worker" = {
+        share = false;
+        instructions = ./AGENTS-worker.md;
+      };
+      "codex.conao3" = { };
+      "codex.agent001" = { };
+      "codex.agent002" = { };
+      "codex.worker" = {
+        share = false;
+        instructions = ./AGENTS-worker.md;
+      };
+      "pi.agent001" = { };
+      "pi.agent002" = { };
+      "cursor-agent.agent001" = { };
+    };
+
+    aliases = {
+      cursor = "cursor.agent001";
+      cursor-agent = "cursor-agent.agent001";
+      pi = "pi.agent001";
+    };
+  };
+
+  home.packages = [
+    # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
+    pkgs.sox
+  ];
 
   programs.git.ignores = [
     ".claude"
     ".claude-dev"
     ".codex"
   ];
-
-  programs.zsh.initContent = lib.mkAfter ''
-    codex() {
-      AGMSG_REAL_CODEX=${codexBin} \
-        "$HOME/.agents/skills/agmsg/scripts/drivers/types/codex/codex-shim.sh" "$@"
-    }
-  '';
-  # drawio-mcp-server 常駐 service。各エージェントは common.nix の mcpServers.drawio
-  # (http://127.0.0.1:3733/mcp) でこの 1 プロセスを共有する。stdio でセッションごとに
-  # spawn すると拡張用 WebSocket ポート 3333 が衝突するため常駐にしている
-  systemd.user.services.drawio-mcp = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
-    Unit.Description = "Draw.io MCP server (shared, http transport)";
-    Service = {
-      ExecStart = "${
-        pkgs.callPackage ../../../pkgs/drawio-mcp-server.nix { }
-      }/bin/drawio-mcp-server --transport http --http-port 3733 --host 127.0.0.1";
-      Restart = "on-failure";
-    };
-    Install.WantedBy = [ "default.target" ];
-  };
 }

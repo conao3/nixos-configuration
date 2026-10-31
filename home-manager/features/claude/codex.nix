@@ -1,48 +1,12 @@
 {
   pkgs,
-  lib,
   inputs,
   system,
+  agentsLib,
   ...
 }:
 let
-  inherit
-    (import ./common.nix {
-      inherit
-        pkgs
-        lib
-        inputs
-        system
-        ;
-    })
-    codexConfigDirs
-    codexSpecDirs
-    mcpServers
-    ;
-
-  codexMcpServers = lib.mapAttrs (
-    _: srv:
-    let
-      usesDevinEnvBearer =
-        lib.hasAttrByPath [ "headers" "Authorization" ] srv
-        && srv.headers.Authorization == "Bearer \${DEVIN_API_KEY}";
-    in
-    if srv ? url then
-      {
-        type = "http";
-        inherit (srv) url;
-      }
-      // lib.optionalAttrs usesDevinEnvBearer {
-        bearer_token_env_var = "DEVIN_API_KEY";
-      }
-    else
-      {
-        command = srv.command;
-        args = srv.args or [ ];
-      }
-      // lib.optionalAttrs (srv ? env) { inherit (srv) env; }
-  ) (lib.filterAttrs (_: srv: !(srv ? headersHelper)) mcpServers);
-  fuguCatalog = ./fugu/fugu.json;
+  llmAgents = inputs.llm-agents.packages.${system};
   fuguProvider = {
     name = "Sakana API";
     base_url = "https://api.sakana.ai/v1";
@@ -52,85 +16,70 @@ let
     stream_max_retries = 5;
     request_max_retries = 4;
   };
-  fuguProfile = {
-    model = "fugu";
-    model_reasoning_effort = "high";
-    model_provider = "sakana";
-    features = {
-      image_generation = false;
-      apps = false;
-    };
-  };
 in
 {
-  home.activation.codexMcpSettings =
-    lib.hm.dag.entryAfter
-      [
-        "writeBoundary"
-        "ensureAgentDirs"
-        "codexShareReconcile"
-      ]
-      (
-        let
-          codexFeatures = {
-            goals = true;
-          };
-          codexStatusLine = [
+  programs.agents.types.codex = {
+    # codex 0.158 の TUI は常駐 app-server daemon を要求するが、nix package は
+    # standalone installer 形式ではないため起動に失敗する。対話起動と resume / fork には
+    # --no-daemon を足す (exec など他のサブコマンドはこの flag を受け付けない)。
+    executable = "${pkgs.writeShellScript "codex-no-daemon" ''
+      real=${llmAgents.codex}/bin/codex
+      case "''${1-}" in
+        "" | -*) exec "$real" --no-daemon "$@" ;;
+        resume | fork)
+          sub=$1
+          shift
+          exec "$real" "$sub" --no-daemon "$@"
+          ;;
+        *) exec "$real" "$@" ;;
+      esac
+    ''}";
+    mcp = {
+      format = "codex";
+      key = "mcp_servers";
+      files = [ "config.toml" ];
+    };
+    files = {
+      "config.toml" = {
+        onConflict = "overwrite";
+        settings = {
+          approval_policy = "never";
+          sandbox_mode = "danger-full-access";
+          features = agentsLib.force { goals = true; };
+          model_providers.sakana = agentsLib.force fuguProvider;
+          tui.status_line = [
             "thread-title"
             "model-with-reasoning"
             "context-remaining"
             "current-dir"
           ];
-          codexBaseJson = builtins.toJSON {
-            approval_policy = "never";
-            sandbox_mode = "danger-full-access";
-            mcp_servers = codexMcpServers;
-            features = codexFeatures;
-            model_providers.sakana = fuguProvider;
-            tui.status_line = codexStatusLine;
+          profiles.fugu = agentsLib.delete;
+        };
+      };
+      "fugu.json" = {
+        strategy = "overwrite";
+        source = ./fugu/fugu.json;
+      };
+      "fugu.config.toml" = {
+        strategy = "overwrite";
+        settings =
+          { dir }:
+          {
+            model = "fugu";
+            model_reasoning_effort = "high";
+            model_provider = "sakana";
+            model_catalog_json = "${dir}/fugu.json";
+            features = {
+              image_generation = false;
+              apps = false;
+            };
           };
-        in
-        ''
-          ${lib.concatMapStringsSep "\n" (dir: ''
-            mkdir -p "${dir}"
-            install -m 0644 ${fuguCatalog} "${dir}/fugu.json"
-            fuguProfileTarget="${dir}/fugu.config.toml"
-            echo '${builtins.toJSON fuguProfile}' \
-              | ${pkgs.jq}/bin/jq --arg dir "${dir}" '. + {model_catalog_json: ($dir + "/fugu.json")}' \
-              | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$fuguProfileTarget"
-            configTarget="${dir}/config.toml"
-            if [ ! -f "$configTarget" ] || [ -L "$configTarget" ] || [ ! -s "$configTarget" ]; then
-              rm -f "$configTarget"
-              echo '${codexBaseJson}' | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget"
-            else
-              ${pkgs.yq-go}/bin/yq -p toml -o json "$configTarget" \
-                | ${pkgs.jq}/bin/jq \
-                    --argjson servers '${builtins.toJSON codexMcpServers}' \
-                    --argjson features '${builtins.toJSON codexFeatures}' \
-                    --argjson provider '${builtins.toJSON fuguProvider}' \
-                    --argjson statusLine '${builtins.toJSON codexStatusLine}' \
-                    'del(.profiles.fugu)
-                     | .approval_policy = "never"
-                     | .sandbox_mode = "danger-full-access"
-                     | .mcp_servers = $servers
-                     | .features = $features
-                     | .model_providers.sakana = $provider
-                     | .tui.status_line = $statusLine' \
-                | ${pkgs.remarshal}/bin/remarshal -f json -t toml > "$configTarget.tmp" \
-                && mv "$configTarget.tmp" "$configTarget"
-            fi
-          '') codexConfigDirs}
-          ${lib.concatMapStringsSep "\n" (dir: ''
-            if [ -d "${dir}" ]; then
-              for f in fugu.config.toml fugu.json; do
-                target="$HOME/.agents/.codex/$f"
-                link="${dir}/$f"
-                if [ -e "$target" ] && { [ ! -e "$link" ] || [ -L "$link" ]; }; then
-                  ln -sfn "$target" "$link"
-                fi
-              done
-            fi
-          '') codexSpecDirs}
-        ''
-      );
+      };
+    };
+  };
+
+  programs.agents.instances."codex.agent001".extraWrappers."codex.sakana.agent001".makeWrapperArgs = [
+    "--add-flags"
+    "-p fugu"
+  ];
 }
