@@ -118,6 +118,13 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
+    nix-agents = {
+      url = "github:conao3/nix-agents";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs =

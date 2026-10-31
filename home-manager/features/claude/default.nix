@@ -9,7 +9,7 @@ let
 in
 {
   imports = [
-    ../../modules/agents
+    inputs.nix-agents.homeManagerModules.default
     ./agmsg.nix
     ./codex.nix
     ./cursor.nix

@@ -505,6 +505,35 @@
         "type": "github"
       }
     },
+    "nix-agents": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "home-manager": [
+          "home-manager"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793417736,
+        "narHash": "sha256-VntDDikW/p3heqJgcXcJeBRcvpB7UQy5dEHlYumRn90=",
+        "owner": "conao3",
+        "repo": "nix-agents",
+        "rev": "e25b2fa9f570405664fcc7d9e8f072822c02fc1b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "nix-agents",
+        "type": "github"
+      }
+    },
     "nix-claude-code": {
       "inputs": {
         "nixpkgs": [
@@ -861,6 +890,7 @@
         "idea-routine": "idea-routine",
         "keg": "keg",
         "llm-agents": "llm-agents",
+        "nix-agents": "nix-agents",
         "nix-claude-code": "nix-claude-code",
         "nix-darwin": "nix-darwin",
         "nix-flakes": "nix-flakes",
