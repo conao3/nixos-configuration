@@ -90,6 +90,45 @@
     ''}"
   ];
 
+  programs.steam = {
+    remotePlay.openFirewall = lib.mkForce false;
+    dedicatedServer.openFirewall = lib.mkForce false;
+    localNetworkGameTransfers.openFirewall = lib.mkForce false;
+  };
+
+  services.resolved = {
+    enable = true;
+    settings.Resolve = {
+      DNS = [
+        "1.1.1.1#cloudflare-dns.com"
+        "1.0.0.1#cloudflare-dns.com"
+        "2606:4700:4700::1111#cloudflare-dns.com"
+        "2606:4700:4700::1001#cloudflare-dns.com"
+      ];
+      DNSOverTLS = "opportunistic";
+      Domains = [ "~." ];
+      LLMNR = false;
+      MulticastDNS = false;
+    };
+  };
+
+  networking.networkmanager = {
+    dns = lib.mkForce "none";
+    settings.main.systemd-resolved = false;
+    wifi.macAddress = "stable";
+    dispatcherScripts = [
+      {
+        type = "basic";
+        source = pkgs.writeShellScript "open-wifi-no-autoconnect" ''
+          [ "$2" = up ] || exit 0
+          [ "$(${pkgs.networkmanager}/bin/nmcli -g connection.type connection show "$CONNECTION_UUID")" = 802-11-wireless ] || exit 0
+          [ -z "$(${pkgs.networkmanager}/bin/nmcli -g 802-11-wireless-security.key-mgmt connection show "$CONNECTION_UUID")" ] || exit 0
+          ${pkgs.networkmanager}/bin/nmcli connection modify "$CONNECTION_UUID" connection.autoconnect no
+        '';
+      }
+    ];
+  };
+
   networking.firewall = {
     trustedInterfaces = [
       "cni0"
