@@ -90,8 +90,26 @@
     ''}"
   ];
 
-  networking.firewall.trustedInterfaces = [
-    "cni0"
-    "flannel.1"
-  ];
+  networking.firewall = {
+    trustedInterfaces = [
+      "cni0"
+      "flannel.1"
+    ];
+    extraCommands = ''
+      iptables -t mangle -N eos-lan-dnat 2>/dev/null || true
+      iptables -t mangle -F eos-lan-dnat
+      iptables -t mangle -A eos-lan-dnat -m conntrack --ctstate DNAT --ctdir ORIGINAL -j DROP
+      for iface in wl+ en+; do
+        iptables -t mangle -C FORWARD -i "$iface" -j eos-lan-dnat 2>/dev/null \
+          || iptables -t mangle -I FORWARD -i "$iface" -j eos-lan-dnat
+      done
+    '';
+    extraStopCommands = ''
+      for iface in wl+ en+; do
+        iptables -t mangle -D FORWARD -i "$iface" -j eos-lan-dnat 2>/dev/null || true
+      done
+      iptables -t mangle -F eos-lan-dnat 2>/dev/null || true
+      iptables -t mangle -X eos-lan-dnat 2>/dev/null || true
+    '';
+  };
 }
