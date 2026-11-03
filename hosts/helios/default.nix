@@ -106,7 +106,7 @@ in
   #   serviceConfig = {
   #     Type = "simple";
   #     WorkingDirectory = "/home/conao/ghq";
-  #     ExecStart = "${cagentBin} server";
+  #     ExecStart = "${cagentBin} server start-server";
   #     Restart = "always";
   #     RestartSec = "5";
   #   };
