@@ -2,12 +2,14 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
 {
   imports = [
     ./hardware-configuration.nix
+    (inputs.nix-flakes + "/nixos/substituters.nix")
   ];
 
   networking.hostName = "conao-nixos-eos";
@@ -51,21 +53,6 @@
   services.xserver = {
     autoRepeatDelay = 300;
     autoRepeatInterval = 30;
-  };
-
-  nix.settings = {
-    substituters = [
-      # keep-sorted start
-      "https://attmcojp.cachix.org"
-      "https://motoki317-ksync.cachix.org"
-      # keep-sorted end
-    ];
-    trusted-public-keys = [
-      # keep-sorted start
-      "attmcojp.cachix.org-1:oru6oV4EttotACGO/YDhmsEyPlPSytG6zWUgTRH3BMQ="
-      "motoki317-ksync.cachix.org-1:uDM0RWapTkolNEgkcqQIGpmJc3bumFf+y3RYj50jQA0="
-      # keep-sorted end
-    ];
   };
 
   services.k3s = {
