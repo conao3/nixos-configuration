@@ -23,6 +23,7 @@
 
   ".serena"
   ".pnpm-store"
+  ".yomiyasu"
 
   # Refference supprements
   ".ref"
