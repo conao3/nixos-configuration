@@ -11,7 +11,7 @@
   - Codex: `$CODEX_HOME`
   - Cursor（cursor-agent プロファイル）: `$CURSOR_HOME`
 - `{agent_global_home}` — エージェント間で共有するディレクトリ。常に **`$HOME/.agents/share`** とする。`{agent_home}` とは別物。
-  - 実体は `~/ghq/github.com/conao3/agents-share/src/` の git レポジトリ。`MEMORY.md` / `MEMORY_SUGGEST/` / `notes/` / `projects/` / `specs/` / `auto-memory/` は symlink でこの repo を指す。`{agent_global_home}` 配下を編集した内容は agents-share でコミットする (conao3 配下なので AGENTS.md の能動的 commit ルールが適用される)。
+  - 実体は `~/ghq/github.com/conao3/agents-share/src/` の git レポジトリ。`MEMORY.md` / `MEMORY_SUGGEST/` / `notes/` / `projects/` / `specs/` は symlink でこの repo を指す。`auto-memory/` は Claude の自動メモリのディレクトリで、ローカルにだけある。`{agent_global_home}` 配下を編集した内容は agents-share でコミットする (conao3 配下なので AGENTS.md の能動的 commit ルールが適用される)。
   - 例外: `AGENTS.md` (このファイル) のみ home-manager が nix store からの read-only symlink として配置する。更新は `~/ghq/github.com/conao3/nixos-configuration/home-manager/features/claude/AGENTS.md` を編集して `make switch` で反映する。
 - `{project_dir_canonical}` — リポジトリのメイン作業ツリー（共有 `.git` を含むディレクトリの親）を、ホームからの相対パスにしたうえで `/` と `.` を `-` に置換した識別子。
 
@@ -20,7 +20,7 @@
   echo "$MAIN" | sed "s|^$HOME/||" | tr /. -
   ```
 
-  `git rev-parse --show-toplevel` は `{project_dir_canonical}` の算出に使わない。
+  worktree の中でも、上のコマンドでメイン作業ツリーから算出する。
 
 ## ファイル構造
 
@@ -73,12 +73,11 @@
 
 判定:
 
-- trigger は「自分が出そうとしている tool 呼び出しの path / cwd が現在の作業 repo と異なる owner/repo を指していること」。物理判定であり、「主作業の延長」「設定ファイルなので付随作業」「軽い編集だけ」のような自己解釈で省略しない。
+- trigger は「自分が出そうとしている tool 呼び出しの path / cwd が現在の作業 repo と異なる owner/repo を指していること」。path・cwd の owner/repo だけで判定し、作業の軽重に関わらず読む。
 - 対象レポジトリが切り替わるたびに、その都度 1 回ずつ。同セッション中に同じ repo へ戻ってきたら再読は不要。
 - ファイルが無い場合のフォールバックは「毎セッション開始時」と同じ。
 - 該当ファイルが `notes/` への参照を持つ場合は合わせて読む。
-
-これを踏まなかったときに起きる典型損害: 別 repo の `make` / `nix rebuild` / `pnpm db:reset` 等の操作を「破壊的かわからないからユーザー判断」と外に出してしまう (projects メモを読めばエージェント実行可と明記されていることが多い)。逆に projects メモを読まずに勝手に破壊的操作を流す方向の事故も同じ仕組みで起きうる。
+- 別 repo での `make` / `nix rebuild` / `pnpm db:reset` 等の実行可否は、読んだ projects メモの記述に従う。
 
 ## `.claude-dev/` の配置
 
@@ -93,7 +92,7 @@
 - それ以外のレポジトリ（他者・組織所有）はユーザーが明示的に commit と指示することが必要。指示は当該作業単位（一連の commit batch）に対する許可と解釈する。別の論理タスク（別 PR、独立した作業単位）に移ったら、たとえ同セッション内でも再度の明示指示を取り直す。
 - commit 直前に `git diff --cached` で staged 内容を必ず目視する。
 - commit メッセージは当該レポジトリの慣習に合わせる。`git log --oneline` で過去 commit の実例（言語、prefix の形式、scope の取り方）を確認してから書く。慣習例: lowercase 英語 + `feat:` / `fix:` / `<package>:` / 日本語 + `feat(scope):` など、レポごとに異なる。
-- `push` は共有状態を変えるため、引き続きユーザーの明示指示が必要。
+- push も、この 2 つの owner の repo では 1 回ごとの許可を取らずに行う。force push とリモートのブランチ・タグの削除・書き換えは、1 回ごとに明示の許可を取る。それ以外の repo の push は、1 回ごとにユーザーの明示許可を取ってから行う。
 
 ## 長期記憶への貢献
 
@@ -109,5 +108,5 @@
 - 直接編集したプロジェクト固有メモの内容は、記憶の提案ファイルには重複して書かない。
 - 提案として書く内容が無い場合は、`MEMORY_SUGGEST/` にファイルを作成しなくてよい。
 - 複数プロジェクトの作業をした場合は、対象プロジェクトごとに直接編集または記憶の提案を行う。
-- ユーザーから受けた指摘は、以後のアウトプット品質を改善する重要な知識として扱い、プロジェクト固有メモや notes へ積極的に反映する。
-- `{agent_global_home}` 配下 (`MEMORY.md` / `projects/*.md` / `notes/*.md` / `MEMORY_SUGGEST/*.md` / `specs/**` 等) を編集したら、その編集を含む作業単位の完了報告**前**に `~/ghq/github.com/conao3/agents-share/` を commit する。conao3 配下 repo なので「`ghq/github.com/conao3/` と `ghq/github.com/sancode-org/` 配下のコミット運用」が適用され、ユーザー指示は不要。編集だけして commit しない状態でユーザーへ完了報告するのは規約違反。トリガは「物理的に share 配下のファイルを編集 (Edit/Write) した」ことであり、「重要そうかどうか」「ユーザーが見たがってそうか」で判断しない。
+- ユーザーから受けた指摘は `notes/playbook/user-feedback.md` の手順で、プロジェクト固有メモや notes へ反映する。
+- `{agent_global_home}` 配下 (`MEMORY.md` / `projects/*.md` / `notes/*.md` / `MEMORY_SUGGEST/*.md` / `specs/**` 等) を編集したら、その編集を含む作業単位の完了報告**前**に `~/ghq/github.com/conao3/agents-share/` を commit する (「`ghq/github.com/conao3/` と `ghq/github.com/sancode-org/` 配下のコミット運用」を適用する)。トリガは share 配下のファイルを Edit/Write で編集したことで、編集の内容の大小に関わらず commit する。
