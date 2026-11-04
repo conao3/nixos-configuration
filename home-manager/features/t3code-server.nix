@@ -6,7 +6,7 @@
   ...
 }:
 let
-  t3 = inputs.llm-agents.packages.${system}.t3code;
+  t3 = (import ../../pkgs/t3code.nix { inherit inputs system; }).t3code;
 in
 {
   # T3 Code の headless server 常駐 (他ホストの T3 から接続先ノードとして使う)。

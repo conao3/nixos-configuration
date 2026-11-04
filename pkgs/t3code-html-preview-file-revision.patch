@@ -1,0 +1,112 @@
+diff --git a/apps/server/src/assets/AssetAccess.ts b/apps/server/src/assets/AssetAccess.ts
+index 41f0d8e3a7..e5f760641a 100644
+--- a/apps/server/src/assets/AssetAccess.ts
++++ b/apps/server/src/assets/AssetAccess.ts
+@@ -505,11 +505,26 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
+           }),
+       ),
+     );
+-    const imageDimensions = HEADER_IMAGE_EXTENSIONS.has(
+-      path.extname(resolved.relativePath).toLowerCase(),
+-    )
+-      ? yield* readImageDimensionsFromHeader(canonicalFile)
+-      : null;
++    const opened = yield* Effect.gen(function* () {
++      const file = yield* openMediaFile(canonicalFile);
++      if (file === null) return null;
++      return {
++        fileRevision: `${file.info.dev}:${file.info.ino}:${file.info.size}:${file.info.mtimeNs}:${file.info.ctimeNs}`,
++        imageDimensions: HEADER_IMAGE_EXTENSIONS.has(
++          path.extname(resolved.relativePath).toLowerCase(),
++        )
++          ? yield* readImageDimensionsFromOpenFile(canonicalFile, file)
++          : null,
++      };
++    }).pipe(
++      Effect.scoped,
++      Effect.mapError(
++        (cause) => new AssetWorkspaceAssetInspectionError({ resource: input.resource, cause }),
++      ),
++    );
++    if (opened === null) {
++      return yield* new AssetWorkspaceAssetNotFoundError({ resource: input.resource });
++    }
+     return {
+       claims: !/\.html?$/i.test(resolved.relativePath)
+         ? {
+@@ -527,8 +542,8 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
+             expiresAt: input.expiresAt,
+           },
+       fileName: path.basename(resolved.relativePath),
+-      imageDimensions,
+-      fileRevision: undefined,
++      imageDimensions: opened.imageDimensions,
++      fileRevision: opened.fileRevision,
+     };
+   },
+ );
+@@ -603,6 +618,7 @@ export const issueAssetUrl = Effect.fn("AssetAccess.issueAssetUrl")(function* (i
+       claims = finalized.claims;
+       fileName = finalized.fileName;
+       imageDimensions = finalized.imageDimensions;
++      fileRevision = finalized.fileRevision;
+       break;
+     }
+     case "draft-workspace-file": {
+diff --git a/apps/web/src/components/files/FilePreviewPanel.tsx b/apps/web/src/components/files/FilePreviewPanel.tsx
+index 234f077da9..8f0e3ccd81 100644
+--- a/apps/web/src/components/files/FilePreviewPanel.tsx
++++ b/apps/web/src/components/files/FilePreviewPanel.tsx
+@@ -58,6 +58,7 @@ import { MorphIcon } from "~/components/MorphIcon";
+ import { useRemoteOpenState } from "~/remoteOpen";
+ import { useClientSettings } from "~/hooks/useSettings";
+ import { useTheme } from "~/hooks/useTheme";
++import { useDeadlinePassed } from "~/hooks/useDeadline";
+ import { getLocalStorageItem, setLocalStorageItem, useLocalStorage } from "~/hooks/useLocalStorage";
+ import { resolveDiffThemeName } from "~/lib/diffRendering";
+ import { PREFERRED_HIGHLIGHTER } from "~/lib/syntaxHighlighting";
+@@ -239,17 +240,29 @@ export function WorkspaceBrowserPreview(props: {
+     workspaceRoot: props.workspaceRoot,
+     absolutePath: props.absolutePath,
+   });
+-  const assetUrl = useAssetUrlState(
+-    props.environmentId,
+-    resource,
+-    pdf ? props.workspaceMutationId : undefined,
+-  );
+-  const fileRevision = pdf && assetUrl._tag === "Success" ? assetUrl.fileRevision : undefined;
++  const assetUrl = useAssetUrlState(props.environmentId, resource, props.workspaceMutationId);
++  const fileRevision = assetUrl._tag === "Success" ? assetUrl.fileRevision : undefined;
+   const revision = fileRevision ?? props.workspaceMutationId;
+   const revisionSuffix =
+     revision === null
+       ? ""
+       : `${assetUrl._tag === "Success" && assetUrl.url.includes("?") ? "&" : "?"}${fileRevision !== undefined ? "file" : "workspace"}-revision=${encodeURIComponent(revision)}`;
++  const [documentGrant, setDocumentGrant] = useState<{
++    revision: string | null;
++    expiresAt: number;
++  } | null>(null);
++  const documentGrantExpiring = useDeadlinePassed(
++    documentGrant === null ? null : documentGrant.expiresAt - 60_000,
++  );
++  if (
++    !pdf &&
++    assetUrl._tag === "Success" &&
++    (documentGrant === null ||
++      documentGrant.revision !== revision ||
++      (assetUrl.expiresAt > documentGrant.expiresAt && documentGrantExpiring))
++  ) {
++    setDocumentGrant({ revision, expiresAt: assetUrl.expiresAt });
++  }
+ 
+   if (assetUrl._tag === "Failure") {
+     return (
+@@ -271,7 +284,7 @@ export function WorkspaceBrowserPreview(props: {
+   return (
+     <BrowserDocumentFrame
+       src={`${assetUrl.url}${revisionSuffix}`}
+-      documentKey={`${props.environmentId}:${resource._tag}:${props.threadRef.threadId}:${props.absolutePath}:${revision}`}
++      documentKey={`${props.environmentId}:${resource._tag}:${props.threadRef.threadId}:${props.absolutePath}:${revision}${pdf ? "" : `:${documentGrant?.expiresAt}`}`}
+       documentId={`${props.environmentId}:${resource._tag}:${props.threadRef.threadId}:${props.absolutePath}`}
+       title={props.title}
+       pdf={pdf}

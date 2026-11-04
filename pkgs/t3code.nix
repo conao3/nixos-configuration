@@ -1,0 +1,16 @@
+{
+  inputs,
+  system,
+}:
+let
+  llmAgents = inputs.llm-agents.packages.${system};
+  t3code = llmAgents.t3code.override {
+    t3code-unwrapped = llmAgents.t3code.unwrapped.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./t3code-html-preview-file-revision.patch ];
+    });
+  };
+in
+{
+  inherit t3code;
+  t3code-desktop = llmAgents.t3code-desktop.override { inherit t3code; };
+}
