@@ -577,11 +577,11 @@
     "nix-flakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1793827072,
-        "narHash": "sha256-ZsKml2iuT1mBkNOS8wAU9coZnXdu9I36lMLtedG5Xss=",
+        "lastModified": 1793830020,
+        "narHash": "sha256-Quie1DrSAhQmK39O+/KUSySTlgoe/PculqV6iic0VCE=",
         "ref": "refs/heads/master",
-        "rev": "62fa2853f54ec5c53d83939690f999131c0305b3",
-        "revCount": 105,
+        "rev": "fae8489430506f793841fbf5c5fc9b9f561af6e0",
+        "revCount": 108,
         "type": "git",
         "url": "file:../nix-flakes"
       },
