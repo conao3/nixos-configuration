@@ -43,6 +43,32 @@
         "type": "github"
       }
     },
+    "awsr": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793911799,
+        "narHash": "sha256-b+C4nYGUHyTfU1kwsm1BFEv7e4q2idXgbz12UtB6EYc=",
+        "owner": "conao3",
+        "repo": "rust-awscli",
+        "rev": "425ad5855b6c9706f8d2b29d6251cf96aec51dd2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "rust-awscli",
+        "type": "github"
+      }
+    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -877,6 +903,7 @@
       "inputs": {
         "agent-friction": "agent-friction",
         "agmsg": "agmsg",
+        "awsr": "awsr",
         "chrome-devtools": "chrome-devtools",
         "claude-desktop": "claude-desktop",
         "codex-desktop-linux": "codex-desktop-linux",
