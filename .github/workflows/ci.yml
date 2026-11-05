@@ -30,5 +30,25 @@ jobs:
         run: |
           mkdir -p /tmp/nix-flakes-ci
           printf '{ }\n' > /tmp/nix-flakes-ci/nix-flakes-registry.nix
-          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace --override-input nix-flakes path:/tmp/nix-flakes-ci
-          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace --override-input nix-flakes path:/tmp/nix-flakes-ci
+          for name in agent-friction idea-routine; do
+            mkdir -p "/tmp/nix-flakes-ci/$name"
+            cat > "/tmp/nix-flakes-ci/$name/flake.nix" <<'STUB'
+          {
+            outputs = _: {
+              packages.x86_64-linux.default = builtins.derivation {
+                name = "stub";
+                system = "x86_64-linux";
+                builder = "/bin/sh";
+                args = [ "-c" "mkdir $out" ];
+              };
+            };
+          }
+          STUB
+          done
+          overrides=(
+            --override-input nix-flakes path:/tmp/nix-flakes-ci
+            --override-input agent-friction path:/tmp/nix-flakes-ci/agent-friction
+            --override-input idea-routine path:/tmp/nix-flakes-ci/idea-routine
+          )
+          nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace "${overrides[@]}"
+          nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace "${overrides[@]}"
