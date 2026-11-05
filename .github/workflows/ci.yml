@@ -30,6 +30,8 @@ jobs:
         run: |
           mkdir -p /tmp/nix-flakes-ci
           printf '{ }\n' > /tmp/nix-flakes-ci/nix-flakes-registry.nix
+          mkdir -p /tmp/nix-flakes-ci/nixos
+          printf '{ }\n' > /tmp/nix-flakes-ci/nixos/substituters.nix
           for name in agent-friction idea-routine; do
             mkdir -p "/tmp/nix-flakes-ci/$name"
             cat > "/tmp/nix-flakes-ci/$name/flake.nix" <<'STUB'
