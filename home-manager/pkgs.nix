@@ -69,6 +69,7 @@
         git-secrets
         git-wt
         gogcli
+        groff
         idea-routine
         imagemagick
         inetutils
