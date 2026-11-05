@@ -20,7 +20,9 @@ in
     Service = {
       ExecStart = "${t3}/bin/t3 serve --port 3774 --tailscale-serve --tailscale-serve-port 8443 %h";
       # provider (claude / codex) と git を子プロセスから呼ぶため user の PATH を渡す
-      Environment = [ "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin" ];
+      Environment = [
+        "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin"
+      ];
       Restart = "on-failure";
       RestartSec = 5;
     };
