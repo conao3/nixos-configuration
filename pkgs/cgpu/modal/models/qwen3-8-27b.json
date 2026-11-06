@@ -17,7 +17,13 @@
     "--tool-call-parser",
     "qwen3_coder",
     "--speculative-config",
-    "{\"method\": \"mtp\", \"num_speculative_tokens\": 3}"
+    "{\"method\": \"mtp\", \"num_speculative_tokens\": 3}",
+    "--max-num-batched-tokens",
+    "8192",
+    "--gpu-memory-utilization",
+    "0.9426",
+    "--safetensors-load-strategy",
+    "prefetch"
   ],
   "opencode": {
     "output": 32768,

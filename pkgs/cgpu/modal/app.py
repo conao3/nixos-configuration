@@ -10,19 +10,20 @@ SPEC = json.loads(base64.b64decode(os.environ["CGPU_MODEL_SPEC"]))
 app = modal.App(f"cgpu-{SPEC['name']}")
 
 hf_cache = modal.Volume.from_name("cgpu-hf-cache", create_if_missing=True)
+vllm_cache = modal.Volume.from_name("cgpu-vllm-cache", create_if_missing=True)
 
 image = (
     modal.Image.from_registry(SPEC["image"], add_python="3.12")
     .entrypoint([])
-    .pip_install(SPEC["vllm"], "hf_transfer")
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "CGPU_MODEL_SPEC": os.environ["CGPU_MODEL_SPEC"]})
+    .pip_install(SPEC["vllm"])
+    .env({"HF_XET_HIGH_PERFORMANCE": "1", "CGPU_MODEL_SPEC": os.environ["CGPU_MODEL_SPEC"]})
 )
 
 
 @app.function(
     image=image,
     gpu=SPEC["gpu"],
-    volumes={"/root/.cache/huggingface": hf_cache},
+    volumes={"/root/.cache/huggingface": hf_cache, "/root/.cache/vllm": vllm_cache},
     secrets=[modal.Secret.from_name("cgpu-api-key")],
     scaledown_window=SPEC["scaledown_seconds"],
     timeout=60 * 30,
