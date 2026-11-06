@@ -16,8 +16,9 @@ Run the self-hosted text LLM (vLLM on Modal) and wire it into OpenCode / T3 Code
 
 Daily use:
   up                  warm up the endpoint and wait until it answers (cold start takes 5-6 min)
-  status              show running containers and this month's usage
-  down                stop the running containers and wait until they are gone
+  status              show running containers, requests in progress and this month's usage
+  down [--force]      stop the running containers and wait until they are gone; refuses while
+                      requests are in progress or a container is still starting (--force stops anyway)
   chat <prompt>...    send one prompt and print the answer, the time and the tokens
                       (--think keeps the model's thinking on)
   logs                follow the server logs (Ctrl-C to quit)
@@ -95,22 +96,42 @@ cmd_up() {
   echo "ready ($(elapsed_since "$start")s): $url"
 }
 
+in_flight() {
+  local metrics
+  metrics=$(curl -s --max-time 10 -H "Authorization: Bearer $(api_key)" "$(endpoint_url)/metrics") || return 1
+  [ -n "$metrics" ] || return 1
+  echo "$metrics" | awk '/^vllm:num_requests_(running|waiting)[{ ]/ { n += $NF } END { printf "%d\n", n }'
+}
+
 cmd_status() {
-  local ids month
+  local ids month requests
   mapfile -t ids < <(containers)
   if [ "${#ids[@]}" -eq 0 ]; then
     echo "containers: none (not billing)"
   else
     echo "containers: ${#ids[@]} running"
     printf '  %s\n' "${ids[@]}"
+    if requests=$(in_flight); then
+      echo "requests in progress: $requests"
+    else
+      echo "requests in progress: unknown (the server is still starting)"
+    fi
   fi
   month=$(modal billing report --for "this month" --json | jq -r '[.[].cost | tonumber] | add // 0 | . * 100 | round / 100')
   echo "usage this month: \$$month (the included credits cover up to the usage limit)"
 }
 
 cmd_down() {
-  local ids
+  local ids requests
   mapfile -t ids < <(containers)
+  if [ "${#ids[@]}" -gt 0 ] && [ "${1:-}" != "--force" ]; then
+    if ! requests=$(in_flight); then
+      die "a container is still starting, likely for a waiting request; rerun with --force to stop it anyway"
+    fi
+    if [ "$requests" -gt 0 ]; then
+      die "$requests request(s) in progress; rerun with --force to stop anyway"
+    fi
+  fi
   for id in "${ids[@]}"; do
     modal container stop -y "$id"
   done
@@ -225,7 +246,7 @@ cmd_env() {
 case "${1:-}" in
   up) cmd_up ;;
   status) cmd_status ;;
-  down) cmd_down ;;
+  down) shift && cmd_down "$@" ;;
   chat) shift && cmd_chat "$@" ;;
   logs) exec modal app logs "$APP_NAME" ;;
   cost) shift && cmd_cost "$@" ;;
