@@ -56,11 +56,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793911799,
-        "narHash": "sha256-b+C4nYGUHyTfU1kwsm1BFEv7e4q2idXgbz12UtB6EYc=",
+        "lastModified": 1793940622,
+        "narHash": "sha256-AR6Lto75X9OqSMV+LlEK1WXcXp0jbykaLE+W+Fd+fS8=",
         "owner": "conao3",
         "repo": "rust-awscli",
-        "rev": "425ad5855b6c9706f8d2b29d6251cf96aec51dd2",
+        "rev": "38fd78c640de0a858935f83a88bd1ea7b2c0ea2f",
         "type": "github"
       },
       "original": {
