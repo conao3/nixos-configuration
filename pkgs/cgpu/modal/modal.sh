@@ -5,7 +5,9 @@ KEY_FILE="$CONFIG_DIR/api-key"
 OPENCODE_CONFIG_FILE="$CONFIG_DIR/opencode.json"
 SECRET_NAME="cgpu-api-key"
 FUNCTION_NAME="serve"
-REQUEST_TIMEOUT=160
+REQUEST_TIMEOUT=30
+READY_DEADLINE=1200
+STARTUP_FAILURE_PATTERN="failed during startup|Runner failed|EngineCore failed to start"
 
 usage() {
   cat <<'EOF'
@@ -54,7 +56,7 @@ require_model() {
 }
 
 spec() {
-  jq -c --arg name "$1" '. + {name: $name}' "$MODELS_DIR/$1.json"
+  jq -c --arg name "$1" '. + {name: $name}' "$MODELS_DIR/$1.json" | base64 -w0
 }
 
 spec_value() {
@@ -89,11 +91,20 @@ in_flight() {
   echo "$metrics" | awk '/^vllm:num_requests_(running|waiting)[{ ]/ { n += $NF } END { printf "%d\n", n }'
 }
 
+startup_failure() {
+  local logs
+  logs=$(modal app logs "$(app_name "$1")" --since "$2" --tail 2000 2>/dev/null || true)
+  if echo "$logs" | grep -qE "$STARTUP_FAILURE_PATTERN"; then
+    echo "$logs" | grep -E "$STARTUP_FAILURE_PATTERN|Error" | grep -v -E 'TimeoutError|ConnectionRefusedError' | tail -5 || true
+  fi
+}
+
 request_until_ready() {
-  local url="$1" body="$2" out="$3" key code start
+  local model="$1" url="$2" body="$3" out="$4" key code start since failure
   key=$(api_key)
   start=$(date +%s)
-  for _ in $(seq 1 10); do
+  since=$(date -d "@$start" +%Y-%m-%dT%H:%M:%S%:z)
+  while [ "$(elapsed_since "$start")" -lt "$READY_DEADLINE" ]; do
     code=$(curl -s -o "$out" -w '%{http_code}' --max-time "$REQUEST_TIMEOUT" \
       -H "Authorization: Bearer $key" -H 'Content-Type: application/json' \
       ${body:+-d "$body"} "$url" || true)
@@ -103,10 +114,16 @@ request_until_ready() {
     if [ "$code" != 303 ] && [ "$code" != 000 ]; then
       die "HTTP $code from $url: $(head -c 300 "$out")"
     fi
+    failure=$(startup_failure "$model" "$since")
+    if [ -n "$failure" ]; then
+      modal app stop "$(app_name "$model")" -y >/dev/null
+      die "startup failed; stopped app $(app_name "$model") so it does not restart (fix it, then: cgpu modal deploy --model $model)
+$failure"
+    fi
     echo "waiting: cold start ($(elapsed_since "$start")s)" >&2
     sleep 5
   done
-  die "not ready after $(elapsed_since "$start")s; check: cgpu modal logs --model <m>"
+  die "not ready after $(elapsed_since "$start")s; check: cgpu modal logs --model $model"
 }
 
 cmd_list() {
@@ -123,7 +140,7 @@ cmd_up() {
   url=$(endpoint_url "$model")
   out=$(mktemp)
   start=$(date +%s)
-  request_until_ready "$url/v1/models" "" "$out"
+  request_until_ready "$model" "$url/v1/models" "" "$out"
   rm -f "$out"
   echo "ready ($(elapsed_since "$start")s): $url"
 }
@@ -192,7 +209,7 @@ cmd_chat() {
     '{model: $model, messages: [{role: "user", content: $prompt}], chat_template_kwargs: {enable_thinking: $think}}')
   out=$(mktemp)
   start=$(date +%s)
-  request_until_ready "$url/v1/chat/completions" "$body" "$out"
+  request_until_ready "$model" "$url/v1/chat/completions" "$body" "$out"
   jq -r '.choices[0].message.content' "$out"
   jq -r --arg t "$(elapsed_since "$start")" \
     '"(\($t)s, prompt \(.usage.prompt_tokens) / completion \(.usage.completion_tokens) tokens, finish \(.choices[0].finish_reason))"' "$out" >&2
@@ -336,7 +353,7 @@ case "$command" in
   chat) cmd_chat "$model" "$think" "${args[*]:-}" ;;
   logs)
     require_model "$model"
-    exec modal app logs "$(app_name "$model")"
+    exec modal app logs "$(app_name "$model")" -f
     ;;
   cost) cmd_cost "${args[0]:-}" "$model" ;;
   init) cmd_init ;;

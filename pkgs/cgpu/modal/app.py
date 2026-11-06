@@ -1,10 +1,11 @@
+import base64
 import json
 import os
 import subprocess
 
 import modal
 
-SPEC = json.loads(os.environ["CGPU_MODEL_SPEC"])
+SPEC = json.loads(base64.b64decode(os.environ["CGPU_MODEL_SPEC"]))
 
 app = modal.App(f"cgpu-{SPEC['name']}")
 
@@ -14,7 +15,7 @@ image = (
     modal.Image.from_registry(SPEC["image"], add_python="3.12")
     .entrypoint([])
     .pip_install(SPEC["vllm"], "hf_transfer")
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "CGPU_MODEL_SPEC": json.dumps(SPEC)})
+    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "CGPU_MODEL_SPEC": os.environ["CGPU_MODEL_SPEC"]})
 )
 
 
