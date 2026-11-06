@@ -10,6 +10,7 @@
   - Claude: `$CLAUDE_CONFIG_DIR`
   - Codex: `$CODEX_HOME`
   - Cursor（cursor-agent プロファイル）: `$CURSOR_HOME`
+  - OpenCode: `$OPENCODE_CONFIG_DIR`（未設定時は `~/.config/opencode`）
 - `{agent_global_home}` — エージェント間で共有するディレクトリ。常に **`$HOME/.agents/share`** とする。`{agent_home}` とは別物。
   - 実体は `~/ghq/github.com/conao3/agents-share/src/` の git レポジトリ。`MEMORY.md` / `MEMORY_SUGGEST/` / `notes/` / `projects/` / `specs/` は symlink でこの repo を指す。`auto-memory/` は Claude の自動メモリのディレクトリで、ローカルにだけある。`{agent_global_home}` 配下を編集した内容は agents-share でコミットする (conao3 配下なので AGENTS.md の能動的 commit ルールが適用される)。
   - 例外: `AGENTS.md` (このファイル) のみ home-manager が nix store からの read-only symlink として配置する。更新は `~/ghq/github.com/conao3/nixos-configuration/home-manager/features/claude/AGENTS.md` を編集して `make switch` で反映する。

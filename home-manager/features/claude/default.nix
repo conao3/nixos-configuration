@@ -58,6 +58,15 @@ in
           history.sortKey = ".ts";
         };
       };
+      opencode = {
+        executable = "${llmAgents.opencode}/bin/opencode";
+        envVar = "OPENCODE_CONFIG_DIR";
+        homeDir = ".config/opencode";
+        files."AGENTS.md" = {
+          strategy = "link";
+          source = ./AGENTS.md;
+        };
+      };
       pi = {
         executable = "${llmAgents.pi}/bin/pi";
         envVar = "PI_CODING_AGENT_DIR";
@@ -87,6 +96,7 @@ in
         share = false;
         instructions = ./AGENTS-worker.md;
       };
+      "opencode" = { };
       "pi.agent001" = { };
       "pi.agent002" = { };
       "cursor-agent.agent001" = { };
