@@ -9,6 +9,7 @@
   home.packages =
     let
       agent-friction = inputs.agent-friction.packages.${system}.default;
+      cgpu = pkgs.callPackage ../pkgs/cgpu { };
       claude-desktop-with-fhs = pkgs.callPackage ../pkgs/claude-desktop-fhs.nix {
         src = inputs.claude-desktop;
       };
@@ -21,7 +22,6 @@
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
-      modal-llm = pkgs.callPackage ../pkgs/modal-llm { };
       outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
@@ -47,6 +47,7 @@
         agent-friction
         babashka
         bottom
+        cgpu
         chrome-devtools
         claude-app-server
         cli-proxy-api-management-center
@@ -78,7 +79,6 @@
         linear-cli
         mo
         modal
-        modal-llm
         neil
         ngrok
         nkf
