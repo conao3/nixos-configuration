@@ -7,11 +7,11 @@
 
 stdenv.mkDerivation rec {
   pname = "lightpanda";
-  version = "nightly-2026-10-28";
+  version = "1.0.3";
 
   src = fetchurl {
-    url = "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux";
-    hash = "sha256-89R/HDagRQ4eGwoANGiXrTSIa5KKTFX54rJS/ztViZU=";
+    url = "https://github.com/lightpanda-io/browser/releases/download/${version}/lightpanda-x86_64-linux";
+    hash = "sha256-U+s02gkVnc+PBIZdv+PmPpplIGJoRJWqfO1d3XyC6LA=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook ];
