@@ -49,8 +49,8 @@ model_names() {
 }
 
 require_model() {
-  [ -n "$1" ] || die "--model is required (models: $(model_names | tr '\n' ' '))"
-  [ -f "$MODELS_DIR/$1.json" ] || die "unknown model '$1' (models: $(model_names | tr '\n' ' '))"
+  [ -n "$1" ] || die "--model is required (models: $(model_names | paste -sd ' '))"
+  [ -f "$MODELS_DIR/$1.json" ] || die "unknown model '$1' (models: $(model_names | paste -sd ' '))"
 }
 
 spec() {
