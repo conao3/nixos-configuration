@@ -21,6 +21,7 @@
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
+      modal-llm = pkgs.callPackage ../pkgs/modal-llm { };
       outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
@@ -76,6 +77,8 @@
         libgccjit
         linear-cli
         mo
+        modal
+        modal-llm
         neil
         ngrok
         nkf
