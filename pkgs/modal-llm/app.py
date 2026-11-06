@@ -8,6 +8,7 @@ SERVED_NAME = "qwen3.6-35b-a3b"
 GPU = "L40S"
 MAX_MODEL_LEN = 131072
 SCALEDOWN_SECONDS = 120
+MAX_NUM_SEQS = 64
 
 app = modal.App("text-llm")
 
@@ -30,6 +31,7 @@ image = (
     timeout=60 * 30,
     max_containers=1,
 )
+@modal.concurrent(max_inputs=MAX_NUM_SEQS)
 @modal.web_server(port=8000, startup_timeout=60 * 10)
 def serve():
     cmd = [
@@ -45,7 +47,7 @@ def serve():
         "--max-model-len",
         str(MAX_MODEL_LEN),
         "--max-num-seqs",
-        "64",
+        str(MAX_NUM_SEQS),
         "--language-model-only",
         "--reasoning-parser",
         "qwen3",
