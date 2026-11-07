@@ -183,7 +183,7 @@ writeShellScriptBin "ghq-sync" ''
   declare -A status_by_seq=()
   while IFS=$'\t' read -r seq _host _start _runtime _send _receive exitval _signal command; do
     case "$seq" in
-      Seq|'') continue ;;
+      Seq|''') continue ;;
     esac
     repo_by_seq["$seq"]="''${command##* }"
     exit_by_seq["$seq"]="$exitval"
