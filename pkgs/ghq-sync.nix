@@ -1,8 +1,6 @@
 {
   writeShellScriptBin,
   coreutils,
-  gawk,
-  gh,
   git,
   gnugrep,
   gnused,
@@ -162,19 +160,13 @@ writeShellScriptBin "ghq-sync" ''
 
   owner_patterns=()
   for owner in "''${owners[@]}"; do
-    total="$(${gh}/bin/gh api graphql \
-      -f query='query($login: String!) { repositoryOwner(login: $login) { repositories(ownerAffiliations: OWNER) { totalCount } } }' \
-      -F login="$owner" --jq '.data.repositoryOwner.repositories.totalCount' 2>/dev/null || echo 0)"
-    [ "$total" -gt 0 ] || total=1000
-
-    ${gh}/bin/gh repo list "$owner" --limit "$total" --source --json sshUrl --jq '.[].sshUrl' \
-      | ${ghq}/bin/ghq get -p 2>&1 | ${gnugrep}/bin/grep -v "exists" || true
-
     owner_patterns+=(-e "/$owner/")
   done
 
   bar_opt=""
   [ -t 2 ] && bar_opt="--bar"
+
+  results_dir="''${log%.log}.results"
 
   rc=0
   ${ghq}/bin/ghq list -p | ${gnugrep}/bin/grep -F "''${owner_patterns[@]}" \
@@ -184,10 +176,52 @@ writeShellScriptBin "ghq-sync" ''
     | ${gnused}/bin/sed 's|/\.git$||' \
     | ${gnugrep}/bin/grep -v '^$' \
     | ${coreutils}/bin/sort -u \
-    | ${parallel}/bin/parallel $bar_opt --tag --joblog "$log" "$0" --repo {} || rc=$?
+    | ${parallel}/bin/parallel $bar_opt --joblog "$log" --results "$results_dir" "$0" --repo {} || rc=$?
+
+  declare -A repo_by_seq=()
+  declare -A exit_by_seq=()
+  declare -A status_by_seq=()
+  while IFS=$'\t' read -r seq _host _start _runtime _send _receive exitval _signal command; do
+    case "$seq" in
+      Seq|'') continue ;;
+    esac
+    repo_by_seq["$seq"]="''${command##* }"
+    exit_by_seq["$seq"]="$exitval"
+  done < "$log"
+
+  for out_file in "$results_dir"/*/*/stdout; do
+    [ -f "$out_file" ] || continue
+    seq="$(cat "''${out_file%/*}/seq")"
+    status_by_seq["$seq"]="$(cat "$out_file")"
+  done
+
+  pushed=()
+  skipped=()
+  failed=()
+  for seq in "''${!repo_by_seq[@]}"; do
+    repo="''${repo_by_seq[$seq]}"
+    status="''${status_by_seq[$seq]:-}"
+    case "$status" in
+      PUSHED*) pushed+=("$repo: $status") ;;
+      SKIP*) skipped+=("$repo: $status") ;;
+      *) [ "''${exit_by_seq[$seq]}" != "0" ] && failed+=("$repo: ''${status:-no output}") ;;
+    esac
+  done
 
   echo
-  ${gawk}/bin/gawk 'NR>1 && $7!=0 {print "FAILED: " $NF}' "$log"
+  echo "summary:"
+  if [ "''${#pushed[@]}" -gt 0 ]; then
+    printf '%s\n' "''${pushed[@]}" | ${coreutils}/bin/sort | ${gnused}/bin/sed 's/^/  pushed: /'
+  fi
+  if [ "''${#skipped[@]}" -gt 0 ]; then
+    printf '%s\n' "''${skipped[@]}" | ${coreutils}/bin/sort | ${gnused}/bin/sed 's/^/  skipped: /'
+  fi
+  if [ "''${#failed[@]}" -gt 0 ]; then
+    printf '%s\n' "''${failed[@]}" | ${coreutils}/bin/sort | ${gnused}/bin/sed 's/^/  failed: /'
+  fi
+  if [ "''${#pushed[@]}" -eq 0 ] && [ "''${#skipped[@]}" -eq 0 ] && [ "''${#failed[@]}" -eq 0 ]; then
+    echo "  all repositories are up to date"
+  fi
   echo "joblog: $log"
   exit "$rc"
 ''
