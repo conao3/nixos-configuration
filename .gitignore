@@ -5,3 +5,4 @@
 /result
 node_modules/
 pkgs/dashboard/frontend/dist/
+__pycache__
