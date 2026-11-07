@@ -21,7 +21,7 @@
     "--max-num-batched-tokens",
     "8192",
     "--gpu-memory-utilization",
-    "0.9426",
+    "0.90",
     "--safetensors-load-strategy",
     "prefetch"
   ],
