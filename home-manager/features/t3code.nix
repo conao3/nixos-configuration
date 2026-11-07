@@ -32,6 +32,149 @@ let
       };
     };
   };
+
+  cgpuProviderInstance = {
+    driver = "opencode";
+    displayName = "cgpu modal";
+    environment = [
+      {
+        name = "OPENCODE_CONFIG";
+        value = "/home/conao/.config/cgpu/modal/opencode.json";
+        sensitive = false;
+      }
+      {
+        name = "OPENCODE_ENABLE_EXA";
+        value = "1";
+      }
+    ];
+    enabled = true;
+    config = {
+      binaryPath = "opencode";
+    };
+  };
+
+  # Initial content of ~/.t3/userdata/settings.json, used only when the
+  # file does not exist yet. After that the file is T3 Code's own: the
+  # merge below applies only the cgpu provider instance and keeps every
+  # other key as the file holds it.
+  t3SettingsSeed = {
+    favorites = [
+      {
+        provider = "opencode_cgpu_modal";
+        model = "qwen3-8-27b/qwen3.8-27b";
+      }
+      {
+        provider = "opencode_cgpu_modal";
+        model = "qwen3-6-35b-a3b/qwen3.6-35b-a3b";
+      }
+      {
+        provider = "opencode_cgpu_modal";
+        model = "qwen3-6-35b-a3b-abliterated/qwen3.6-35b-a3b-abliterated";
+      }
+    ];
+    providerModelPreferences = {
+      opencode_textllm = {
+        hiddenModels = [ ];
+        modelOrder = [
+          "text-llm/qwen3.6-35b-a3b"
+          "opencode/beam-free"
+          "opencode/big-pickle"
+          "opencode/crouton-alpha-free"
+          "opencode/deepseek-v4.1-flash-free"
+          "opencode/flint-40b-free"
+          "opencode/glm-5.3-flash-free"
+          "opencode/mimo-v2.6-flash-free"
+          "opencode/nemotron-3.5-lightning-free"
+          "opencode/nemotron-3.5-super-vl-free"
+          "opencode/pulse-alpha-free"
+        ];
+      };
+    };
+    defaultModelSelection = {
+      instanceId = "claude_conao3";
+      model = "claude-opus-5-5";
+    };
+    projectSettingsFolded = true;
+    compactIdleThreads = true;
+    idleCompaction = "beforeCacheExpires";
+    snoozeLimitedThreads = true;
+    autoResumeLimitedThreads = true;
+    providerInstances = {
+      claude_conao3 = {
+        driver = "claudeAgent";
+        displayName = "Claude conao3";
+        config = {
+          homePath = "/home/conao/.agents/.claude.conao3";
+          launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
+        };
+      };
+      claude_agent001 = {
+        driver = "claudeAgent";
+        displayName = "Claude agent001";
+        config = {
+          homePath = "/home/conao/.agents/.claude.agent001";
+          launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
+        };
+      };
+      codex_agent001 = {
+        driver = "codex";
+        displayName = "Codex agent001";
+        config = {
+          homePath = "/home/conao/.agents/.codex.agent001";
+        };
+      };
+      codex_agent002 = {
+        driver = "codex";
+        displayName = "Codex agent002";
+        config = {
+          homePath = "/home/conao/.agents/.codex.agent002";
+        };
+      };
+      opencode_cgpu_modal = cgpuProviderInstance;
+    };
+  };
+
+  t3SettingsSeedFile = pkgs.writeText "t3-settings-seed.json" (builtins.toJSON t3SettingsSeed);
+
+  # A programs.agents force op (nix-agents merge.jq format): replaces
+  # the cgpu provider instance subtree, keeps every other key.
+  t3SettingsOps = pkgs.writeText "t3-settings-ops.json" (
+    builtins.toJSON [
+      {
+        op = "force";
+        path = [
+          "providerInstances"
+          "opencode_cgpu_modal"
+        ];
+        value = cgpuProviderInstance;
+      }
+    ]
+  );
+
+  # Same merge as programs.agents (nix-agents merge.jq): applies the ops
+  # to the current file and writes the result back as a regular file.
+  t3SettingsMerge = pkgs.writeShellScript "t3-settings-merge" ''
+    set -euo pipefail
+    target=$1
+    ops=$2
+    seed=$3
+    ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$target")"
+    if [ -f "$target" ] && [ -s "$target" ]; then
+      current=$(${pkgs.coreutils}/bin/cat "$target")
+    else
+      current=$(${pkgs.coreutils}/bin/cat "$seed")
+    fi
+    out=$(printf '%s' "$current" \
+      | ${lib.getExe pkgs.jq} --slurpfile ops "$ops" --arg label "t3code settings" --arg target "$target" -f ${inputs.nix-agents}/merge.jq)
+    tmp=$(${pkgs.coreutils}/bin/mktemp "$(${pkgs.coreutils}/bin/dirname "$target")/.agents-merge.XXXXXX")
+    warnings=$(printf '%s' "$out" | ${lib.getExe pkgs.jq} -r '.warnings[]')
+    if [ -n "$warnings" ]; then
+      printf '%s\n' "$warnings" >> "$(${pkgs.coreutils}/bin/dirname "$target")/settings-warnings.log"
+    fi
+    printf '%s' "$out" | ${lib.getExe pkgs.jq} '.result' > "$tmp"
+    ${pkgs.coreutils}/bin/chmod 0644 "$tmp"
+    ${pkgs.coreutils}/bin/mv -T "$tmp" "$target"
+  '';
 in
 {
   imports = [ inputs.sops-nix.homeManagerModules.sops ];
@@ -68,109 +211,16 @@ in
     };
   };
 
-  home.file = lib.mkIf isEos {
-    ".t3/userdata/settings.json".text = builtins.toJSON {
-      favorites = [
-        {
-          provider = "opencode_cgpu_modal";
-          model = "qwen3-8-27b/qwen3.8-27b";
-        }
-        {
-          provider = "opencode_cgpu_modal";
-          model = "qwen3-6-35b-a3b/qwen3.6-35b-a3b";
-        }
-        {
-          provider = "opencode_cgpu_modal";
-          model = "qwen3-6-35b-a3b-abliterated/qwen3.6-35b-a3b-abliterated";
-        }
-      ];
-      providerModelPreferences = {
-        opencode_textllm = {
-          hiddenModels = [ ];
-          modelOrder = [
-            "text-llm/qwen3.6-35b-a3b"
-            "opencode/beam-free"
-            "opencode/big-pickle"
-            "opencode/crouton-alpha-free"
-            "opencode/deepseek-v4.1-flash-free"
-            "opencode/flint-40b-free"
-            "opencode/glm-5.3-flash-free"
-            "opencode/mimo-v2.6-flash-free"
-            "opencode/nemotron-3.5-lightning-free"
-            "opencode/nemotron-3.5-super-vl-free"
-            "opencode/pulse-alpha-free"
-          ];
-        };
-      };
-      defaultModelSelection = {
-        instanceId = "claude_conao3";
-        model = "claude-opus-5-5";
-      };
-      projectSettingsFolded = true;
-      compactIdleThreads = true;
-      idleCompaction = "beforeCacheExpires";
-      snoozeLimitedThreads = true;
-      autoResumeLimitedThreads = true;
-      providerInstances = {
-        claude_conao3 = {
-          driver = "claudeAgent";
-          displayName = "Claude conao3";
-          config = {
-            homePath = "/home/conao/.agents/.claude.conao3";
-            launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
-          };
-        };
-        claude_agent001 = {
-          driver = "claudeAgent";
-          displayName = "Claude agent001";
-          config = {
-            homePath = "/home/conao/.agents/.claude.agent001";
-            launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
-          };
-        };
-        codex_agent001 = {
-          driver = "codex";
-          displayName = "Codex agent001";
-          config = {
-            homePath = "/home/conao/.agents/.codex.agent001";
-          };
-        };
-        codex_agent002 = {
-          driver = "codex";
-          displayName = "Codex agent002";
-          config = {
-            homePath = "/home/conao/.agents/.codex.agent002";
-          };
-        };
-        opencode_cgpu_modal = {
-          driver = "opencode";
-          displayName = "cgpu modal";
-          environment = [
-            {
-              name = "OPENCODE_CONFIG";
-              value = "/home/conao/.config/cgpu/modal/opencode.json";
-              sensitive = false;
-            }
-            {
-              name = "OPENCODE_ENABLE_EXA";
-              value = "1";
-            }
-          ];
-          enabled = true;
-          config = {
-            binaryPath = "opencode";
-          };
-        };
-      };
-    };
-  };
-
-  # The decrypted secret paths are runtime paths, so they cannot be
-  # home.file sources. Link them into place after activation instead.
   home.activation = lib.mkIf isEos {
+    # The decrypted secret paths are runtime paths, so they cannot be
+    # home.file sources. Link them into place after activation instead.
     linkAgentSecrets = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       $DRY_RUN_CMD ln -sf ${config.sops.secrets."cgpu-modal-api-key".path} /home/conao/.config/cgpu/modal/api-key
       $DRY_RUN_CMD ln -sf ${config.sops.secrets."exa-api-key".path} /home/conao/.config/exa/key
+    '';
+
+    mergeT3Settings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      ${t3SettingsMerge} "$HOME/.t3/userdata/settings.json" ${t3SettingsOps} ${t3SettingsSeedFile}
     '';
   };
 }
