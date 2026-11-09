@@ -53,9 +53,18 @@ let
     };
   };
 
+  opencodeAgent001ProviderInstance = {
+    driver = "opencode";
+    displayName = "OpenCode agent001";
+    enabled = true;
+    config = {
+      binaryPath = "/etc/profiles/per-user/conao/bin/opencode.agent001";
+    };
+  };
+
   # Initial content of ~/.t3/userdata/settings.json, used only when the
   # file does not exist yet. After that the file is T3 Code's own: the
-  # merge below applies only the cgpu provider instance and keeps every
+  # merge below applies only the OpenCode provider instances and keeps every
   # other key as the file holds it.
   t3SettingsSeed = {
     favorites = [
@@ -131,13 +140,14 @@ let
         };
       };
       opencode_cgpu_modal = cgpuProviderInstance;
+      opencode_agent001 = opencodeAgent001ProviderInstance;
     };
   };
 
   t3SettingsSeedFile = pkgs.writeText "t3-settings-seed.json" (builtins.toJSON t3SettingsSeed);
 
   # A programs.agents force op (nix-agents merge.jq format): replaces
-  # the cgpu provider instance subtree, keeps every other key.
+  # the OpenCode provider instance subtrees, keeps every other key.
   t3SettingsOps = pkgs.writeText "t3-settings-ops.json" (
     builtins.toJSON [
       {
@@ -147,6 +157,14 @@ let
           "opencode_cgpu_modal"
         ];
         value = cgpuProviderInstance;
+      }
+      {
+        op = "force";
+        path = [
+          "providerInstances"
+          "opencode_agent001"
+        ];
+        value = opencodeAgent001ProviderInstance;
       }
     ]
   );
