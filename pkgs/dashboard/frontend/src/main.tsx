@@ -5,14 +5,17 @@ import clsx from "clsx";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   ColumnFiltersState,
-  ColumnDef,
   SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
+  ColumnVisibilityState,
+  columnFilteringFeature,
+  columnVisibilityFeature,
+  createColumnHelper,
+  createFilteredRowModel,
+  createSortedRowModel,
+  filterFn_includesString,
+  rowSortingFeature,
+  tableFeatures,
+  useTable,
 } from "@tanstack/react-table";
 
 type PortEntry = {
@@ -553,12 +556,83 @@ async function fetchProcessDetail(pid: string): Promise<ProcessDetail> {
   return (await response.json()) as ProcessDetail;
 }
 
+const EMPTY_PORTS: PortEntry[] = [];
+
+const features = tableFeatures({
+  columnFilteringFeature,
+  columnVisibilityFeature,
+  rowSortingFeature,
+  filteredRowModel: createFilteredRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  filterFns: { includesString: filterFn_includesString },
+});
+
+const columnHelper = createColumnHelper<typeof features, PortEntry>();
+
+const numericSortFn = (a: { getValue: (id: string) => unknown }, b: { getValue: (id: string) => unknown }, id: string): number =>
+  Number(a.getValue(id)) - Number(b.getValue(id));
+
+const columns = columnHelper.columns([
+  columnHelper.accessor("proto", { header: "Proto", filterFn: "includesString" }),
+  columnHelper.accessor("ipVersion", { header: "IP Version", filterFn: "includesString" }),
+  columnHelper.accessor("address", { header: "Local Address", filterFn: "includesString" }),
+  columnHelper.accessor("port", {
+    header: "Port",
+    filterFn: "includesString",
+    cell: (info) => {
+      const port = String(info.getValue());
+      return (
+        <a href={`http://localhost:${port}`} target="_blank" rel="noreferrer">
+          {port}
+        </a>
+      );
+    },
+    sortFn: numericSortFn,
+  }),
+  columnHelper.display({
+    id: "knownAs",
+    header: "Known As",
+    cell: (info) => {
+      const port = String(info.row.original.port);
+      const matches = CURRENT_HOST_CATALOG_BY_PORT[port] ?? [];
+      if (matches.length === 0) {
+        return <span className="text-slate-400">-</span>;
+      }
+
+      return (
+        <div className="grid gap-1">
+          {matches.map((entry) => (
+            <div key={entry.id} className="leading-tight">
+              <div className="font-medium text-slate-800">{entry.name}</div>
+              <div className="text-xs text-slate-500">{STATE_LABELS[entry.state]}</div>
+            </div>
+          ))}
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor("process", { header: "Process", filterFn: "includesString" }),
+  columnHelper.accessor("pid", { header: "PID", filterFn: "includesString", sortFn: numericSortFn }),
+  columnHelper.accessor("cwd", {
+    header: "Working Dir",
+    filterFn: "includesString",
+    cell: (info) => {
+      const cwd = String(info.getValue());
+      return (
+        <span className="inline-block max-w-[320px] overflow-hidden text-ellipsis whitespace-nowrap align-bottom" title={cwd}>
+          {cwd}
+        </span>
+      );
+    },
+  }),
+]);
+
 function App(): React.JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([{ id: "port", desc: false }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
     { id: "ipVersion", value: "ipv4" },
   ]);
-  const [columnVisibility] = useState<VisibilityState>({
+  const [columnVisibility] = useState<ColumnVisibilityState>({
     ipVersion: false,
   });
   const [selectedKey, setSelectedKey] = useState<string>("");
@@ -576,77 +650,14 @@ function App(): React.JSX.Element {
     [query.data?.ports],
   );
 
-  const columns = useMemo<ColumnDef<PortEntry>[]>(
-    () => [
-      { accessorKey: "proto", header: "Proto" },
-      { accessorKey: "ipVersion", header: "IP Version" },
-      { accessorKey: "address", header: "Local Address" },
-      {
-        accessorKey: "port",
-        header: "Port",
-        cell: (info) => {
-          const port = String(info.getValue());
-          return (
-            <a href={`http://localhost:${port}`} target="_blank" rel="noreferrer">
-              {port}
-            </a>
-          );
-        },
-        sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
-      },
-      {
-        id: "knownAs",
-        header: "Known As",
-        cell: (info) => {
-          const port = String(info.row.original.port);
-          const matches = CURRENT_HOST_CATALOG_BY_PORT[port] ?? [];
-          if (matches.length === 0) {
-            return <span className="text-slate-400">-</span>;
-          }
-
-          return (
-            <div className="grid gap-1">
-              {matches.map((entry) => (
-                <div key={entry.id} className="leading-tight">
-                  <div className="font-medium text-slate-800">{entry.name}</div>
-                  <div className="text-xs text-slate-500">{STATE_LABELS[entry.state]}</div>
-                </div>
-              ))}
-            </div>
-          );
-        },
-      },
-      { accessorKey: "process", header: "Process" },
-      {
-        accessorKey: "pid",
-        header: "PID",
-        sortingFn: (a, b, id) => Number(a.getValue(id)) - Number(b.getValue(id)),
-      },
-      {
-        accessorKey: "cwd",
-        header: "Working Dir",
-        cell: (info) => {
-          const cwd = String(info.getValue());
-          return (
-            <span className="inline-block max-w-[320px] overflow-hidden text-ellipsis whitespace-nowrap align-bottom" title={cwd}>
-              {cwd}
-            </span>
-          );
-        },
-      },
-    ],
-    [],
-  );
-
-  const table = useReactTable({
-    data: query.data?.ports ?? [],
+  const portsData = query.data?.ports ?? EMPTY_PORTS;
+  const table = useTable({
+    features,
     columns,
+    data: portsData,
     state: { sorting, columnFilters, columnVisibility },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const selectedPort = useMemo(() => {
@@ -796,7 +807,7 @@ function App(): React.JSX.Element {
                             type="button"
                             onClick={header.column.getToggleSortingHandler()}
                           >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <table.FlexRender header={header} />
                             <span className="text-slate-500">{sorted === "asc" ? " ▲" : sorted === "desc" ? " ▼" : ""}</span>
                           </button>
                         )}
@@ -817,7 +828,7 @@ function App(): React.JSX.Element {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="border-b border-slate-200 px-3 py-2 align-middle text-sm">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      <table.FlexRender cell={cell} />
                     </td>
                   ))}
                 </tr>

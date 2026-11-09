@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "birdclaw": "0.16.3"
+    "birdclaw": "0.17.0"
   }
 }

@@ -8,10 +8,10 @@
 
 buildNpmPackage {
   pname = "birdclaw";
-  version = "0.16.3";
+  version = "0.17.0";
 
   src = ./birdclaw;
-  npmDepsHash = "sha256-zCK/vZmUgbFh5CELEMofXEuZ2pRdL/d5hhAfLmDTCpk=";
+  npmDepsHash = "sha256-DusGQVpEB8e1usqzHbkCI6pQ1ulks8CbeQ2gMgQEbXE=";
 
   nodejs = nodejs_26;
   nativeBuildInputs = [ makeWrapper ];

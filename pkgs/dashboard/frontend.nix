@@ -7,7 +7,7 @@ buildNpmPackage {
   version = "0.1.0";
 
   src = ./frontend;
-  npmDepsHash = "sha256-wMhQLAaSwT4eE6ZdtbxUnsA+eVZjY7VR03Cp8Jd4WFc=";
+  npmDepsHash = "sha256-TUKElRkczOLgoaJPJQlspbWG4dW7fwSs+7ZQ25YDWIU=";
 
   npmBuildScript = "build";
 
