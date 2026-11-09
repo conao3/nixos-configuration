@@ -149,8 +149,18 @@ let
   # A programs.agents force op (nix-agents merge.jq format): replaces
   # the OpenCode provider instance subtrees, keeps every other key.
   t3SettingsOps = pkgs.writeText "t3-settings-ops.json" (
-    builtins.toJSON [
-      {
+    builtins.toJSON (
+      [
+        {
+          op = "force";
+          path = [
+            "providerInstances"
+            "opencode_agent001"
+          ];
+          value = opencodeAgent001ProviderInstance;
+        }
+      ]
+      ++ lib.optional isEos {
         op = "force";
         path = [
           "providerInstances"
@@ -158,15 +168,7 @@ let
         ];
         value = cgpuProviderInstance;
       }
-      {
-        op = "force";
-        path = [
-          "providerInstances"
-          "opencode_agent001"
-        ];
-        value = opencodeAgent001ProviderInstance;
-      }
-    ]
+    )
   );
 
   # Same merge as programs.agents (nix-agents merge.jq): applies the ops
@@ -229,15 +231,17 @@ in
     };
   };
 
-  home.activation = lib.mkIf isEos {
+  home.activation = {
     # The decrypted secret paths are runtime paths, so they cannot be
     # home.file sources. Link them into place after activation instead.
-    linkAgentSecrets = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      $DRY_RUN_CMD ln -sf ${
-        config.sops.secrets."cgpu-modal-api-key".path
-      } /home/conao/.config/cgpu/modal/api-key
-      $DRY_RUN_CMD ln -sf ${config.sops.secrets."exa-api-key".path} /home/conao/.config/exa/key
-    '';
+    linkAgentSecrets = lib.mkIf isEos (
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        $DRY_RUN_CMD ln -sf ${
+          config.sops.secrets."cgpu-modal-api-key".path
+        } /home/conao/.config/cgpu/modal/api-key
+        $DRY_RUN_CMD ln -sf ${config.sops.secrets."exa-api-key".path} /home/conao/.config/exa/key
+      ''
+    );
 
     mergeT3Settings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
       ${t3SettingsMerge} "$HOME/.t3/userdata/settings.json" ${t3SettingsOps} ${t3SettingsSeedFile}
