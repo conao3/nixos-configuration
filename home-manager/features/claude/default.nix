@@ -97,6 +97,10 @@ in
         instructions = ./AGENTS-worker.md;
       };
       "opencode" = { };
+      "opencode.agent001".wrapper.makeWrapperArgs = [
+        "--run"
+        ''export OPENCODE_DB="$OPENCODE_CONFIG_DIR/opencode.db"''
+      ];
       "pi.agent001" = { };
       "pi.agent002" = { };
       "cursor-agent.agent001" = { };
