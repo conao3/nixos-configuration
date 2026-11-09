@@ -14,7 +14,7 @@
 
   networking.hostName = "conao-nixos-eos";
 
-  time.timeZone = lib.mkForce "America/Vancouver";
+  time.timeZone = lib.mkForce "America/Toronto";
 
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
