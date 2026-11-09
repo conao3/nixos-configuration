@@ -215,7 +215,9 @@ in
     # The decrypted secret paths are runtime paths, so they cannot be
     # home.file sources. Link them into place after activation instead.
     linkAgentSecrets = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      $DRY_RUN_CMD ln -sf ${config.sops.secrets."cgpu-modal-api-key".path} /home/conao/.config/cgpu/modal/api-key
+      $DRY_RUN_CMD ln -sf ${
+        config.sops.secrets."cgpu-modal-api-key".path
+      } /home/conao/.config/cgpu/modal/api-key
       $DRY_RUN_CMD ln -sf ${config.sops.secrets."exa-api-key".path} /home/conao/.config/exa/key
     '';
 
