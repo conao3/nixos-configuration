@@ -49,7 +49,7 @@ let
     ];
     enabled = true;
     config = {
-      binaryPath = "opencode";
+      binaryPath = "${inputs.llm-agents.packages.${system}.opencode}/bin/opencode";
     };
   };
 

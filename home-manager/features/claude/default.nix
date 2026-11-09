@@ -6,6 +6,10 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
+  opencodeWrapperArgs = [
+    "--run"
+    ''export OPENCODE_DB="$OPENCODE_CONFIG_DIR/opencode.db" XDG_STATE_HOME="$OPENCODE_CONFIG_DIR/state"''
+  ];
 in
 {
   imports = [
@@ -59,9 +63,17 @@ in
         };
       };
       opencode = {
-        executable = "${llmAgents.opencode}/bin/opencode";
+        executable = "${llmAgents.opencode2}/bin/opencode2";
         envVar = "OPENCODE_CONFIG_DIR";
         homeDir = ".config/opencode";
+        share = {
+          enable = true;
+          exclude = [
+            "opencode.db*"
+            "state"
+            "service*.json"
+          ];
+        };
         files."AGENTS.md" = {
           strategy = "link";
           source = ./AGENTS.md;
@@ -96,11 +108,7 @@ in
         share = false;
         instructions = ./AGENTS-worker.md;
       };
-      "opencode" = { };
-      "opencode.agent001".wrapper.makeWrapperArgs = [
-        "--run"
-        ''export OPENCODE_DB="$OPENCODE_CONFIG_DIR/opencode.db"''
-      ];
+      "opencode.agent001".wrapper.makeWrapperArgs = opencodeWrapperArgs;
       "pi.agent001" = { };
       "pi.agent002" = { };
       "cursor-agent.agent001" = { };
@@ -109,13 +117,9 @@ in
     aliases = {
       cursor = "cursor.agent001";
       cursor-agent = "cursor-agent.agent001";
+      opencode = "opencode.agent001";
       pi = "pi.agent001";
     };
-  };
-
-  home.file.".agents/.opencode.agent001/opencode.json".text = builtins.toJSON {
-    "\$schema" = "https://opencode.ai/config.json";
-    provider.opencode-go.options.apiKey = "{file:./opencode-go-api-key}";
   };
 
   home.packages = [
