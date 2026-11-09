@@ -9,6 +9,7 @@
   home.packages =
     let
       agent-friction = inputs.agent-friction.packages.${system}.default;
+      brave = pkgs.callPackage ../pkgs/brave { };
       cgpu = pkgs.callPackage ../pkgs/cgpu { };
       claude-desktop-with-fhs = pkgs.callPackage ../pkgs/claude-desktop-fhs.nix {
         src = inputs.claude-desktop;
@@ -109,6 +110,7 @@
         (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
         anki
         binutils
+        brave
         burpsuite
         chromium
         dbeaver-bin
