@@ -1,0 +1,77 @@
+diff --git a/apps/web/src/lib/chatThreadActions.ts b/apps/web/src/lib/chatThreadActions.ts
+index ac5412c239..c8412cfbae 100644
+--- a/apps/web/src/lib/chatThreadActions.ts
++++ b/apps/web/src/lib/chatThreadActions.ts
+@@ -1,4 +1,8 @@
+ import { scopeProjectRef } from "@t3tools/client-runtime/environment";
++import {
++  deriveLogicalProjectKeyFromSettings,
++  selectProjectGroupingSettings,
++} from "@t3tools/client-runtime/state/project-grouping";
+ import type {
+   EnvironmentId,
+   ModelSelection,
+@@ -6,6 +10,9 @@ import type {
+   ScopedProjectRef,
+ } from "@t3tools/contracts";
+ import type { ComposerThreadDraftState, DraftThreadEnvMode } from "../composerDraftStore";
++import { getClientSettings } from "../hooks/useSettings";
++import { readProjects } from "../state/entities";
++import { readPrimaryEnvironmentId } from "../state/environments";
+ 
+ type ComposerModelSelectionState = Pick<
+   ComposerThreadDraftState,
+@@ -82,6 +89,29 @@ export function resolveThreadActionProjectRef(
+   return context.defaultProjectRef;
+ }
+ 
++export function preferPrimaryEnvironmentProjectRef(projectRef: ScopedProjectRef): ScopedProjectRef {
++  const primaryEnvironmentId = readPrimaryEnvironmentId();
++  if (primaryEnvironmentId === null || projectRef.environmentId === primaryEnvironmentId) {
++    return projectRef;
++  }
++  const projects = readProjects();
++  const source = projects.find(
++    (project) =>
++      project.environmentId === projectRef.environmentId && project.id === projectRef.projectId,
++  );
++  if (!source) {
++    return projectRef;
++  }
++  const settings = selectProjectGroupingSettings(getClientSettings());
++  const logicalKey = deriveLogicalProjectKeyFromSettings(source, settings);
++  const primary = projects.find(
++    (project) =>
++      project.environmentId === primaryEnvironmentId &&
++      deriveLogicalProjectKeyFromSettings(project, settings) === logicalKey,
++  );
++  return primary ? scopeProjectRef(primary.environmentId, primary.id) : projectRef;
++}
++
+ export async function startNewThreadFromContext(
+   context: ChatThreadActionContext,
+ ): Promise<boolean> {
+@@ -90,6 +120,6 @@ export async function startNewThreadFromContext(
+     return false;
+   }
+ 
+-  await context.handleNewThread(projectRef);
++  await context.handleNewThread(preferPrimaryEnvironmentProjectRef(projectRef));
+   return true;
+ }
+diff --git a/apps/web/src/sidebarProjectGrouping.ts b/apps/web/src/sidebarProjectGrouping.ts
+index 5f9f7d981d..def784236f 100644
+--- a/apps/web/src/sidebarProjectGrouping.ts
++++ b/apps/web/src/sidebarProjectGrouping.ts
+@@ -230,10 +230,10 @@ export function buildSidebarProjectPickerEntries(input: {
+         ))
+       : null;
+     const targetProject =
+-      preferredProject ??
+       group.memberProjects.find(
+         (project) => project.environmentId === group.environmentId && project.id === group.id,
+       ) ??
++      preferredProject ??
+       group.memberProjects[0];
+     if (!targetProject) return [];
+ 
