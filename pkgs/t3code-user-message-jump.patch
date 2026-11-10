@@ -1,0 +1,129 @@
+diff --git a/apps/web/src/components/chat/MessagesTimeline.tsx b/apps/web/src/components/chat/MessagesTimeline.tsx
+index cea2daa111..1233ef507d 100644
+--- a/apps/web/src/components/chat/MessagesTimeline.tsx
++++ b/apps/web/src/components/chat/MessagesTimeline.tsx
+@@ -100,6 +100,7 @@ import { TimelineSystemDivider } from "./TimelineSystemDivider";
+ 
+ import { forwardWheelToTimeline } from "./timelineMinimapWheel";
+ import { TimelineMinimap } from "./TimelineMinimap";
++import { registerCommands } from "../../shortcuts/dispatcher";
+ import {
+   type TimelineRowSharedState,
+   type TimelineRowActivityState,
+@@ -136,6 +137,9 @@ import { useThreadFindPositionReader } from "./useThreadFindPositionReader";
+ import { ThreadActivityAnnouncer } from "./ThreadActivityAnnouncer";
+ import { useStableHandoffRuns, useIncrementalTimelineRows, useStableRows } from "./useTimelineRows";
+ 
++const USER_MESSAGE_JUMP_VIEW_OFFSET = 24;
++const USER_MESSAGE_JUMP_TOLERANCE = 4;
++
+ function timelineListStateFor(identity: string): {
+   readonly identity: string;
+   readonly rememberedPosition: RememberedTimelinePosition | undefined;
+@@ -879,6 +883,57 @@ const ConversationTimeline = memo(function ConversationTimeline({
+     );
+   });
+ 
++  const jumpToUserMessage = useStableCallback((direction: "previous" | "next") => {
++    const state = listRef.current?.getState?.();
++    if (!state || minimapItems.length === 0) return false;
++    const firstBufferedIndex = state.startBuffered;
++    const firstBufferedRow: HTMLElement | undefined =
++      firstBufferedIndex == null ? undefined : state.elementAtIndex(firstBufferedIndex);
++    const firstBufferedTop =
++      firstBufferedIndex == null ? undefined : state.positionAtIndex(firstBufferedIndex);
++    const viewport: HTMLElement | undefined = listRef.current?.getScrollableNode();
++    const scroll =
++      firstBufferedRow && viewport && firstBufferedTop !== undefined
++        ? firstBufferedTop +
++          viewport.getBoundingClientRect().top -
++          firstBufferedRow.getBoundingClientRect().top
++        : state.scroll;
++    const anchor = scroll + USER_MESSAGE_JUMP_VIEW_OFFSET;
++    const positionOf = (rowIndex: number) => {
++      const position = state.positionAtIndex(rowIndex);
++      return position != null && Number.isFinite(position) ? position : null;
++    };
++    const target =
++      direction === "next"
++        ? minimapItems.find((item) => {
++            const position = positionOf(item.rowIndex);
++            return position === null
++              ? item.rowIndex > (state.endBuffered ?? -1)
++              : position > anchor + USER_MESSAGE_JUMP_TOLERANCE;
++          })
++        : minimapItems.findLast((item) => {
++            const position = positionOf(item.rowIndex);
++            return position === null
++              ? item.rowIndex < (state.startBuffered ?? 0)
++              : position < anchor - USER_MESSAGE_JUMP_TOLERANCE;
++          });
++    if (!target) return false;
++    navigateTimeline();
++    void listRef.current?.scrollToIndex({
++      index: target.rowIndex,
++      animated: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
++      viewOffset: USER_MESSAGE_JUMP_VIEW_OFFSET,
++    });
++  });
++  useEffect(
++    () =>
++      registerCommands({
++        "chat.previousUserMessage": () => jumpToUserMessage("previous"),
++        "chat.nextUserMessage": () => jumpToUserMessage("next"),
++      }),
++    [jumpToUserMessage],
++  );
++
+   const minimapRefreshFrameRef = useRef<number | null>(null);
+   const scheduleMinimapRefresh = () => {
+     if (minimapRefreshFrameRef.current !== null) return;
+diff --git a/apps/web/src/components/files/BrowserDocumentFrame.tsx b/apps/web/src/components/files/BrowserDocumentFrame.tsx
+index 245e7bd1a3..73ab626c9d 100644
+--- a/apps/web/src/components/files/BrowserDocumentFrame.tsx
++++ b/apps/web/src/components/files/BrowserDocumentFrame.tsx
+@@ -55,6 +55,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+   "filePicker.toggle",
+   "projectSearch.toggle",
+   "chat.find",
++  "chat.previousUserMessage",
++  "chat.nextUserMessage",
+   "sidebar.toggle",
+   "rightPanel.toggle",
+   "rightPanel.toggleMaximized",
+diff --git a/packages/contracts/src/keybindings.ts b/packages/contracts/src/keybindings.ts
+index 32616ddc42..22e72ed49b 100644
+--- a/packages/contracts/src/keybindings.ts
++++ b/packages/contracts/src/keybindings.ts
+@@ -105,6 +105,8 @@ export const STATIC_KEYBINDING_COMMANDS = [
+   "chat.newLocal",
+   "chat.newWithoutProject",
+   "chat.find",
++  "chat.previousUserMessage",
++  "chat.nextUserMessage",
+   "editor.openFavorite",
+   "usage.cost",
+   "usage.tokens",
+diff --git a/packages/shared/src/keybindings.ts b/packages/shared/src/keybindings.ts
+index d71aa98548..a2d887507c 100644
+--- a/packages/shared/src/keybindings.ts
++++ b/packages/shared/src/keybindings.ts
+@@ -202,6 +202,9 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+   { key: "mod+shift+n", command: "chat.newLocal", when: "!terminalFocus" },
+   { key: "mod+alt+n", command: "chat.newWithoutProject", when: "!terminalFocus" },
+   { key: "mod+f", command: "chat.find", when: "!terminalFocus && !previewFocus" },
++  { key: "alt+p", command: "chat.previousUserMessage", when: "!terminalFocus" },
++  { key: "alt+n", command: "chat.nextUserMessage", when: "!terminalFocus" },
++  { key: "alt+o", command: "thread.nextDone", when: "!terminalFocus" },
+   { key: "mod+shift+m", command: "modelPicker.toggle", when: "!terminalFocus" },
+   { key: "mod+shift+h", command: "composer.host", when: "!terminalFocus" },
+   { key: "mod+shift+e", command: "composer.effort", when: "!terminalFocus" },
+@@ -215,8 +218,6 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+   { key: "mod+o", command: "editor.openFavorite" },
+   { key: "mod+shift+[", command: "thread.previous" },
+   { key: "mod+shift+]", command: "thread.next" },
+-  { key: "alt+p", command: "thread.previousDone", when: "!terminalFocus" },
+-  { key: "alt+n", command: "thread.nextDone", when: "!terminalFocus" },
+   { key: "mod+shift+c", command: "thread.copyReference", when: "!terminalFocus" },
+   { key: "mod+shift+s", command: "thread.settle", when: "!terminalFocus" },
+   { key: "mod+shift+p", command: "thread.pin", when: "!terminalFocus" },
