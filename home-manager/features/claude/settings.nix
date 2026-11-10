@@ -64,6 +64,7 @@ in
         sessionUrl = false;
       };
       language = "japanese";
+      advisorModel = "fable";
       autoMemoryEnabled = false;
       autoMemoryDirectory = "~/.agents/share/auto-memory";
       statusLine = agentsLib.force {
