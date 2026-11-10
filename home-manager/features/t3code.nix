@@ -14,6 +14,10 @@ let
     && osConfig != null
     && osConfig.networking.hostName == "conao-nixos-eos";
 
+  hostName = osConfig.networking.hostName;
+
+  claudeLaunchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md --append-system-prompt \"このセッションが動いているホストは ${lib.removePrefix "conao-nixos-" hostName} (${hostName})。\"";
+
   cgpuProvider = endpointSecret: servedModel: {
     npm = "@ai-sdk/openai-compatible";
     name = "cgpu modal";
@@ -121,7 +125,7 @@ let
         displayName = "Claude conao3";
         config = {
           homePath = "/home/conao/.agents/.claude.conao3";
-          launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
+          launchArgs = claudeLaunchArgs;
         };
       };
       claude_agent001 = {
@@ -129,7 +133,7 @@ let
         displayName = "Claude agent001";
         config = {
           homePath = "/home/conao/.agents/.claude.agent001";
-          launchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md";
+          launchArgs = claudeLaunchArgs;
         };
       };
       codex_agent001 = {
@@ -154,7 +158,8 @@ let
   t3SettingsSeedFile = pkgs.writeText "t3-settings-seed.json" (builtins.toJSON t3SettingsSeed);
 
   # A programs.agents force op (nix-agents merge.jq format): replaces
-  # the OpenCode provider instance subtrees, keeps every other key.
+  # the OpenCode provider instance subtrees and the Claude launch
+  # arguments, keeps every other key.
   t3SettingsOps = pkgs.writeText "t3-settings-ops.json" (
     builtins.toJSON (
       [
@@ -167,6 +172,22 @@ let
           value = opencodeAgent001ProviderInstance;
         }
       ]
+      ++
+        map
+          (instance: {
+            op = "force";
+            path = [
+              "providerInstances"
+              instance
+              "config"
+              "launchArgs"
+            ];
+            value = claudeLaunchArgs;
+          })
+          [
+            "claude_conao3"
+            "claude_agent001"
+          ]
       ++ lib.optional isEos {
         op = "force";
         path = [
