@@ -9,6 +9,7 @@ let
       patches = (old.patches or [ ]) ++ [
         ./t3code-html-preview-file-revision.patch
         ./t3code-opencode-console-go-usage.patch
+        ./t3code-full-access-no-approval.patch
       ];
     });
   };

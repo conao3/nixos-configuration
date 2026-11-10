@@ -1,0 +1,17 @@
+--- a/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts
++++ b/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts
+@@ -2761,10 +2761,11 @@
+ }
+ 
+ function requiresClaudeApproval(context: ActiveClaudeTurnContext): boolean {
+-  // CLI-forwarded requests need a person's decision even under bypass (ask rules,
+-  // safety checks, or settings fallback). Do not wait for queued init/status updates.
++  // Under bypass, CLI-forwarded requests (ask rules, safety checks, or settings
++  // fallback) are allowed without a person's decision. Do not wait for queued
++  // init/status updates.
+   const policy = context.queryPolicy;
+-  return policy.installPermissionCallback || policy.permissionMode === "bypassPermissions";
++  return policy.installPermissionCallback;
+ }
+ 
+ function claudeRuntimeQueryPolicyKey(policy: ClaudeRuntimeQueryPolicy): string {
