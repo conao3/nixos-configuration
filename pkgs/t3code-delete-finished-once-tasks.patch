@@ -1,0 +1,19 @@
+--- a/apps/server/src/scheduledTasks/ScheduledTaskService.ts
++++ b/apps/server/src/scheduledTasks/ScheduledTaskService.ts
+@@ -1020,6 +1020,16 @@
+             ),
+           );
+         if (written) yield* notifyChanged;
++        if (
++          written &&
++          runSucceeded &&
++          recorded.schedule.type === "once" &&
++          recorded.nextRunAt === null
++        ) {
++          yield* deleteRow(task.id);
++          yield* forgetWebhookTask(task.id);
++          yield* notifyChanged;
++        }
+         // The stored row can belong to a replacement, so report this dispatch separately.
+         return { task: recorded, threadId, dispatchFailed: !runSucceeded };
+       }).pipe(

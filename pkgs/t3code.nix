@@ -11,6 +11,7 @@ let
         ./t3code-opencode-console-go-usage.patch
         ./t3code-full-access-no-approval.patch
         ./t3code-new-thread-primary-environment.patch
+        ./t3code-delete-finished-once-tasks.patch
       ];
     });
   };
