@@ -13,6 +13,7 @@ let
         ./t3code-new-thread-primary-environment.patch
         ./t3code-delete-finished-once-tasks.patch
         ./t3code-done-thread-traversal.patch
+        ./t3code-sidebar-host-filter.patch
       ];
     });
   };

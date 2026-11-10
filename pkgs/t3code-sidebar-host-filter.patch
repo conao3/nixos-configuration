@@ -1,0 +1,244 @@
+diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
+index c59faee4a8..95c22aecb4 100644
+--- a/apps/web/src/components/Sidebar.tsx
++++ b/apps/web/src/components/Sidebar.tsx
+@@ -66,6 +66,7 @@ import {
+   ChevronDownIcon,
+   FolderIcon,
+   ListFilterIcon,
++  MonitorIcon,
+   PlusIcon,
+   SettingsIcon,
+ } from "lucide-react";
+@@ -823,6 +824,14 @@ function isOptimisticDropReleased(input: {
+   return membershipChanged || foreignKeyLanded || allAssignmentsLanded;
+ }
+ 
++const SIDEBAR_HOST_SCOPE_PREFIX = "host:";
++
++function sidebarHostScopeId(value: string): string | null {
++  return value.startsWith(SIDEBAR_HOST_SCOPE_PREFIX)
++    ? value.slice(SIDEBAR_HOST_SCOPE_PREFIX.length)
++    : null;
++}
++
+ // Build maps in a hook so the compiler can prove they are frozen and cache them.
+ function useSidebarLookups() {
+   const projects = useProjects();
+@@ -852,6 +861,12 @@ function useSidebarLookups() {
+       value: project.projectKey,
+       label: project.displayName,
+     })),
++    ...(environments.length > 1
++      ? environments.map((environment) => ({
++          value: `${SIDEBAR_HOST_SCOPE_PREFIX}${environment.environmentId}`,
++          label: environment.label,
++        }))
++      : []),
+   ];
+   return {
+     projects,
+@@ -1030,6 +1045,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+   const projectGroupsRef = useRef(projectGroups);
+   const persistedProjectScopeKeys = useUiStateStore((store) => store.sidebarProjectScopeKeys);
+   const setPersistedProjectScopeKeys = useUiStateStore((store) => store.setSidebarProjectScopeKeys);
++  const hostScopeIds = useUiStateStore((store) => store.sidebarHostScopeIds);
++  const setHostScopeIds = useUiStateStore((store) => store.setSidebarHostScopeIds);
+   const [projectScopeMenuState, dispatchProjectScopeMenu] = useReducer(
+     reduceSidebarProjectScopeMenuState,
+     { open: false, query: "" },
+@@ -1111,14 +1128,21 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+   const chosenProjectGroups = scopeGroups.filter((project) =>
+     chosenProjectScopeKeys.includes(project.projectKey),
+   );
++  const chosenHostScopeIds = new Set(
++    (hostScopeIds as EnvironmentId[]).filter((id) => environmentLabelById.has(id)),
++  );
+   const chosenScopeProjectKeys =
+-    chosenProjectGroups.length === 0
++    chosenProjectGroups.length === 0 && chosenHostScopeIds.size === 0
+       ? null
+       : new Set(
+-          chosenProjectGroups.flatMap((project) =>
+-            project.memberProjectRefs.map(
+-              (projectRef) => `${projectRef.environmentId}:${projectRef.projectId}`,
+-            ),
++          (chosenProjectGroups.length === 0 ? projectGroups : chosenProjectGroups).flatMap(
++            (project) =>
++              project.memberProjectRefs
++                .filter(
++                  (projectRef) =>
++                    chosenHostScopeIds.size === 0 || chosenHostScopeIds.has(projectRef.environmentId),
++                )
++                .map((projectRef) => `${projectRef.environmentId}:${projectRef.projectId}`),
+           ),
+         );
+   const threads = useQuietThreadShells();
+@@ -1166,7 +1190,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+     if (!revealWidensScope) return;
+     clearSelection();
+     setPersistedProjectScopeKeys([]);
+-  }, [clearSelection, revealWidensScope, setPersistedProjectScopeKeys]);
++    setHostScopeIds([]);
++  }, [clearSelection, revealWidensScope, setPersistedProjectScopeKeys, setHostScopeIds]);
+   const revealActiveRow = useActiveRowReveal(routeReveal, routeRowThreadKey);
+   const showProjectEnvironments = projectGroupsSpanEnvironments(projectGroups);
+   const scratchMachineLabelFor = (
+@@ -3043,6 +3068,18 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                       return;
+                     }
+                     if (!item) return;
++                    const hostId = sidebarHostScopeId(item.value);
++                    if (hostId !== null) {
++                      eventDetails.cancel();
++                      clearSelection();
++                      setHostScopeIds(
++                        hostScopeIds.includes(hostId)
++                          ? hostScopeIds.filter((candidate) => candidate !== hostId)
++                          : [...hostScopeIds, hostId],
++                      );
++                      scrollSidebarToTop(sidebarContentRef.current);
++                      return;
++                    }
+                     if (item.value === "all") {
+                       setProjectScopeKeys([]);
+                     } else if (
+@@ -3063,7 +3100,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                         label={
+                           scopedProjectGroups.length > 0
+                             ? `Filter threads by project: ${scopedProjectGroups.map((project) => project.displayName).join(", ")}`
+-                            : "Filter threads by project"
++                            : chosenHostScopeIds.size > 0
++                              ? `Filter threads by host: ${[...chosenHostScopeIds].map((id) => environmentLabelById.get(id) ?? id).join(", ")}`
++                              : "Filter threads by project"
+                         }
+                       />
+                     }
+@@ -3082,6 +3121,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                       <span className="flex shrink-0">
+                         <ProjectFavicon project={scopedProjectGroups[0]} className="size-4" />
+                       </span>
++                    ) : chosenHostScopeIds.size > 0 ? (
++                      <MonitorIcon className="size-4" />
+                     ) : (
+                       <ListFilterIcon className="size-4" />
+                     )}
+@@ -3144,9 +3185,12 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                     <ComboboxList aria-multiselectable>
+                       {(item: (typeof projectScopeItems)[number]) => {
+                         const project = projectGroupByScopeKey.get(item.value) ?? null;
++                        const hostId = sidebarHostScopeId(item.value);
+                         const isSelected = project
+                           ? projectScopeKeys.includes(item.value)
+-                          : projectScopeKeys.length === 0;
++                          : hostId !== null
++                            ? chosenHostScopeIds.has(hostId as EnvironmentId)
++                            : projectScopeKeys.length === 0;
+                         return (
+                           <ComboboxItem
+                             key={item.value}
+@@ -3162,6 +3206,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                             <ProjectScopeRowIcon isSelected={isSelected}>
+                               {project ? (
+                                 <ProjectFavicon project={project} className="size-4 shrink-0" />
++                              ) : hostId !== null ? (
++                                <MonitorIcon className="size-4 shrink-0" />
+                               ) : (
+                                 <FolderIcon className="size-4 shrink-0" />
+                               )}
+diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+index ed3a8276be..c6ae739fe3 100644
+--- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
++++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+@@ -1439,7 +1439,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                 <span
+                   className={cn("min-w-0 flex-1 truncate font-normal text-secondary-label text-xs")}
+                 >
+-                  {props.projectDisplayName}
++                  {props.environmentLabel
++                    ? `${props.projectDisplayName} · ${props.environmentLabel}`
++                    : props.projectDisplayName}
+                 </span>
+               ) : (
+                 <span className="flex-1" />
+diff --git a/apps/web/src/uiStateStore.ts b/apps/web/src/uiStateStore.ts
+index 328e1a6477..983a2c6049 100644
+--- a/apps/web/src/uiStateStore.ts
++++ b/apps/web/src/uiStateStore.ts
+@@ -28,6 +28,7 @@ export interface PersistedUiState {
+   defaultAdvertisedEndpointKey?: string | null;
+   sidebarProjectScopeKey?: string | null;
+   sidebarProjectScopeKeys?: string[];
++  sidebarHostScopeIds?: string[];
+   threadChangedFilesExpansionVersion?: number;
+   threadChangedFilesExpandedById?: Record<string, Record<string, boolean>>;
+   pullRequestMergeMethod?: string;
+@@ -37,6 +38,7 @@ export interface UiProjectState {
+   projectExpandedById: Record<string, boolean>;
+   projectOrder: string[];
+   sidebarProjectScopeKeys: string[];
++  sidebarHostScopeIds: string[];
+ }
+ 
+ export interface UiThreadState {
+@@ -59,6 +61,7 @@ const initialState: UiState = {
+   projectExpandedById: {},
+   projectOrder: [],
+   sidebarProjectScopeKeys: [],
++  sidebarHostScopeIds: [],
+   threadLastVisitedAtById: {},
+   threadChangedFilesExpandedById: {},
+   defaultAdvertisedEndpointKey: null,
+@@ -154,6 +157,7 @@ export function parsePersistedState(parsed: PersistedUiState): UiState {
+     sidebarProjectScopeKeys: sanitizeStringArray(
+       parsed.sidebarProjectScopeKeys ?? [parsed.sidebarProjectScopeKey],
+     ),
++    sidebarHostScopeIds: sanitizeStringArray(parsed.sidebarHostScopeIds ?? []),
+     pullRequestMergeMethod: isPullRequestMergeMethod(parsed.pullRequestMergeMethod)
+       ? parsed.pullRequestMergeMethod
+       : initialState.pullRequestMergeMethod,
+@@ -228,6 +232,7 @@ export function persistState(state: UiState): void {
+         threadLastVisitedAtById: state.threadLastVisitedAtById,
+         defaultAdvertisedEndpointKey: state.defaultAdvertisedEndpointKey,
+         sidebarProjectScopeKeys: state.sidebarProjectScopeKeys,
++        sidebarHostScopeIds: state.sidebarHostScopeIds,
+         // Older clients read only this field.
+         sidebarProjectScopeKey:
+           state.sidebarProjectScopeKeys.length === 1
+@@ -345,6 +350,20 @@ function setSidebarProjectScopeKeys(state: UiState, projectKeys: readonly string
+   };
+ }
+ 
++function setSidebarHostScopeIds(state: UiState, hostIds: readonly string[]): UiState {
++  const nextIds = sanitizeStringArray(hostIds);
++  if (
++    nextIds.length === state.sidebarHostScopeIds.length &&
++    nextIds.every((id, index) => id === state.sidebarHostScopeIds[index])
++  ) {
++    return state;
++  }
++  return {
++    ...state,
++    sidebarHostScopeIds: nextIds,
++  };
++}
++
+ function setPullRequestMergeMethod(state: UiState, method: PullRequestMergeMethod): UiState {
+   return state.pullRequestMergeMethod === method
+     ? state
+@@ -434,6 +453,7 @@ interface UiStateStore extends UiState {
+   setThreadChangedFilesExpanded: (threadId: string, turnId: string, expanded: boolean) => void;
+   setDefaultAdvertisedEndpointKey: (key: string | null) => void;
+   setSidebarProjectScopeKeys: (projectKeys: readonly string[]) => void;
++  setSidebarHostScopeIds: (hostIds: readonly string[]) => void;
+   setPullRequestMergeMethod: (method: PullRequestMergeMethod) => void;
+   setProjectExpanded: (projectIds: string | readonly string[], expanded: boolean) => void;
+   reorderProjects: (
+@@ -455,6 +475,7 @@ export const useUiStateStore = create<UiStateStore>((set) => ({
+     set((state) => setDefaultAdvertisedEndpointKey(state, key)),
+   setSidebarProjectScopeKeys: (projectKeys) =>
+     set((state) => setSidebarProjectScopeKeys(state, projectKeys)),
++  setSidebarHostScopeIds: (hostIds) => set((state) => setSidebarHostScopeIds(state, hostIds)),
+   setPullRequestMergeMethod: (method) => set((state) => setPullRequestMergeMethod(state, method)),
+   setProjectExpanded: (projectIds, expanded) =>
+     set((state) => setProjectExpanded(state, projectIds, expanded)),
