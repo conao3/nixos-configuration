@@ -15,6 +15,7 @@ let
         ./t3code-done-thread-traversal.patch
         ./t3code-sidebar-host-filter.patch
         ./t3code-sidebar-row-host-chip.patch
+        ./t3code-cli-thread-retitle.patch
       ];
     });
   };

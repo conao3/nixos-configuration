@@ -1,0 +1,41 @@
+diff --git a/apps/server/src/cli/thread.ts b/apps/server/src/cli/thread.ts
+index 7bfddda472..5b6734bbd6 100644
+--- a/apps/server/src/cli/thread.ts
++++ b/apps/server/src/cli/thread.ts
+@@ -762,6 +762,29 @@ const threadShowCommand = Command.make("show", {
+   ),
+ );
+ 
++const threadRetitleCommand = Command.make("retitle", {
++  ...projectLocationFlags,
++  thread: threadArgument,
++}).pipe(
++  Command.withDescription("Regenerate a thread's title from its conversation."),
++  Command.withHandler((flags) =>
++    Effect.gen(function* () {
++      const threadId = yield* decodeThreadId(flags.thread);
++      yield* withThreadTools(
++        flags,
++        Effect.fn("cli.thread.retitle")(function* (tools) {
++          yield* tools.call(
++            "t3_thread_update",
++            { threadId, action: "regenerate_title" },
++            Schema.Unknown,
++          );
++          yield* Console.log("Regenerating.");
++        }),
++      );
++    }).pipe(reportThreadErrors),
++  ),
++);
++
+ export const threadCommand = Command.make("thread").pipe(
+   Command.withDescription("Start, message, and read threads on the running server."),
+   Command.withSubcommands([
+@@ -769,5 +792,6 @@ export const threadCommand = Command.make("thread").pipe(
+     threadStartCommand,
+     threadSendCommand,
+     threadShowCommand,
++    threadRetitleCommand,
+   ]),
+ );
