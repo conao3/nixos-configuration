@@ -72,12 +72,14 @@ in
           [ -s "$OPENCODE_DB" ] || exit 0
 
           raw=$(${llmQuota}/bin/llm-quota usage get-opencode-usage 2>/dev/null) || exit 0
-          echo "$raw" | ${pkgs.jq}/bin/jq -e '.Summary.Week.PercentLeft != null' >/dev/null 2>&1 || exit 0
+          echo "$raw" | ${pkgs.jq}/bin/jq -e '.Summary.Week.PercentLeft != null and .Summary.Month.PercentLeft != null' >/dev/null 2>&1 || exit 0
 
           state_dir="$HOME/.local/share/opencode-usage"
           state="$state_dir/history.json"
+          month_state="$state_dir/month-history.json"
           ${pkgs.coreutils}/bin/mkdir -p "$state_dir"
           [ -s "$state" ] || echo '{"points":[]}' > "$state"
+          [ -s "$month_state" ] || echo '{"points":[]}' > "$month_state"
 
           now=$(${pkgs.coreutils}/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
           used=$(echo "$raw" | ${pkgs.jq}/bin/jq -r '100 - .Summary.Week.PercentLeft')
@@ -86,24 +88,42 @@ in
           echo "$history" > "$state"
           points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
 
-          shaped=$(echo "$raw" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" '
+          month_used=$(echo "$raw" | ${pkgs.jq}/bin/jq -r '100 - .Summary.Month.PercentLeft')
+          month_history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$month_used" \
+            '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$month_state") || exit 1
+          echo "$month_history" > "$month_state"
+          month_points=$(echo "$month_history" | ${pkgs.jq}/bin/jq -c '.points')
+
+          shaped=$(echo "$raw" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" --argjson month_history "$month_points" '
             def win: if . == null then null else
               {used_usd: .UsedUsd, limit_usd: .LimitUsd,
                percent_left: .PercentLeft, resets_at: .ResetsAt}
             end;
-            def pace_points:
-              (.Summary.Week.ResetsAt | gsub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) as $r
+            def toepoch: gsub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601;
+            def pace_points($reset; $secs):
+              ($reset | toepoch) as $r
               | ($now | fromdateiso8601) as $n
-              | ($r - 604800) as $s
+              | ($r - $secs) as $s
               | [range($s; ([$n, $r] | min); 900)
                  | {at: strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    u: ((1000 - ((. - $s) / 604800 * 1000 | round)) / 10)}];
+                    u: ((1000 - ((. - $s) / $secs * 1000 | round)) / 10)}];
+            def month_window_secs:
+              (.Summary.Month.ResetsAt | toepoch) as $r
+              | (($r | gmtime)
+                 | (if .[1] == 0
+                    then [.[0] - 1, 11, .[2], .[3], .[4], .[5], .[6], .[7]]
+                    else [.[0], .[1] - 1, .[2], .[3], .[4], .[5], .[6], .[7]]
+                    end)
+                 | mktime) as $s
+              | ($r - $s);
             {updated_at: $now,
              five_hour: (.Summary.FiveHour | win),
              week: (.Summary.Week | win),
              month: (.Summary.Month | win),
              history: ($history | map({at: .at, u: (100 - .u)})),
-             pace: pace_points}')
+             pace: pace_points(.Summary.Week.ResetsAt; 604800),
+             month_history: ($month_history | map({at: .at, u: (100 - .u)})),
+             month_pace: pace_points(.Summary.Month.ResetsAt; month_window_secs)}')
           payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
             '{files: {"opencode-usage.json": {content: $content}}}')
           echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
