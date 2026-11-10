@@ -106,6 +106,10 @@
       url = "git+file:../nix-flakes";
       flake = false;
     };
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-msb = {
       url = "github:conao3/nix-msb";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -194,6 +198,7 @@
                 ./hosts/${hostname}
                 { nixpkgs = commonNixpkgsConfig; }
                 inputs.sops-nix.nixosModules.sops
+                inputs.nix-index-database.nixosModules.nix-index
                 (import (inputs.nix-flakes + "/nix-flakes-registry.nix"))
               ];
             };

@@ -16,6 +16,9 @@
       };
       chrome-devtools = inputs.chrome-devtools.packages.${system}.default;
       cli-proxy-api-management-center = pkgs.callPackage ../pkgs/cli-proxy-api-management-center.nix { };
+      comma = pkgs.callPackage ../pkgs/comma.nix {
+        inherit (inputs.nix-index-database.packages.${system}) comma-with-db;
+      };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       document-packet = inputs.document-packet.packages.${system}.default;
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { };
@@ -54,6 +57,7 @@
         cli-proxy-api-management-center
         clj-kondo
         clojure-mcp-light
+        comma
         coreutils
         cosense-cli
         dev

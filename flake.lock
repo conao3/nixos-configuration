@@ -616,6 +616,26 @@
         "url": "file:../nix-flakes"
       }
     },
+    "nix-index-database": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794132860,
+        "narHash": "sha256-iGNtQnUZsi+v6/4NbtYr+dsmASa6GkzXtUcTpE8F3mE=",
+        "owner": "nix-community",
+        "repo": "nix-index-database",
+        "rev": "af9249ca33bc2efaae5d071e4c67ddef19dcb681",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-index-database",
+        "type": "github"
+      }
+    },
     "nix-msb": {
       "inputs": {
         "nixpkgs": [
@@ -921,6 +941,7 @@
         "nix-claude-code": "nix-claude-code",
         "nix-darwin": "nix-darwin",
         "nix-flakes": "nix-flakes",
+        "nix-index-database": "nix-index-database",
         "nix-msb": "nix-msb",
         "nixpkgs": "nixpkgs_2",
         "outbound-manifest": "outbound-manifest",
