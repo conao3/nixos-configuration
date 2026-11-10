@@ -1,0 +1,152 @@
+diff --git a/apps/web/src/components/Sidebar.logic.ts b/apps/web/src/components/Sidebar.logic.ts
+index c20789e2a9..f02a9c6d37 100644
+--- a/apps/web/src/components/Sidebar.logic.ts
++++ b/apps/web/src/components/Sidebar.logic.ts
+@@ -837,6 +837,36 @@ export function resolveAdjacentThreadId<T>(input: {
+   return currentIndex < threadIds.length - 1 ? (threadIds[currentIndex + 1] ?? null) : null;
+ }
+ 
++export function isSidebarThreadDone(
++  thread: ThreadStatusInput & SidebarThreadStatusInput,
++): boolean {
++  return resolveSidebarThreadStatus(thread) === "ready" && hasUnseenCompletion(thread);
++}
++
++export function resolveAdjacentDoneThreadId<T>(input: {
++  threadIds: readonly T[];
++  currentThreadId: T | null;
++  direction: ThreadTraversalDirection;
++  isDone: (threadId: T) => boolean;
++}): T | null {
++  const { currentThreadId, direction, isDone, threadIds } = input;
++  const count = threadIds.length;
++  if (count === 0) {
++    return null;
++  }
++  const step = direction === "next" ? 1 : -1;
++  const currentIndex = currentThreadId === null ? -1 : threadIds.indexOf(currentThreadId);
++  const startIndex = currentIndex !== -1 ? currentIndex : direction === "next" ? -1 : count;
++  for (let offset = 1; offset <= count; offset += 1) {
++    const index = (((startIndex + step * offset) % count) + count) % count;
++    const threadId = threadIds[index];
++    if (threadId !== undefined && threadId !== currentThreadId && isDone(threadId)) {
++      return threadId;
++    }
++  }
++  return null;
++}
++
+ export type SidebarThreadStatus =
+   | "approval"
+   | "input"
+diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
+index 18aa27709e..c59faee4a8 100644
+--- a/apps/web/src/components/Sidebar.tsx
++++ b/apps/web/src/components/Sidebar.tsx
+@@ -90,6 +90,7 @@ import {
+ } from "@t3tools/client-runtime/state/runtime";
+ import { isElectron } from "../env";
+ import {
++  doneThreadTraversalDirectionFromCommand,
+   resolveShortcutCommand,
+   shortcutLabelForCommand,
+   shouldShowThreadJumpHintsForModifiers,
+@@ -194,7 +195,10 @@ import {
+   orderItemsByPreferredIds,
+   planSidebarThreadDrop,
+   reduceSidebarProjectScopeMenuState,
++  isSidebarThreadDone,
++  resolveAdjacentDoneThreadId,
+   resolveAdjacentThreadId,
++  resolveThreadLastVisitedAt,
+   resolveSidebarSweepKeys,
+   resolveSidebarDropTarget,
+   resolveSidebarDropVerb,
+@@ -2920,6 +2924,29 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+         );
+         return;
+       }
++      const doneTraversalDirection = doneThreadTraversalDirectionFromCommand(command);
++      if (doneTraversalDirection !== null) {
++        const localLastVisitedAtById = useUiStateStore.getState().threadLastVisitedAtById;
++        navigateToThreadKey(
++          resolveAdjacentDoneThreadId({
++            threadIds: orderedThreadKeys,
++            currentThreadId: routeRowThreadKey,
++            direction: doneTraversalDirection,
++            isDone: (threadKey) => {
++              const thread = threadByKey.get(threadKey);
++              if (!thread) return false;
++              return isSidebarThreadDone({
++                ...thread,
++                lastVisitedAt: resolveThreadLastVisitedAt(
++                  thread.lastVisitedAt,
++                  localLastVisitedAtById[threadKey],
++                ),
++              });
++            },
++          }),
++        );
++        return;
++      }
+       const jumpIndex = threadJumpIndexFromCommand(command ?? "");
+       if (jumpIndex === null) return;
+       navigateToThreadKey(orderedThreadKeys[jumpIndex] ?? null);
+diff --git a/apps/web/src/components/files/BrowserDocumentFrame.tsx b/apps/web/src/components/files/BrowserDocumentFrame.tsx
+index 7c4aa4ad38..245e7bd1a3 100644
+--- a/apps/web/src/components/files/BrowserDocumentFrame.tsx
++++ b/apps/web/src/components/files/BrowserDocumentFrame.tsx
+@@ -65,6 +65,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+   "navigation.forward",
+   "thread.previous",
+   "thread.next",
++  "thread.previousDone",
++  "thread.nextDone",
+   ...THREAD_JUMP_KEYBINDING_COMMANDS,
+   ...MODEL_PICKER_JUMP_KEYBINDING_COMMANDS,
+ ]);
+diff --git a/apps/web/src/keybindings.ts b/apps/web/src/keybindings.ts
+index fc96aa1f85..596e0a0f7f 100644
+--- a/apps/web/src/keybindings.ts
++++ b/apps/web/src/keybindings.ts
+@@ -280,6 +280,14 @@ export function threadTraversalDirectionFromCommand(
+   return null;
+ }
+ 
++export function doneThreadTraversalDirectionFromCommand(
++  command: string | null,
++): "previous" | "next" | null {
++  if (command === "thread.previousDone") return "previous";
++  if (command === "thread.nextDone") return "next";
++  return null;
++}
++
+ export function shouldShowThreadJumpHintsForModifiers(
+   modifiers: ShortcutModifierStateLike,
+   keybindings: ResolvedKeybindingsConfig,
+diff --git a/packages/contracts/src/keybindings.ts b/packages/contracts/src/keybindings.ts
+index 714e0a1d48..32616ddc42 100644
+--- a/packages/contracts/src/keybindings.ts
++++ b/packages/contracts/src/keybindings.ts
+@@ -40,6 +40,8 @@ const THREAD_KEYBINDING_COMMANDS = [
+   "thread.editQueuedMessage",
+   "thread.previous",
+   "thread.next",
++  "thread.previousDone",
++  "thread.nextDone",
+   "thread.copyReference",
+   "thread.settle",
+   "thread.pin",
+diff --git a/packages/shared/src/keybindings.ts b/packages/shared/src/keybindings.ts
+index 32292c0f9e..d71aa98548 100644
+--- a/packages/shared/src/keybindings.ts
++++ b/packages/shared/src/keybindings.ts
+@@ -215,6 +215,8 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+   { key: "mod+o", command: "editor.openFavorite" },
+   { key: "mod+shift+[", command: "thread.previous" },
+   { key: "mod+shift+]", command: "thread.next" },
++  { key: "alt+p", command: "thread.previousDone", when: "!terminalFocus" },
++  { key: "alt+n", command: "thread.nextDone", when: "!terminalFocus" },
+   { key: "mod+shift+c", command: "thread.copyReference", when: "!terminalFocus" },
+   { key: "mod+shift+s", command: "thread.settle", when: "!terminalFocus" },
+   { key: "mod+shift+p", command: "thread.pin", when: "!terminalFocus" },
