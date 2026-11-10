@@ -14,6 +14,7 @@ let
         ./t3code-delete-finished-once-tasks.patch
         ./t3code-done-thread-traversal.patch
         ./t3code-sidebar-host-filter.patch
+        ./t3code-sidebar-row-host-chip.patch
       ];
     });
   };
