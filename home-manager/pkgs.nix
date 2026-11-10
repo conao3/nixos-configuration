@@ -178,7 +178,6 @@
         inputs.keg.packages.${system}.default
         inputs.pype.packages.${system}.default
         inputs.rust-llm-quota.packages.${system}.default
-        inputs.rust-opencode-limits.packages.${system}.default
         devo
         pkgs.nodejs_24
         pkgs.pnpm_10

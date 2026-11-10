@@ -56,12 +56,6 @@
       url = "github:conao3/rust-llm-quota";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    rust-opencode-limits = {
-      url = "github:conao3/rust-opencode-limits";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
-      inputs.treefmt-nix.follows = "treefmt-nix";
-    };
     devo = {
       url = "github:conao3/rust-devo";
       flake = false;

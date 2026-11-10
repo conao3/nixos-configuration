@@ -928,7 +928,6 @@
         "pype": "pype",
         "rust-fetch-usage-limit": "rust-fetch-usage-limit",
         "rust-llm-quota": "rust-llm-quota",
-        "rust-opencode-limits": "rust-opencode-limits",
         "sops-nix": "sops-nix",
         "treefmt-nix": "treefmt-nix_6"
       }
@@ -964,42 +963,16 @@
         "treefmt-nix": "treefmt-nix_5"
       },
       "locked": {
-        "lastModified": 1794209142,
-        "narHash": "sha256-KISQwew0ZZ1hNopGt5KYm2LegQviQMMRmnZjkQJs28g=",
+        "lastModified": 1794272739,
+        "narHash": "sha256-cdCHn3T8yH9FQErc8abQIixrT5Gf6Ft4yx7PxlC4oJk=",
         "owner": "conao3",
         "repo": "rust-llm-quota",
-        "rev": "f18540ed2811a5805273fd71bbcded5d1dd4c358",
+        "rev": "289fd255ca5754104d50d2e1656e95fdebf03542",
         "type": "github"
       },
       "original": {
         "owner": "conao3",
         "repo": "rust-llm-quota",
-        "type": "github"
-      }
-    },
-    "rust-opencode-limits": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "treefmt-nix": [
-          "treefmt-nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1794271100,
-        "narHash": "sha256-she2afZsA9TQMk5qiiNghI9tDPE/7WZyWkFzCR2r4f0=",
-        "owner": "conao3",
-        "repo": "rust-opencode-limits",
-        "rev": "4f4f529af66832a07b06d4514a8373201119f09b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "conao3",
-        "repo": "rust-opencode-limits",
         "type": "github"
       }
     },
