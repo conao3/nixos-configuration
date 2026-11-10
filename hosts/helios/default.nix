@@ -16,6 +16,7 @@ in
     ./hardware-configuration.nix
     ./coding-agent.nix
     ./kill-orphan.nix
+    ./llm-usage.nix
     ./memory.nix
     ./sunshine.nix
     ./tmux-server.nix
