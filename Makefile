@@ -11,6 +11,7 @@ switch:
 ifeq ($(UNAME_S),Darwin)
 	sudo -H nix run nix-darwin -- switch --flake . --show-trace |& $(NOM)
 else
+	nix flake archive >/dev/null
 	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | $(NOM) --json
 	systemctl --user daemon-reload || true
 	systemctl --user restart timers.target || true
