@@ -928,6 +928,7 @@
         "pype": "pype",
         "rust-fetch-usage-limit": "rust-fetch-usage-limit",
         "rust-llm-quota": "rust-llm-quota",
+        "rust-opencode-limits": "rust-opencode-limits",
         "sops-nix": "sops-nix",
         "treefmt-nix": "treefmt-nix_6"
       }
@@ -973,6 +974,32 @@
       "original": {
         "owner": "conao3",
         "repo": "rust-llm-quota",
+        "type": "github"
+      }
+    },
+    "rust-opencode-limits": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794271100,
+        "narHash": "sha256-she2afZsA9TQMk5qiiNghI9tDPE/7WZyWkFzCR2r4f0=",
+        "owner": "conao3",
+        "repo": "rust-opencode-limits",
+        "rev": "4f4f529af66832a07b06d4514a8373201119f09b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "rust-opencode-limits",
         "type": "github"
       }
     },

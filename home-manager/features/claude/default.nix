@@ -125,30 +125,6 @@ in
   home.packages = [
     # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
     pkgs.sox
-    (pkgs.writeShellApplication {
-      name = "opencode-go-usage";
-      runtimeInputs = [
-        pkgs.sqlite
-        pkgs.curl
-        pkgs.jq
-        pkgs.util-linux
-      ];
-      text = ''
-        instance=''${1:-agent001}
-        db="$HOME/.agents/.opencode.$instance/opencode.db"
-        row=$(sqlite3 -readonly "$db" "select json_extract(value,'$.access'), json_extract(value,'$.metadata.orgID'), json_extract(value,'$.metadata.server') from credential where integration_id='opencode' and active=1")
-        IFS='|' read -r token org server <<<"$row"
-        if [ -z "$token" ]; then
-          echo "opencode-go-usage: no active OpenCode Console credential in $db" >&2
-          exit 1
-        fi
-        curl -fsS -H "Authorization: Bearer $token" -H "x-org-id: $org" -A opencode-go-usage/1 "$server/api/go/status" \
-          | jq -r '.access.meters | to_entries[] | .value as $m
-              | ($m.usedMicroCents | tonumber) as $used | ($m.limitMicroCents | tonumber) as $limit
-              | "\(.key)\t\($used * 100 / $limit | floor)%\t$\($used / 1e8 * 100 | round / 100) / $\($limit / 1e8)\tresets \($m.resetsAt // "-")"' \
-          | column -t -s "$(printf '\t')"
-      '';
-    })
   ];
 
   programs.git.ignores = [

@@ -6,7 +6,10 @@ let
   llmAgents = inputs.llm-agents.packages.${system};
   t3code = llmAgents.t3code.override {
     t3code-unwrapped = llmAgents.t3code.unwrapped.overrideAttrs (old: {
-      patches = (old.patches or [ ]) ++ [ ./t3code-html-preview-file-revision.patch ];
+      patches = (old.patches or [ ]) ++ [
+        ./t3code-html-preview-file-revision.patch
+        ./t3code-opencode-console-go-usage.patch
+      ];
     });
   };
 in

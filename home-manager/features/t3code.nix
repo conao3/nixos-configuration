@@ -56,6 +56,13 @@ let
   opencodeAgent001ProviderInstance = {
     driver = "opencode";
     displayName = "OpenCode agent001";
+    environment = [
+      {
+        name = "OPENCODE_DB";
+        value = "/home/conao/.agents/.opencode.agent001/opencode.db";
+        sensitive = false;
+      }
+    ];
     enabled = true;
     config = {
       binaryPath = "/etc/profiles/per-user/conao/bin/opencode.agent001";
