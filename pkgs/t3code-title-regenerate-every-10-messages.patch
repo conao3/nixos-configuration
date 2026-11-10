@@ -1,0 +1,53 @@
+diff --git a/apps/server/src/orchestration-v2/Orchestrator.ts b/apps/server/src/orchestration-v2/Orchestrator.ts
+index f20ca8bdc9..7da28adfd1 100644
+--- a/apps/server/src/orchestration-v2/Orchestrator.ts
++++ b/apps/server/src/orchestration-v2/Orchestrator.ts
+@@ -627,6 +627,8 @@ const decodeUserInputAnswers = Schema.decodeUnknownEffect(
+   ),
+ );
+ 
++const THREAD_TITLE_REGENERATION_USER_MESSAGE_INTERVAL = 10;
++
+ function pendingThreadTitleGenerationEffect(
+   commandId: CommandId,
+   threadId: ThreadId,
+@@ -5668,6 +5670,39 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
+       ]);
+       projection = applyToProjection(projection, event);
+     }
++    if (
++      command.createdBy === "user" &&
++      !automaticWake &&
++      !isNativeMaintenanceCommand(command) &&
++      projection.thread.titleRegeneration == null &&
++      (userMessages.filter((message) => !isNativeMaintenanceCommand(message)).length + 1) %
++        THREAD_TITLE_REGENERATION_USER_MESSAGE_INTERVAL ===
++        0
++    ) {
++      const now = yield* DateTime.now;
++      const thread: OrchestrationV2AppThread = {
++        ...projection.thread,
++        titleRegeneration: { requestId: command.commandId, startedAt: now },
++        updatedAt: now,
++      };
++      const event = yield* emit(
++        events,
++        command,
++      )({
++        type: "thread.metadata-updated",
++        threadId: command.threadId,
++        providerInstanceId: thread.providerInstanceId,
++        occurredAt: now,
++        payload: thread,
++      });
++      yield* Ref.update(effects, (existing) => [
++        ...existing,
++        pendingThreadTitleGenerationEffect(command.commandId, command.threadId, {
++          type: "regenerate",
++        }),
++      ]);
++      projection = applyToProjection(projection, event);
++    }
+     const modelSelection = command.modelSelection ?? projection.thread.modelSelection;
+     let dispatchMode = resolveMessageDispatchIntent(
+       projection,

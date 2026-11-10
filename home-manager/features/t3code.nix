@@ -16,41 +16,7 @@ let
 
   hostName = osConfig.networking.hostName;
 
-  threadTitleInstructions = "タイトルは日本語で書き、末尾に半角スペースと分類のタグを 1 つだけ付ける (例: 「トロントの住居探し #住居」)。タグは # に続く 1 語で、作業の領域を表す (例: #求職 #会計 #住居 #英語 #ルーチン #t3code #nixos)。前のタイトルのタグが今の作業に合っていれば、同じタグを使う。";
-
-  t3ThreadRetitle = pkgs.writeShellApplication {
-    name = "t3-thread-retitle";
-    runtimeInputs = [
-      t3codePackages.t3code
-      pkgs.jq
-      pkgs.coreutils
-    ];
-    text = ''
-      project=$HOME/ghq/github.com/conao3/idea
-      state_dir=''${XDG_STATE_HOME:-$HOME/.local/state}/t3-thread-retitle
-      state=$state_dir/latest-runs.json
-      mkdir -p "$state_dir"
-      [ -s "$state" ] || echo '{}' > "$state"
-      threads=$(t3 thread list --project "$project" --json)
-      ids=$(jq -r --slurpfile seen "$state" '
-        .[]
-        | select(.latestRunId != null)
-        | select(.settled | not)
-        | select(.status | IN("running", "waiting", "queued", "starting", "preparing") | not)
-        | select($seen[0][.threadId] != .latestRunId)
-        | .threadId
-      ' <<<"$threads")
-      while IFS= read -r id; do
-        [ -n "$id" ] || continue
-        if t3 thread retitle "$id" </dev/null >/dev/null; then
-          run=$(jq -r --arg id "$id" '.[] | select(.threadId == $id) | .latestRunId' <<<"$threads")
-          tmp=$(mktemp "$state_dir/.latest-runs.XXXXXX")
-          jq --arg id "$id" --arg run "$run" '.[$id] = $run' "$state" > "$tmp"
-          mv -T "$tmp" "$state"
-        fi
-      done <<<"$ids"
-    '';
-  };
+  threadTitleInstructions = "タイトルは日本語で書き、末尾に半角スペースで区切って分類のタグを付ける (例: 「トロントの住居探し #住居 #カナダ」)。タグは # に続く 1 語で、作業の領域を表す (例: #求職 #会計 #住居 #英語 #ルーチン #t3code #nixos)。タグの数に上限はなく、当てはまる領域の分だけ付ける。前のタイトルのタグが今の作業に合っていれば、同じタグを使う。";
 
   claudeLaunchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md --append-system-prompt \"このセッションが動いているホストは ${lib.removePrefix "conao-nixos-" hostName} (${hostName})。\"";
 
@@ -234,8 +200,8 @@ let
           op = "force";
           path = [ "textGenerationModelSelection" ];
           value = {
-            instanceId = "claude_conao3";
-            model = "claude-haiku-5-5";
+            instanceId = "opencode_agent001";
+            model = "opencode-go/deepseek-v4.1-flash";
           };
         }
       ]
@@ -282,23 +248,6 @@ in
     t3codePackages.t3code
     t3codePackages.t3code-desktop
   ];
-
-  systemd.user.services.t3-thread-retitle = {
-    Unit.Description = "Regenerate T3 Code thread titles with their topic tag";
-    Service = {
-      Type = "oneshot";
-      ExecStart = lib.getExe t3ThreadRetitle;
-    };
-  };
-
-  systemd.user.timers.t3-thread-retitle = {
-    Unit.Description = "Regenerate T3 Code thread titles every 30 minutes";
-    Timer = {
-      OnCalendar = "*:0/30";
-      Persistent = true;
-    };
-    Install.WantedBy = [ "timers.target" ];
-  };
 
   sops = lib.mkIf isEos {
     defaultSopsFile = ../../secrets/secrets.yaml;
