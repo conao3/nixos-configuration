@@ -1,0 +1,59 @@
+diff --git a/apps/web/src/state/environments.ts b/apps/web/src/state/environments.ts
+index a35af5e094..cfb8081328 100644
+--- a/apps/web/src/state/environments.ts
++++ b/apps/web/src/state/environments.ts
+@@ -5,6 +5,7 @@ import {
+   type EnvironmentPresentation as BaseEnvironmentPresentation,
+ } from "@t3tools/client-runtime/connection";
+ import { Discovery } from "@t3tools/client-runtime/relay";
++import { environmentDisplayLabel } from "@t3tools/client-runtime/state/presentation";
+ import type { EnvironmentId } from "@t3tools/contracts";
+ import * as Option from "effect/Option";
+ 
+@@ -33,7 +34,7 @@ function projectEnvironmentPresentation(
+   return {
+     ...presentation,
+     environmentId,
+-    label: presentation.entry.target.label,
++    label: environmentDisplayLabel(presentation.entry.target.label),
+     displayUrl: connectionCatalogDisplayUrl(presentation.entry),
+     relayManaged: hasRelayRoute(presentation.entry),
+   };
+diff --git a/packages/client-runtime/src/state/presentation.ts b/packages/client-runtime/src/state/presentation.ts
+index f3ffb03b0b..e3989aef0f 100644
+--- a/packages/client-runtime/src/state/presentation.ts
++++ b/packages/client-runtime/src/state/presentation.ts
+@@ -20,6 +20,15 @@ import {
+ import { type EnvironmentCatalogState, enabledEnvironmentIds } from "./connections.ts";
+ import { hasRelayRoute } from "../connection/routes.ts";
+ 
++const ENVIRONMENT_LABEL_ALIASES: Readonly<Record<string, string>> = {
++  "conao-nixos-eos": "eos",
++  "conao-nixos-helios": "helios",
++};
++
++export function environmentDisplayLabel(label: string): string {
++  return ENVIRONMENT_LABEL_ALIASES[label] ?? label;
++}
++
+ function mapsEqual<K, V>(left: ReadonlyMap<K, V>, right: ReadonlyMap<K, V>): boolean {
+   if (left.size !== right.size) {
+     return false;
+@@ -207,7 +216,7 @@ export function projectEnvironmentConnectionSummary(
+ ): EnvironmentConnectionSummary {
+   return {
+     environmentId,
+-    environmentLabel: environment.entry.target.label,
++    environmentLabel: environmentDisplayLabel(environment.entry.target.label),
+     displayUrl: connectionCatalogDisplayUrl(environment.entry) ?? "",
+     isRelayManaged: hasRelayRoute(environment.entry),
+     isEnabled: environment.entry.enabled,
+@@ -235,7 +244,7 @@ export function createEnvironmentSummaryAtoms(input: {
+   const identitiesAtom = Atom.make((get) => {
+     const next = [...get(input.catalogValueAtom).entries].map(([environmentId, entry]) => ({
+       environmentId,
+-      label: entry.target.label,
++      label: environmentDisplayLabel(entry.target.label),
+     }));
+     const previous = Option.getOrNull(
+       get.self<ReadonlyArray<{ readonly environmentId: EnvironmentId; readonly label: string }>>(),

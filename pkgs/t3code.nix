@@ -17,6 +17,7 @@ let
         ./t3code-sidebar-row-host-chip.patch
         ./t3code-title-regenerate-every-10-messages.patch
         ./t3code-user-message-jump.patch
+        ./t3code-environment-label-aliases.patch
       ];
     });
   };
