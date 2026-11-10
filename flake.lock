@@ -468,11 +468,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794203155,
-        "narHash": "sha256-8m1RuVcC2YSvpeU41qwrIApDAJnOgd7JslEuV7W1mPk=",
+        "lastModified": 1794284642,
+        "narHash": "sha256-4f3UCJNQdvSM5zLGSeVA4F7yXE9/TpCeriCnE9FcwOY=",
         "ref": "refs/heads/main",
-        "rev": "aa62135113101cee3db39940a0a90a5c2e63dfca",
-        "revCount": 10,
+        "rev": "6a882c1ef485832cf3e35fb201e41e43d146e289",
+        "revCount": 11,
         "type": "git",
         "url": "ssh://git@github.com/conao3/rust-idea-routine.git"
       },
