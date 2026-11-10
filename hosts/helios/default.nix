@@ -19,6 +19,7 @@ in
     ./llm-usage.nix
     ./memory.nix
     ./sunshine.nix
+    ./sysmon.nix
     ./tmux-server.nix
   ];
 
