@@ -22,6 +22,7 @@ let
         ./t3code-no-history-swipe.patch
         ./t3code-file-markdown-table-sort.patch
         ./t3code-file-find.patch
+        ./t3code-sidebar-launched-threads.patch
       ];
     });
   };

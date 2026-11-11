@@ -1,0 +1,987 @@
+diff --git a/apps/server/src/mcp/McpToolAccess.ts b/apps/server/src/mcp/McpToolAccess.ts
+index b82d9bb5..b5bd4359 100644
+--- a/apps/server/src/mcp/McpToolAccess.ts
++++ b/apps/server/src/mcp/McpToolAccess.ts
+@@ -402,7 +402,20 @@ const routed = Effect.fn("McpToolAccess.routed")(function* <Tools extends Record
+         if (scope.linkedEnvironments === false) return yield* PeerForwarding.linkedEnvironmentsOff;
+         yield* (remote as RemoteCheck<typeof params>)(params);
+         if (Option.isNone(forwarding)) return yield* linksUnavailable;
+-        return yield* forwarding.value.call(scope, tool, target, { ...params, environmentId });
++        const launchedFrom =
++          name === "t3_thread_launch" && scope.thread !== undefined
++            ? {
++                launchedFrom: {
++                  environmentId: scope.environmentId,
++                  threadId: scope.thread.threadId,
++                },
++              }
++            : {};
++        return yield* forwarding.value.call(scope, tool, target, {
++          ...params,
++          ...launchedFrom,
++          environmentId,
++        });
+       });
+   }
+   return handlers as Toolkit.HandlersFrom<Tools>;
+diff --git a/apps/server/src/mcp/OrchestratorMcpService.ts b/apps/server/src/mcp/OrchestratorMcpService.ts
+index e84212ca..fad68d39 100644
+--- a/apps/server/src/mcp/OrchestratorMcpService.ts
++++ b/apps/server/src/mcp/OrchestratorMcpService.ts
+@@ -2836,6 +2836,7 @@ const make = Effect.gen(function* () {
+                   ...(parent.thread.linkOrigin === undefined
+                     ? {}
+                     : { linkOrigin: parent.thread.linkOrigin }),
++                  launchedFrom: { environmentId: scope.environmentId, threadId: parent.thread.id },
+                 })
+                 .pipe(
+                   Effect.mapError((error) =>
+diff --git a/apps/server/src/mcp/toolkits/project/handlers.test.ts b/apps/server/src/mcp/toolkits/project/handlers.test.ts
+index 6721e894..966662a4 100644
+--- a/apps/server/src/mcp/toolkits/project/handlers.test.ts
++++ b/apps/server/src/mcp/toolkits/project/handlers.test.ts
+@@ -53,6 +53,7 @@ const clientLaunchHarness = (input: {
+   readonly hostedAppUrl?: string;
+   /** The orchestrator refuses the new thread's mode, as under a managed ceiling. */
+   readonly refusedByCeiling?: true;
++  readonly callerThreadId?: ThreadId;
+ }) => {
+   const projectId = ProjectId.make("project:client-target");
+   const modelSelection = {
+@@ -84,7 +85,14 @@ const clientLaunchHarness = (input: {
+     Layer.succeed(McpInvocationContext.McpInvocationContext, {
+       environmentId: EnvironmentId.make("environment"),
+       requestNamespace: "client:session-1",
+-      thread: undefined,
++      thread:
++        input.callerThreadId === undefined
++          ? undefined
++          : {
++              threadId: input.callerThreadId,
++              providerSessionId: "provider-session-1",
++              providerInstanceId: ProviderInstanceId.make("claudeAgent"),
++            },
+       client: {
+         sessionId: "session-1",
+         label: "Claude Code",
+@@ -97,6 +105,19 @@ const clientLaunchHarness = (input: {
+     Layer.mock(ThreadManagement.ThreadManagementService)({
+       // A thread exists once a launch started it.
+       getThreadShell: (threadId) => {
++        if (threadId === input.callerThreadId) {
++          return Effect.succeed({
++            id: threadId,
++            projectId,
++            modelSelection,
++            providerInstanceId: ProviderInstanceId.make("claudeAgent"),
++            runtimeMode: "full-access",
++            interactionMode: "default",
++            activeRunId: "run:caller",
++            archivedAt: null,
++            deletedAt: null,
++          } as unknown as OrchestrationV2ThreadShell);
++        }
+         const launch = input.launched.find((candidate) => candidate.threadId === threadId);
+         return Effect.succeed(
+           launch === undefined
+@@ -664,3 +685,46 @@ it.effect("deleting a project through MCP also discards its clone record", () =>
+     expect(discarded).toEqual([harness.projectId]);
+   }),
+ );
++
++it.effect("a launch records the thread that launched it, and a client cannot claim one", () =>
++  Effect.gen(function* () {
++    const launchFrom = Effect.fn("test.launchFrom")(function* (
++      callerThreadId: ThreadId | undefined,
++      params: Record<string, unknown>,
++    ) {
++      const launched: Array<ThreadLaunch.ThreadLaunchInput> = [];
++      const { projectId, dependencies } = clientLaunchHarness({
++        runtimeModeCeiling: "full-access",
++        launched,
++        ...(callerThreadId === undefined ? {} : { callerThreadId }),
++      });
++      const toolkit = yield* ProjectToolkit.pipe(
++        Effect.provide(
++          McpToolAccess.HandlersLayer.layer(ProjectHandlers.layer).pipe(
++            Layer.provide(dependencies),
++          ),
++        ),
++      );
++      yield* toolkit
++        .handle("t3_thread_launch", { title: "Child", projectId, ...params } as never)
++        .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(dependencies));
++      return launched;
++    });
++
++    const callerThreadId = ThreadId.make("thread:parent");
++    const fromThread = yield* launchFrom(callerThreadId, { message: "Go" });
++    expect(fromThread[0]?.launchedFrom).toEqual({
++      environmentId: EnvironmentId.make("environment"),
++      threadId: callerThreadId,
++    });
++
++    const claimed = yield* launchFrom(undefined, {
++      launchedFrom: {
++        environmentId: EnvironmentId.make("environment-elsewhere"),
++        threadId: ThreadId.make("thread:claimed"),
++      },
++    });
++    expect(claimed).toHaveLength(1);
++    expect(claimed[0]?.launchedFrom).toBeUndefined();
++  }),
++);
+diff --git a/apps/server/src/mcp/toolkits/project/handlers.ts b/apps/server/src/mcp/toolkits/project/handlers.ts
+index 253964cc..4f6fdb3c 100644
+--- a/apps/server/src/mcp/toolkits/project/handlers.ts
++++ b/apps/server/src/mcp/toolkits/project/handlers.ts
+@@ -98,6 +98,12 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
+             : yield* launchCommandId(scope.requestNamespace, input.clientRequestId);
+         const threadId = ThreadId.make(commandId);
+         const messageId = MessageId.make(commandId);
++        const launchedFrom =
++          caller !== undefined
++            ? { environmentId: scope.environmentId, threadId: caller.id }
++            : linkOrigin === undefined
++              ? undefined
++              : input.launchedFrom;
+         const attachments = input.attachments ?? [];
+         if (attachments.some((attachment) => !Claims.attachmentIsPendingUpload(attachment)))
+           return yield* new OrchestratorMcpFailure({
+@@ -247,6 +253,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
+           ...(linkOrigin === undefined ? {} : { linkOrigin }),
+           // Kept only alongside linkOrigin: thread.create drops it otherwise.
+           ...(input.delegatedFrom === undefined ? {} : { delegatedFrom: input.delegatedFrom }),
++          ...(launchedFrom === undefined ? {} : { launchedFrom }),
+         }).pipe(
+           Effect.mapError((error) => {
+             if (error._tag === "AttachmentClaimError") {
+diff --git a/apps/server/src/mcp/toolkits/project/tools.ts b/apps/server/src/mcp/toolkits/project/tools.ts
+index f02042e6..161737dd 100644
+--- a/apps/server/src/mcp/toolkits/project/tools.ts
++++ b/apps/server/src/mcp/toolkits/project/tools.ts
+@@ -6,6 +6,7 @@ import {
+   ThreadId,
+   RunId,
+   OrchestrationV2DelegatedFrom,
++  OrchestrationV2LaunchedFrom,
+   OrchestrationV2RunStatus,
+   OrchestrationV2ThreadLaunchWorkspaceStrategy,
+   RuntimeMode,
+@@ -153,6 +154,7 @@ const ThreadLaunchTool = Tool.make("t3_thread_launch", {
+     clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
+     /** Set by a linked environment launching its agent's delegated task here; ignored otherwise. */
+     delegatedFrom: Schema.optional(OrchestrationV2DelegatedFrom),
++    launchedFrom: Schema.optional(OrchestrationV2LaunchedFrom),
+   }),
+   success: Schema.Struct({
+     threadId: ThreadId,
+diff --git a/apps/server/src/orchestration-v2/Orchestrator.ts b/apps/server/src/orchestration-v2/Orchestrator.ts
+index 7da28adf..e3163a85 100644
+--- a/apps/server/src/orchestration-v2/Orchestrator.ts
++++ b/apps/server/src/orchestration-v2/Orchestrator.ts
+@@ -2836,6 +2836,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
+       ...(command.linkOrigin === undefined || command.delegatedFrom === undefined
+         ? {}
+         : { delegatedFrom: command.delegatedFrom }),
++      ...(command.launchedFrom === undefined ? {} : { launchedFrom: command.launchedFrom }),
+       lineage: {
+         parentThreadId: null,
+         relationshipToParent: null,
+diff --git a/apps/server/src/orchestration-v2/ProjectionStore.ts b/apps/server/src/orchestration-v2/ProjectionStore.ts
+index a46c8017..ed0415f4 100644
+--- a/apps/server/src/orchestration-v2/ProjectionStore.ts
++++ b/apps/server/src/orchestration-v2/ProjectionStore.ts
+@@ -1599,6 +1599,9 @@ export function threadShellFromProjection(
+     ...(projection.thread.delegatedFrom === undefined
+       ? {}
+       : { delegatedFrom: projection.thread.delegatedFrom }),
++    ...(projection.thread.launchedFrom === undefined
++      ? {}
++      : { launchedFrom: projection.thread.launchedFrom }),
+     latestRunId: latestRun?.id ?? null,
+     latestRunRequestedAt: latestRun?.requestedAt ?? null,
+     latestRunStartedAt: latestRun?.startedAt ?? null,
+@@ -1880,6 +1883,9 @@ function shellFromState(input: {
+     ...(input.state.thread.delegatedFrom === undefined
+       ? {}
+       : { delegatedFrom: input.state.thread.delegatedFrom }),
++    ...(input.state.thread.launchedFrom === undefined
++      ? {}
++      : { launchedFrom: input.state.thread.launchedFrom }),
+     latestRunId: input.state.latestRunId,
+     latestRunRequestedAt: input.state.latestRunRequestedAt,
+     latestRunStartedAt: input.state.latestRunStartedAt,
+diff --git a/apps/server/src/orchestration-v2/ThreadForkService.ts b/apps/server/src/orchestration-v2/ThreadForkService.ts
+index 6790a291..294c4ae3 100644
+--- a/apps/server/src/orchestration-v2/ThreadForkService.ts
++++ b/apps/server/src/orchestration-v2/ThreadForkService.ts
+@@ -100,7 +100,11 @@ export const layer: Layer.Layer<ThreadForkServiceV2> = Layer.succeed(
+         });
+       }
+       // The remote parent delegated the source thread, not its forks.
+-      const { delegatedFrom: _delegatedFrom, ...inherited } = input.sourceProjection.thread;
++      const {
++        delegatedFrom: _delegatedFrom,
++        launchedFrom: _launchedFrom,
++        ...inherited
++      } = input.sourceProjection.thread;
+       const targetThread: OrchestrationV2AppThread = {
+         ...inherited,
+         // PR context follows the conversation; watching remains the source thread's responsibility.
+diff --git a/apps/server/src/orchestration-v2/ThreadLaunchService.ts b/apps/server/src/orchestration-v2/ThreadLaunchService.ts
+index 7e7829ba..2722dc3d 100644
+--- a/apps/server/src/orchestration-v2/ThreadLaunchService.ts
++++ b/apps/server/src/orchestration-v2/ThreadLaunchService.ts
+@@ -10,6 +10,7 @@ import {
+   type OrchestrationV2Actor,
+   type OrchestrationV2CreationSource,
+   type OrchestrationV2DelegatedFrom,
++  type OrchestrationV2LaunchedFrom,
+   type OrchestrationV2LinkOrigin,
+   type OrchestrationV2ProviderThreadNativeMetadata,
+   type OrchestrationV2ThreadProjection,
+@@ -103,6 +104,7 @@ export interface ThreadLaunchInput {
+   readonly linkOrigin?: OrchestrationV2LinkOrigin;
+   /** The parent there, when that environment's agent delegated this as a task. */
+   readonly delegatedFrom?: OrchestrationV2DelegatedFrom;
++  readonly launchedFrom?: OrchestrationV2LaunchedFrom;
+ }
+ 
+ type PreparationInput = Pick<
+@@ -948,6 +950,7 @@ const make = Effect.gen(function* () {
+                 ...(input.delegatedFrom === undefined
+                   ? {}
+                   : { delegatedFrom: input.delegatedFrom }),
++                ...(input.launchedFrom === undefined ? {} : { launchedFrom: input.launchedFrom }),
+                 createdBy: input.createdBy,
+                 creationSource: input.creationSource,
+               });
+diff --git a/apps/server/src/orchestration-v2/ThreadManagementService.ts b/apps/server/src/orchestration-v2/ThreadManagementService.ts
+index f0346b2b..743ab3fd 100644
+--- a/apps/server/src/orchestration-v2/ThreadManagementService.ts
++++ b/apps/server/src/orchestration-v2/ThreadManagementService.ts
+@@ -81,7 +81,12 @@ export function withCreationProvenance(
+   switch (command.type) {
+     case "thread.create": {
+       // Only the server stamps a link's origin, so a client cannot set one.
+-      const { linkOrigin: _linkOrigin, delegatedFrom: _delegatedFrom, ...rest } = command;
++      const {
++        linkOrigin: _linkOrigin,
++        delegatedFrom: _delegatedFrom,
++        launchedFrom: _launchedFrom,
++        ...rest
++      } = command;
+       return { ...rest, ...provenance };
+     }
+     case "message.dispatch":
+diff --git a/apps/web/src/components/Sidebar.logic.test.ts b/apps/web/src/components/Sidebar.logic.test.ts
+index 3e2e8be2..e8bd95d5 100644
+--- a/apps/web/src/components/Sidebar.logic.test.ts
++++ b/apps/web/src/components/Sidebar.logic.test.ts
+@@ -36,6 +36,7 @@ import {
+   groupSidebarThreadsByProject,
+   resolveSidebarFolderDot,
+   sidebarFolderExpansionKeys,
++  nestSidebarLaunchedThreads,
+ } from "./Sidebar.logic";
+ import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
+ import {
+@@ -1657,3 +1658,91 @@ describe("shouldCreateNewThreadInCurrentProject", () => {
+     expect(shouldCreateNewThreadInCurrentProject(true, 2, 2)).toBe(true);
+   });
+ });
++
++describe("nestSidebarLaunchedThreads", () => {
++  const env = EnvironmentId.make("environment-local");
++  const remote = EnvironmentId.make("environment-remote");
++  const shell = (
++    id: string,
++    launchedFrom?: { environmentId: EnvironmentId; threadId: string },
++    environmentId: EnvironmentId = env,
++  ) => ({
++    environmentId,
++    id: ThreadId.make(id),
++    launchedFrom:
++      launchedFrom === undefined
++        ? null
++        : {
++            environmentId: launchedFrom.environmentId,
++            threadId: ThreadId.make(launchedFrom.threadId),
++          },
++  });
++  const key = (thread: ReturnType<typeof shell>) =>
++    scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id));
++  const ids = (threads: readonly ReturnType<typeof shell>[]) => threads.map((thread) => thread.id);
++  const open = { collapsedParentKeys: new Set<string>(), routeThreadKey: null };
++
++  it("puts launched threads under their parent where the family's first member was", () => {
++    const parent = shell("parent");
++    const childA = shell("child-a", { environmentId: env, threadId: "parent" });
++    const childB = shell("child-b", { environmentId: env, threadId: "parent" }, remote);
++    const nested = nestSidebarLaunchedThreads(
++      [childA, shell("other"), parent, childB, shell("last")],
++      open,
++    );
++    expect(ids(nested.visibleThreads)).toEqual(["parent", "child-a", "child-b", "other", "last"]);
++    expect(nested.familyByParentKey.get(key(parent))?.childKeys).toEqual([
++      key(childA),
++      key(childB),
++    ]);
++    expect([...nested.childKeys]).toEqual([key(childA), key(childB)]);
++  });
++
++  it("joins nested launches to the top-most listed ancestor", () => {
++    const nested = nestSidebarLaunchedThreads(
++      [
++        shell("grandchild", { environmentId: env, threadId: "child" }),
++        shell("parent"),
++        shell("child", { environmentId: env, threadId: "parent" }),
++      ],
++      open,
++    );
++    expect(ids(nested.visibleThreads)).toEqual(["parent", "grandchild", "child"]);
++  });
++
++  it("leaves a thread whose parent is not listed, or another group's, as a row of its own", () => {
++    const orphan = shell("orphan", { environmentId: env, threadId: "missing" });
++    const parent = shell("parent");
++    const elsewhere = shell("elsewhere", { environmentId: env, threadId: "parent" });
++    const nested = nestSidebarLaunchedThreads([orphan, parent, elsewhere], {
++      ...open,
++      sameGroup: () => false,
++    });
++    expect(ids(nested.visibleThreads)).toEqual(["orphan", "parent", "elsewhere"]);
++    expect(nested.childKeys.size).toBe(0);
++  });
++
++  it("hides a collapsed family's children but keeps them in order and keeps the route thread", () => {
++    const parent = shell("parent");
++    const childA = shell("child-a", { environmentId: env, threadId: "parent" });
++    const childB = shell("child-b", { environmentId: env, threadId: "parent" });
++    const nested = nestSidebarLaunchedThreads([parent, childA, childB], {
++      collapsedParentKeys: new Set([key(parent)]),
++      routeThreadKey: key(childB),
++    });
++    expect(ids(nested.visibleThreads)).toEqual(["parent", "child-b"]);
++    expect(ids(nested.threads)).toEqual(["parent", "child-a", "child-b"]);
++    expect(nested.familyByParentKey.get(key(parent))?.collapsed).toBe(true);
++  });
++
++  it("survives a launch cycle", () => {
++    const nested = nestSidebarLaunchedThreads(
++      [
++        shell("a", { environmentId: env, threadId: "b" }),
++        shell("b", { environmentId: env, threadId: "a" }),
++      ],
++      open,
++    );
++    expect(ids(nested.threads).toSorted()).toEqual(["a", "b"]);
++  });
++});
+diff --git a/apps/web/src/components/Sidebar.logic.ts b/apps/web/src/components/Sidebar.logic.ts
+index bc3f0129..d86c29f1 100644
+--- a/apps/web/src/components/Sidebar.logic.ts
++++ b/apps/web/src/components/Sidebar.logic.ts
+@@ -1400,3 +1400,81 @@ export function sortScopedProjectsForSidebar<
+       left.id.localeCompare(right.id),
+   );
+ }
++
++export interface SidebarLaunchFamily {
++  readonly childKeys: readonly string[];
++  readonly collapsed: boolean;
++}
++
++export interface SidebarLaunchNesting<T> {
++  readonly threads: readonly T[];
++  readonly visibleThreads: readonly T[];
++  readonly familyByParentKey: ReadonlyMap<string, SidebarLaunchFamily>;
++  readonly childKeys: ReadonlySet<string>;
++}
++
++export function nestSidebarLaunchedThreads<
++  T extends Pick<SidebarThreadSummary, "environmentId" | "id" | "launchedFrom">,
++>(
++  threads: readonly T[],
++  input: {
++    readonly collapsedParentKeys: ReadonlySet<string>;
++    readonly routeThreadKey: string | null;
++    readonly sameGroup?: (parent: T, child: T) => boolean;
++  },
++): SidebarLaunchNesting<T> {
++  const keyOf = (thread: T) => scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id));
++  const byKey = new Map(threads.map((thread) => [keyOf(thread), thread] as const));
++  const parentOf = (thread: T): T | undefined => {
++    const from = thread.launchedFrom;
++    if (from == null) return undefined;
++    const parent = byKey.get(scopedThreadKey(scopeThreadRef(from.environmentId, from.threadId)));
++    if (parent === undefined || parent === thread) return undefined;
++    return input.sameGroup === undefined || input.sameGroup(parent, thread) ? parent : undefined;
++  };
++  const rootKeyOf = (thread: T): string => {
++    const visited = new Set<T>([thread]);
++    let current = thread;
++    for (let parent = parentOf(current); parent !== undefined; parent = parentOf(current)) {
++      if (visited.has(parent)) return keyOf(thread);
++      visited.add(parent);
++      current = parent;
++    }
++    return keyOf(current);
++  };
++  const membersByRoot = new Map<string, T[]>();
++  for (const thread of threads) {
++    const rootKey = rootKeyOf(thread);
++    const members = membersByRoot.get(rootKey);
++    if (members === undefined) membersByRoot.set(rootKey, [thread]);
++    else members.push(thread);
++  }
++  if (membersByRoot.size === threads.length) {
++    return {
++      threads,
++      visibleThreads: threads,
++      familyByParentKey: new Map(),
++      childKeys: new Set(),
++    };
++  }
++  const ordered: T[] = [];
++  const visible: T[] = [];
++  const familyByParentKey = new Map<string, SidebarLaunchFamily>();
++  const childKeys = new Set<string>();
++  for (const [rootKey, members] of membersByRoot) {
++    const root = byKey.get(rootKey)!;
++    ordered.push(root);
++    visible.push(root);
++    const children = members.filter((member) => member !== root);
++    if (children.length === 0) continue;
++    const collapsed = input.collapsedParentKeys.has(rootKey);
++    familyByParentKey.set(rootKey, { childKeys: children.map(keyOf), collapsed });
++    for (const child of children) {
++      const childKey = keyOf(child);
++      childKeys.add(childKey);
++      ordered.push(child);
++      if (!collapsed || childKey === input.routeThreadKey) visible.push(child);
++    }
++  }
++  return { threads: ordered, visibleThreads: visible, familyByParentKey, childKeys };
++}
+diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
+index 82aa7acc..ba348edd 100644
+--- a/apps/web/src/components/Sidebar.tsx
++++ b/apps/web/src/components/Sidebar.tsx
+@@ -219,6 +219,7 @@ import {
+   type SidebarListItem,
+   type SidebarSection,
+   resolveSidebarRowThreadId,
++  nestSidebarLaunchedThreads,
+ } from "./Sidebar.logic";
+ import {
+   createSidebarCollisionDetection,
+@@ -331,6 +332,12 @@ const sidebarProviderEntriesAtom = Atom.make((get) => {
+ const EMPTY_PROVIDER_ENTRIES: ReadonlyMap<string, SidebarProviderEntry> = new Map();
+ const EMPTY_THREADS: readonly EnvironmentThreadShell[] = [];
+ 
++interface SidebarLaunchFamilySummary {
++  readonly childCount: number;
++  readonly workingCount: number;
++  readonly collapsed: boolean;
++}
++
+ const SETTLED_TAIL_INITIAL_COUNT = 10;
+ const SETTLED_TAIL_PAGE_COUNT = 25;
+ const SETTLED_SHELF_EXPANDED_KEY = "t3code:sidebar:settled-expanded";
+@@ -507,8 +514,59 @@ function useSidebarThreads(input: {
+     clockKey: `${nowMinute}:${snoozeWakeClock}:${inboxReturnsVersion}`,
+   });
+ 
+-  const { pinnedThreads, activeThreads, workingThreads, snoozedThreads, settledThreads } =
+-    partition;
++  const [collapsedLaunchParentKeys, setCollapsedLaunchParentKeys] = useState<ReadonlySet<string>>(
++    () => new Set(),
++  );
++  const nestLaunched = (list: readonly EnvironmentThreadShell[]) =>
++    nestSidebarLaunchedThreads(list, {
++      collapsedParentKeys: collapsedLaunchParentKeys,
++      routeThreadKey: routeRowThreadKey,
++      ...(folderGroups === null
++        ? {}
++        : {
++            sameGroup: (parent: EnvironmentThreadShell, child: EnvironmentThreadShell) =>
++              parent.environmentId === child.environmentId && parent.projectId === child.projectId,
++          }),
++    });
++  const launchNestings = [
++    nestLaunched(partition.pinnedThreads),
++    nestLaunched(partition.activeThreads),
++    nestLaunched(partition.workingThreads),
++    nestLaunched(partition.snoozedThreads),
++    nestLaunched(partition.settledThreads),
++  ] as const;
++  const [pinnedThreads, activeThreads, workingThreads, snoozedThreads, settledThreads] =
++    launchNestings.map((nesting) => nesting.visibleThreads) as [
++      readonly EnvironmentThreadShell[],
++      readonly EnvironmentThreadShell[],
++      readonly EnvironmentThreadShell[],
++      readonly EnvironmentThreadShell[],
++      readonly EnvironmentThreadShell[],
++    ];
++  const launchChildKeys = new Set(launchNestings.flatMap((nesting) => [...nesting.childKeys]));
++  const launchFamilyByParentKey = new Map<string, SidebarLaunchFamilySummary>();
++  const hiddenLaunchChildKeysByParentKey = new Map<string, readonly string[]>();
++  const hiddenLaunchChildren: EnvironmentThreadShell[] = [];
++  for (const nesting of launchNestings) {
++    const threadByNestedKey = new Map(
++      nesting.threads.map((thread) => [threadShellKey(thread), thread] as const),
++    );
++    const visibleKeys = new Set(nesting.visibleThreads.map(threadShellKey));
++    for (const [parentKey, family] of nesting.familyByParentKey) {
++      launchFamilyByParentKey.set(parentKey, {
++        childCount: family.childKeys.length,
++        workingCount: family.childKeys.filter((childKey) => {
++          const child = threadByNestedKey.get(childKey);
++          return child !== undefined && isThreadWorking(child);
++        }).length,
++        collapsed: family.collapsed,
++      });
++      const hiddenKeys = family.childKeys.filter((childKey) => !visibleKeys.has(childKey));
++      hiddenLaunchChildKeysByParentKey.set(parentKey, hiddenKeys);
++      for (const childKey of hiddenKeys)
++        hiddenLaunchChildren.push(threadByNestedKey.get(childKey)!);
++    }
++  }
+   // Older settled threads load in pages; the shelf lists them only as far as they are loaded.
+   const olderSettledShelf = useOlderSettledShelf({
+     scopes: olderSettledScopes([...serverConfigs.keys()], scopedProjectKeys),
+@@ -582,6 +640,11 @@ function useSidebarThreads(input: {
+   }
+   return {
+     ...partition,
++    pinnedThreads,
++    activeThreads,
++    workingThreads,
++    snoozedThreads,
++    settledThreads,
+     threads,
+     workingShelfEnabled,
+     searchableThreads: [
+@@ -615,6 +678,23 @@ function useSidebarThreads(input: {
+     visibleSnoozedThreads,
+     visibleWorkingThreads,
+     orderedThreadKeys: orderedThreads.map(threadShellKey),
++    traversalThreadKeys: orderedThreads.flatMap((thread) => {
++      const key = threadShellKey(thread);
++      return [key, ...(hiddenLaunchChildKeysByParentKey.get(key) ?? [])];
++    }),
++    traversalThreadByKey: new Map(
++      [...orderedThreads, ...hiddenLaunchChildren].map(
++        (thread) => [threadShellKey(thread), thread] as const,
++      ),
++    ),
++    launchChildKeys,
++    launchFamilyByParentKey,
++    toggleLaunchFamily: (parentKey: string) =>
++      setCollapsedLaunchParentKeys((current) => {
++        const next = new Set(current);
++        if (!next.delete(parentKey)) next.add(parentKey);
++        return next;
++      }),
+     threadByKey: new Map(orderedThreads.map((thread) => [threadShellKey(thread), thread] as const)),
+     settledThreadKeys: new Set(settledThreads.map(threadShellKey)),
+     snoozedThreadKeys: new Set(snoozedThreads.map(threadShellKey)),
+@@ -1140,7 +1220,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+               project.memberProjectRefs
+                 .filter(
+                   (projectRef) =>
+-                    chosenHostScopeIds.size === 0 || chosenHostScopeIds.has(projectRef.environmentId),
++                    chosenHostScopeIds.size === 0 ||
++                    chosenHostScopeIds.has(projectRef.environmentId),
+                 )
+                 .map((projectRef) => `${projectRef.environmentId}:${projectRef.projectId}`),
+           ),
+@@ -1364,6 +1445,11 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+     visibleSnoozedThreads,
+     visibleWorkingThreads,
+     orderedThreadKeys,
++    traversalThreadKeys,
++    traversalThreadByKey,
++    launchChildKeys,
++    launchFamilyByParentKey,
++    toggleLaunchFamily,
+     threadByKey,
+     settledThreadKeys,
+     snoozedThreadKeys,
+@@ -2931,7 +3017,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+       });
+       const navigateToThreadKey = (targetThreadKey: string | null) => {
+         if (!targetThreadKey) return false;
+-        const targetThread = threadByKey.get(targetThreadKey);
++        const targetThread = traversalThreadByKey.get(targetThreadKey);
+         if (!targetThread) return false;
+         event.preventDefault();
+         event.stopPropagation();
+@@ -2965,12 +3051,12 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+           .map(([draftKey]) => draftKey);
+         const draftSessionKeySet = new Set(draftSessionKeys);
+         const targetKey = resolveAdjacentDoneThreadId({
+-          threadIds: [...draftSessionKeys, ...orderedThreadKeys],
++          threadIds: [...draftSessionKeys, ...traversalThreadKeys],
+           currentThreadId: routeDraftIdForRows ?? routeRowThreadKey,
+           direction: doneTraversalDirection,
+           isDone: (threadKey) => {
+             if (draftSessionKeySet.has(threadKey)) return true;
+-            const thread = threadByKey.get(threadKey);
++            const thread = traversalThreadByKey.get(threadKey);
+             if (!thread) return false;
+             return (
+               composerDraftHasUserContent(composerDrafts.draftsByThreadKey[threadKey]) ||
+@@ -3008,7 +3094,8 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+     routeRowThreadKey,
+     routeTerminalOpen,
+     scopedProjectKeys,
+-    threadByKey,
++    traversalThreadByKey,
++    traversalThreadKeys,
+   ]);
+ 
+   const shouldShowJumpHintsNow = shouldShowThreadJumpHintsForModifiers(
+@@ -3413,13 +3500,16 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                         );
+                         const isCard =
+                           section === "active" || section === "pinned" || section === "working";
+-                        const rowVariant = folderRow
+-                          ? folderRowsMultiline
+-                            ? "folder-multiline"
+-                            : "folder"
+-                          : isCard
+-                            ? "card"
+-                            : "slim";
++                        const launchFamily = launchFamilyByParentKey.get(threadKey);
++                        const rowVariant = launchChildKeys.has(threadKey)
++                          ? "child"
++                          : folderRow
++                            ? folderRowsMultiline
++                              ? "folder-multiline"
++                              : "folder"
++                            : isCard
++                              ? "card"
++                              : "slim";
+                         return (
+                           <SortableThreadRow
+                             key={threadKey}
+@@ -3429,10 +3519,15 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+                               projectFolders !== null ||
+                               renamingThreadKey === threadKey ||
+                               !draggableThreadKeys.has(threadKey) ||
++                              launchChildKeys.has(threadKey) ||
+                               optimisticDrop !== null
+                             }
+                             thread={thread}
+                             variant={rowVariant}
++                            launchChildCount={launchFamily?.childCount ?? 0}
++                            launchWorkingCount={launchFamily?.workingCount ?? 0}
++                            launchCollapsed={launchFamily?.collapsed ?? false}
++                            onToggleLaunchFamily={toggleLaunchFamily}
+                             navigationParent={
+                               folderRow ??
+                               (section === "working" ||
+diff --git a/apps/web/src/components/SidebarLaunchFamily.browser.test.tsx b/apps/web/src/components/SidebarLaunchFamily.browser.test.tsx
+new file mode 100644
+index 00000000..89ade704
+--- /dev/null
++++ b/apps/web/src/components/SidebarLaunchFamily.browser.test.tsx
+@@ -0,0 +1,70 @@
++import { createMemoryHistory } from "@tanstack/react-router";
++import { DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts/settings";
++import type * as Context from "effect/Context";
++import { expect, it, vi } from "vite-plus/test";
++import { page, userEvent } from "vite-plus/test/browser";
++
++import "~/index.css";
++
++import { AppRoot } from "~/AppRoot";
++import "~/components/ChatView";
++import { __setClientSettingsForTests } from "~/hooks/useSettings";
++import { getRouter } from "~/router";
++import {
++  ENVIRONMENT_ID,
++  installFakeEnvironment,
++  threadWithHistory,
++  type FakeDriver,
++} from "../../test/fakeEnvironment";
++import { render } from "../../test/render";
++
++vi.mock("../../../../packages/client-runtime/src/connection/driver.ts", async (importOriginal) => {
++  const [actual, { fakeDriver }, Layer] = await Promise.all([
++    importOriginal<{ readonly ConnectionDriver: Context.Key<unknown, FakeDriver> }>(),
++    import("../../test/fakeEnvironment"),
++    import("effect/Layer"),
++  ]);
++  return { ...actual, layer: Layer.succeed(actual.ConnectionDriver, fakeDriver) };
++});
++
++vi.mock(import("~/rpc/requestLatencyState"), async (original) => ({
++  ...(await original()),
++  trackRpcRequestSent: () => {},
++}));
++
++const rowThreadIds = () =>
++  [...document.querySelectorAll("[data-thread-item]")].map((row) =>
++    row.getAttribute("data-thread-item")?.split(":").at(-1),
++  );
++
++it("lists launched threads under their parent and folds them away", async () => {
++  const parent = threadWithHistory("parent", 1);
++  using _environment = installFakeEnvironment([
++    { ...threadWithHistory("first-child", 1), launchedFrom: parent.id },
++    threadWithHistory("other", 1),
++    parent,
++    { ...threadWithHistory("second-child", 1), launchedFrom: parent.id },
++  ]);
++  await page.viewport(1400, 900);
++  __setClientSettingsForTests({
++    ...DEFAULT_CLIENT_SETTINGS,
++    onboardingCompletedAt: "2026-01-01T00:00:00.000Z",
++  });
++  const router = getRouter(
++    createMemoryHistory({ initialEntries: [`/${ENVIRONMENT_ID}/${parent.id}`] }),
++  );
++  await router.load();
++  const container = document.createElement("div");
++  container.style.cssText = "height: 900px; width: 1400px;";
++  await using _app = await render(<AppRoot router={router} />, { container, router: false });
++
++  const hide = page.getByRole("button", { name: "Hide 2 launched threads" });
++  await expect.element(hide).toBeVisible();
++  const family = rowThreadIds().filter((id) => id !== "other");
++  expect(family).toEqual(["parent", "first-child", "second-child"]);
++  expect(document.querySelectorAll("[data-testid='sidebar-row-launch-child']")).toHaveLength(2);
++
++  await userEvent.click(hide);
++  await expect.element(page.getByRole("button", { name: "Show 2 launched threads" })).toBeVisible();
++  expect(rowThreadIds().filter((id) => id !== "other")).toEqual(["parent"]);
++});
+diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+index f1b178eb..e7459cd7 100644
+--- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
++++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+@@ -37,6 +37,7 @@ import {
+   CircleCheckIcon,
+   CircleDashedIcon,
+   CircleDotDashedIcon,
++  ChevronRightIcon,
+   ClockIcon,
+   GitBranchIcon,
+   MessageCircleQuestionIcon,
+@@ -535,7 +536,11 @@ type SidebarThreadRowProps = {
+   thread: SidebarThreadSummary;
+   // "folder" is a one-line row inside a boring sidebar project folder;
+   // "folder-multiline" adds the card's branch and PR line under it.
+-  variant: "card" | "slim" | "folder" | "folder-multiline";
++  variant: "card" | "slim" | "folder" | "folder-multiline" | "child";
++  launchChildCount: number;
++  launchWorkingCount: number;
++  launchCollapsed: boolean;
++  onToggleLaunchFamily: (parentKey: string) => void;
+   navigationParent?: string | undefined;
+   variantAction: SidebarSweepAction;
+   settlementSupported: boolean;
+@@ -1124,6 +1129,37 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+   ) : null;
+ 
+   const remoteMachineIcon = null;
++  const launchToggle =
++    props.launchChildCount > 0 ? (
++      <button
++        type="button"
++        aria-expanded={!props.launchCollapsed}
++        aria-label={
++          props.launchCollapsed
++            ? `Show ${props.launchChildCount} launched threads`
++            : `Hide ${props.launchChildCount} launched threads`
++        }
++        data-testid="sidebar-launch-toggle"
++        onClick={(event) => {
++          event.preventDefault();
++          event.stopPropagation();
++          props.onToggleLaunchFamily(threadKey);
++        }}
++        onPointerDown={(event) => event.stopPropagation()}
++        className="relative z-20 inline-flex h-5 shrink-0 cursor-pointer items-center gap-1 rounded-sm px-1 text-xs text-secondary-label outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
++      >
++        <ChevronRightIcon
++          aria-hidden
++          className={cn("size-3 transition-transform", !props.launchCollapsed && "rotate-90")}
++        />
++        <span className="tabular-nums">{props.launchChildCount}</span>
++        {props.launchCollapsed && props.launchWorkingCount > 0 ? (
++          <span className="text-info-foreground tabular-nums">
++            {props.launchWorkingCount} working
++          </span>
++        ) : null}
++      </button>
++    ) : null;
+   const hostChip = props.environmentLabel ? (
+     <span
+       className={cn(
+@@ -1133,17 +1169,18 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+           : "bg-sidebar-accent text-secondary-label",
+       )}
+     >
+-      <EnvironmentMachineIcon aria-hidden kind={props.environmentMachine} className="size-3 shrink-0" />
++      <EnvironmentMachineIcon
++        aria-hidden
++        kind={props.environmentMachine}
++        className="size-3 shrink-0"
++      />
+       <span className="truncate">{props.environmentLabel}</span>
+     </span>
+   ) : null;
+   const diff = latestRunDiff(thread);
+   // Only the trailing icons would remain, so the row moves them to the title line instead.
+   const metaLineEmpty =
+-    !showsScratchMachine &&
+-    prBadge === null &&
+-    diff === null &&
+-    runningTerminalIds.length === 0;
++    !showsScratchMachine && prBadge === null && diff === null && runningTerminalIds.length === 0;
+   const metaLine = metaLineEmpty ? null : (
+     <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-secondary-label text-xs">
+       {showsScratchMachine ? (
+@@ -1190,7 +1227,8 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+ 
+   if (variant !== "card") {
+     const multiline = variant === "folder-multiline";
+-    const inFolder = variant === "folder" || multiline;
++    const launchChild = variant === "child";
++    const inFolder = variant === "folder" || multiline || launchChild;
+     return (
+       <li
+         data-thread-item={threadKey}
+@@ -1213,7 +1251,13 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                 data-sidebar-parent={props.navigationParent}
+                 aria-label={accessibility.label}
+                 aria-current={accessibility.current}
+-                data-testid={inFolder ? "sidebar-row-folder" : "sidebar-row-slim"}
++                data-testid={
++                  launchChild
++                    ? "sidebar-row-launch-child"
++                    : inFolder
++                      ? "sidebar-row-folder"
++                      : "sidebar-row-slim"
++                }
+                 aria-busy={isRegeneratingTitle || undefined}
+                 className={cn(
+                   rowSurfaceClassName,
+@@ -1221,7 +1265,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                     ? "flex flex-col justify-center px-2.5 py-1.5"
+                     : "flex h-9 items-center gap-2.5 px-2.5",
+                   // Lines titles up with the folder name, past its chevron and icon.
+-                  inFolder && "ps-9",
++                  inFolder && (launchChild ? "ps-7" : "ps-9"),
+                 )}
+                 onClick={handleClick}
+                 onDoubleClick={handleDoubleClick}
+@@ -1246,8 +1290,12 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                   ) : null}
+                 </span>
+               )}
++              {launchToggle}
+               {draftIndicator}
+               {title}
++              {launchChild && hostChip ? (
++                <span className="flex max-w-20 min-w-0 shrink-0">{hostChip}</span>
++              ) : null}
+               {multiline ? titleLineIcons : null}
+               {pinIndicator}
+               {multiline ? null : terminalStatusIcon}
+@@ -1431,6 +1479,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+               {/* Left of the status slot, the pin would slide when hover swaps the
+                 label for the wider row controls. */}
+               {pinIndicator}
++              {launchToggle}
+               {hostChip}
+               <span className="flex-1" />
+               {sortable?.isDragging ? (
+diff --git a/apps/web/test/fakeEnvironment.ts b/apps/web/test/fakeEnvironment.ts
+index 44cd45d1..3e203eb8 100644
+--- a/apps/web/test/fakeEnvironment.ts
++++ b/apps/web/test/fakeEnvironment.ts
+@@ -185,6 +185,7 @@ function run(threadId: ThreadId, id: RunId, ordinal: number, userMessageId: stri
+ export interface FakeThread {
+   /** Makes this a side chat of that thread. */
+   readonly sideChatOf?: ThreadId;
++  readonly launchedFrom?: ThreadId;
+   readonly id: ThreadId;
+   readonly title: string;
+   readonly runs: ReadonlyArray<OrchestrationV2Run>;
+@@ -234,6 +235,9 @@ function shellOf(thread: FakeThread): OrchestrationV2ThreadShell {
+       ...(thread.sideChatOf ? { sideChat: true } : {}),
+     },
+     forkedFrom: null,
++    ...(thread.launchedFrom === undefined
++      ? {}
++      : { launchedFrom: { environmentId: ENVIRONMENT_ID, threadId: thread.launchedFrom } }),
+     createdBy: "user",
+     creationSource: "web",
+     latestRunId: latest?.id ?? null,
+diff --git a/packages/client-runtime/src/state/models.ts b/packages/client-runtime/src/state/models.ts
+index 196b5ff3..544723e5 100644
+--- a/packages/client-runtime/src/state/models.ts
++++ b/packages/client-runtime/src/state/models.ts
+@@ -150,6 +150,7 @@ export interface EnvironmentThreadShell {
+   readonly linkOrigin: OrchestrationV2ThreadShell["linkOrigin"] | null;
+   /** The thread in a linked environment that delegated this one, if one did. */
+   readonly delegatedFrom: OrchestrationV2ThreadShell["delegatedFrom"] | null;
++  readonly launchedFrom: OrchestrationV2ThreadShell["launchedFrom"] | null;
+   readonly activeProviderThreadId: OrchestrationV2ThreadShell["activeProviderThreadId"];
+   readonly latestRun: ThreadRunSummary | null;
+   readonly runtime: ThreadRuntimeSummary | null;
+@@ -298,6 +299,7 @@ export function presentThreadShell(
+     forkedFrom: thread.forkedFrom,
+     linkOrigin: thread.linkOrigin ?? null,
+     delegatedFrom: thread.delegatedFrom ?? null,
++    launchedFrom: thread.launchedFrom ?? null,
+     activeProviderThreadId: thread.activeProviderThreadId,
+     latestRun,
+     runtime,
+diff --git a/packages/contracts/src/orchestrationV2.ts b/packages/contracts/src/orchestrationV2.ts
+index 785f41e3..5453c1c2 100644
+--- a/packages/contracts/src/orchestrationV2.ts
++++ b/packages/contracts/src/orchestrationV2.ts
+@@ -139,6 +139,12 @@ export const OrchestrationV2DelegatedFrom = Schema.Struct({
+ });
+ export type OrchestrationV2DelegatedFrom = typeof OrchestrationV2DelegatedFrom.Type;
+ 
++export const OrchestrationV2LaunchedFrom = Schema.Struct({
++  environmentId: EnvironmentId,
++  threadId: ThreadId,
++});
++export type OrchestrationV2LaunchedFrom = typeof OrchestrationV2LaunchedFrom.Type;
++
+ export const OrchestrationV2NativeRefStrength = Schema.Literals(["strong", "weak", "none"]);
+ export type OrchestrationV2NativeRefStrength = typeof OrchestrationV2NativeRefStrength.Type;
+ 
+@@ -459,6 +465,7 @@ export const OrchestrationV2AppThread = Schema.Struct({
+   historyOrigin: Schema.optional(OrchestrationV2ThreadHistoryOrigin),
+   linkOrigin: Schema.optional(OrchestrationV2LinkOrigin),
+   delegatedFrom: Schema.optional(OrchestrationV2DelegatedFrom),
++  launchedFrom: Schema.optional(OrchestrationV2LaunchedFrom),
+   lineage: OrchestrationV2AppThreadLineage,
+   forkedFrom: Schema.NullOr(
+     Schema.Union([
+@@ -2089,6 +2096,7 @@ export const OrchestrationV2ThreadShell = Schema.Struct({
+   historyOrigin: Schema.optional(OrchestrationV2ThreadHistoryOrigin),
+   linkOrigin: Schema.optional(OrchestrationV2LinkOrigin),
+   delegatedFrom: Schema.optional(OrchestrationV2DelegatedFrom),
++  launchedFrom: Schema.optional(OrchestrationV2LaunchedFrom),
+   latestRunId: Schema.NullOr(RunId),
+   latestRunRequestedAt: Schema.optional(Schema.NullOr(Schema.DateTimeUtc)),
+   latestRunStartedAt: Schema.optional(Schema.NullOr(Schema.DateTimeUtc)),
+@@ -2920,6 +2928,7 @@ export const OrchestrationV2Command = Schema.Union([
+     linkOrigin: Schema.optional(OrchestrationV2LinkOrigin),
+     /** Only the server sets this, with `linkOrigin`, for a linked environment's delegated task. */
+     delegatedFrom: Schema.optional(OrchestrationV2DelegatedFrom),
++    launchedFrom: Schema.optional(OrchestrationV2LaunchedFrom),
+     importedNativeThread: Schema.optional(
+       Schema.Struct({
+         ref: Schema.Struct({
