@@ -1,0 +1,575 @@
+diff --git a/apps/web/src/components/files/FileFindBar.tsx b/apps/web/src/components/files/FileFindBar.tsx
+new file mode 100644
+index 00000000..6546b189
+--- /dev/null
++++ b/apps/web/src/components/files/FileFindBar.tsx
+@@ -0,0 +1,198 @@
++import { ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
++import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
++
++import { cn } from "~/lib/utils";
++import { Button } from "../ui/button";
++import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
++import {
++  clearFindHighlights,
++  findTextRanges,
++  paintFindHighlights,
++  registerFileFindShortcut,
++  wrapFindIndex,
++} from "./fileFind";
++
++/** Find in a file surface whose text is in the DOM (rendered markdown). */
++export function useFileFind(surfaceRef: RefObject<HTMLElement | null>) {
++  const [open, setOpen] = useState(false);
++  const [query, setQuery] = useState("");
++  const [activeIndex, setActiveIndex] = useState(0);
++  const [focusRequestId, setFocusRequestId] = useState(0);
++  const [ranges, setRanges] = useState<Range[]>([]);
++  const [bar, setBar] = useState<HTMLDivElement | null>(null);
++
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- registers the find shortcut on the global keyboard dispatcher
++  useEffect(
++    () =>
++      registerFileFindShortcut(
++        () => surfaceRef.current,
++        () => {
++          setOpen(true);
++          setFocusRequestId((value) => value + 1);
++        },
++      ),
++    [surfaceRef],
++  );
++
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- searches the rendered DOM text and follows its mutations
++  useEffect(() => {
++    const surface = surfaceRef.current;
++    if (!open || !surface) {
++      setRanges([]);
++      return;
++    }
++    let frame: number | null = null;
++    const search = () => {
++      frame = null;
++      setRanges(findTextRanges(surface, query, bar));
++    };
++    search();
++    const observer = new MutationObserver((records) => {
++      if (records.every((record) => bar?.contains(record.target))) return;
++      if (frame === null) frame = requestAnimationFrame(search);
++    });
++    observer.observe(surface, { childList: true, subtree: true, characterData: true });
++    return () => {
++      observer.disconnect();
++      if (frame !== null) cancelAnimationFrame(frame);
++    };
++  }, [bar, open, query, surfaceRef]);
++
++  const currentIndex = wrapFindIndex(activeIndex, ranges.length);
++
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- paints CSS highlights and scrolls the active match into view
++  useEffect(() => {
++    if (!open || ranges.length === 0) {
++      clearFindHighlights();
++      return;
++    }
++    paintFindHighlights(ranges, currentIndex);
++    ranges[currentIndex]?.startContainer.parentElement?.scrollIntoView({
++      block: "center",
++      inline: "nearest",
++    });
++  }, [currentIndex, open, ranges]);
++
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- removes this surface's highlights when it unmounts
++  useEffect(() => clearFindHighlights, []);
++
++  return {
++    attachBar: setBar,
++    open,
++    query,
++    matchCount: ranges.length,
++    activeIndex: currentIndex,
++    focusRequestId,
++    onQueryChange: (next: string) => {
++      setQuery(next);
++      setActiveIndex(0);
++    },
++    onNext: () => setActiveIndex(currentIndex + 1),
++    onPrevious: () => setActiveIndex(currentIndex - 1),
++    onClose: () => {
++      setOpen(false);
++      clearFindHighlights();
++      surfaceRef.current?.focus({ preventScroll: true });
++    },
++  };
++}
++
++export function FileFindBar({ attachBar, ...props }: ReturnType<typeof useFileFind>) {
++  const inputRef = useRef<HTMLInputElement | null>(null);
++
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- focuses and selects the input DOM node when the bar opens or the shortcut fires again
++  useEffect(() => {
++    if (!props.open) return;
++    inputRef.current?.focus();
++    inputRef.current?.select();
++  }, [
++    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Each find shortcut bumps the request id, so an open bar refocuses and reselects its query.
++    props.focusRequestId,
++    props.open,
++  ]);
++
++  if (!props.open) return null;
++
++  const hasQuery = props.query.length > 0;
++  const noResults = hasQuery && props.matchCount === 0;
++  const label = hasQuery
++    ? props.matchCount === 0
++      ? "0/0"
++      : `${props.activeIndex + 1}/${props.matchCount}`
++    : "";
++  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
++    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
++    if (event.key === "Enter") {
++      event.preventDefault();
++      event.stopPropagation();
++      if (event.shiftKey) props.onPrevious();
++      else props.onNext();
++    } else if (event.key === "Escape") {
++      event.preventDefault();
++      event.stopPropagation();
++      props.onClose();
++    }
++  };
++
++  return (
++    <div
++      ref={attachBar}
++      data-file-find-bar
++      className="absolute top-3 right-3 z-40 w-[min(22rem,calc(100%-1.5rem))]"
++    >
++      <InputGroup
++        variant="popover"
++        size="lg"
++        role="search"
++        aria-label="Find in file"
++        className="w-full"
++      >
++        <InputGroupInput
++          ref={inputRef}
++          type="search"
++          size="sm"
++          value={props.query}
++          aria-label="Find in file"
++          placeholder="Find in file"
++          maxLength={200}
++          spellCheck={false}
++          autoComplete="off"
++          onChange={(event) => props.onQueryChange(event.target.value)}
++          onKeyDown={handleKeyDown}
++        />
++        <InputGroupAddon align="inline-end" inset="pill">
++          <span
++            aria-live="polite"
++            className={cn(
++              "min-w-10 text-center text-xs tabular-nums",
++              noResults ? "text-destructive" : "text-muted-foreground",
++            )}
++          >
++            {label}
++          </span>
++          <Button
++            size="icon-xs"
++            variant="ghost"
++            aria-label="Previous match"
++            disabled={props.matchCount === 0}
++            onClick={props.onPrevious}
++          >
++            <ChevronUpIcon />
++          </Button>
++          <Button
++            size="icon-xs"
++            variant="ghost"
++            aria-label="Next match"
++            disabled={props.matchCount === 0}
++            onClick={props.onNext}
++          >
++            <ChevronDownIcon />
++          </Button>
++          <Button size="icon-xs" variant="ghost" aria-label="Close find" onClick={props.onClose}>
++            <XIcon />
++          </Button>
++        </InputGroupAddon>
++      </InputGroup>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx b/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
+index 49857b5d..53752c17 100644
+--- a/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
++++ b/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
+@@ -2,6 +2,7 @@ import { EnvironmentId, ThreadId, type ProjectReadFileResult } from "@t3tools/co
+ import { AsyncResult } from "effect/reactivity";
+ import { describe, expect, it, vi } from "vite-plus/test";
+ import { act, fakeTimers, render } from "../../../test/render";
++import { userEvent } from "vite-plus/test/browser";
+ 
+ const state = vi.hoisted(() => ({
+   file: null as ProjectReadFileResult | null,
+@@ -160,3 +161,112 @@ describe("rendered Markdown task saves", () => {
+     });
+   });
+ });
++
++describe("find in a rendered Markdown file", () => {
++  function findPreview() {
++    state.file = {
++      relativePath: "notes.md",
++      contents:
++        "# Rent\n\nToronto rent is high.\n\n| City | Rent |\n| --- | --- |\n| toronto | 2,400 |\n",
++      byteLength: 80,
++      truncated: false,
++    };
++    return (
++      <FilePreviewPanel
++        environmentId={environmentId}
++        cwd="/workspace"
++        projectName="Project"
++        relativePath="notes.md"
++        threadRef={threadRef}
++        composerDraftTarget={threadRef}
++        keybindings={[]}
++        availableEditors={[]}
++        openInShortcutEnabled={false}
++        revealLine={null}
++        revealRequestId={0}
++        onOpenFile={vi.fn()}
++        onNavigateFolder={vi.fn()}
++        folderTrail={undefined}
++        onPendingChange={vi.fn()}
++        selectedFilePending={false}
++        workspaceMutationId={null}
++      />
++    );
++  }
++  const highlightSize = (name: string) => CSS.highlights.get(name)?.size ?? 0;
++
++  it("opens with Ctrl+F after clicking the file and highlights every match", async () => {
++    using _settings = setup();
++    await using screen = await render(findPreview());
++    const paragraph = [...screen.container.querySelectorAll("p")].find((node) =>
++      node.textContent?.includes("Toronto rent"),
++    )!;
++    await userEvent.click(paragraph);
++    await userEvent.keyboard("{Control>}f{/Control}");
++    const input = screen.container.querySelector<HTMLInputElement>(
++      'input[aria-label="Find in file"]',
++    );
++    expect(input).not.toBeNull();
++    expect(document.activeElement).toBe(input);
++    await userEvent.keyboard("toronto");
++    await vi.waitFor(() => expect(screen.container.textContent).toContain("1/2"));
++    expect(highlightSize("t3-file-find-active")).toBe(1);
++    expect(highlightSize("t3-file-find")).toBe(1);
++    await userEvent.keyboard("{Enter}");
++    await vi.waitFor(() => expect(screen.container.textContent).toContain("2/2"));
++    await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
++    await vi.waitFor(() => expect(screen.container.textContent).toContain("1/2"));
++    await userEvent.keyboard("{Escape}");
++    expect(screen.container.querySelector('input[aria-label="Find in file"]')).toBeNull();
++    expect(highlightSize("t3-file-find-active")).toBe(0);
++    await userEvent.keyboard("{Control>}f{/Control}");
++    expect(screen.container.querySelector('input[aria-label="Find in file"]')).not.toBeNull();
++  });
++});
++
++describe("find in an editable source file", () => {
++  it("opens the editor's search panel with Ctrl+F after clicking the file surface", async () => {
++    using _settings = setup();
++    state.file = {
++      relativePath: "main.ts",
++      contents: "const rent = 2400;\nconsole.log(rent);\n",
++      byteLength: 40,
++      truncated: false,
++    };
++    await using screen = await render(
++      <FilePreviewPanel
++        environmentId={environmentId}
++        cwd="/workspace"
++        projectName="Project"
++        relativePath="main.ts"
++        threadRef={threadRef}
++        composerDraftTarget={threadRef}
++        keybindings={[]}
++        availableEditors={[]}
++        openInShortcutEnabled={false}
++        revealLine={null}
++        revealRequestId={0}
++        onOpenFile={vi.fn()}
++        onNavigateFolder={vi.fn()}
++        folderTrail={undefined}
++        onPendingChange={vi.fn()}
++        selectedFilePending={false}
++        workspaceMutationId={null}
++      />,
++    );
++    const host = () =>
++      [...screen.container.querySelectorAll<HTMLElement>("*")].find(
++        (node) => node.shadowRoot?.querySelector("pre") != null,
++      );
++    await vi.waitFor(
++      () => expect(host()?.shadowRoot?.querySelector("[contenteditable=true]")).toBeTruthy(),
++      { timeout: 10_000 },
++    );
++    const surface = host()!.closest<HTMLElement>("[tabindex='-1']")!;
++    await act(() => surface.focus());
++    await userEvent.keyboard("{Control>}f{/Control}");
++    await vi.waitFor(() =>
++      expect(host()!.shadowRoot!.querySelector('input[placeholder="Search"]')).toBeTruthy(),
++    );
++  });
++});
+diff --git a/apps/web/src/components/files/FilePreviewPanel.tsx b/apps/web/src/components/files/FilePreviewPanel.tsx
+index efe9ed4f..92afe50e 100644
+--- a/apps/web/src/components/files/FilePreviewPanel.tsx
++++ b/apps/web/src/components/files/FilePreviewPanel.tsx
+@@ -89,6 +89,8 @@ import { FileExplorerPane } from "./FileExplorerPane";
+ import { FileBreadcrumbs } from "./FileBreadcrumbs";
+ import { breadcrumbPathOf, retainedBreadcrumbTrail, trailChildOf } from "./filePath";
+ import { FileMarkdownPreview } from "./FileMarkdownPreview";
++import { FileFindBar, useFileFind } from "./FileFindBar";
++import { registerFileFindShortcut } from "./fileFind";
+ import {
+   type FileCommentAnnotationEntry,
+   type FileCommentAnnotationGroup,
+@@ -605,6 +607,10 @@ function useFileLineReveal(
+   };
+ }
+ 
++function isEditorContentElement(target: EventTarget): boolean {
++  return target instanceof HTMLElement && target.isContentEditable;
++}
++
+ const createFileEditor: EditorFactory<FileCommentAnnotationGroup, undefined> = (
+   editorType,
+   options,
+@@ -850,6 +856,35 @@ function EditableFileSurface({
+       onDismiss: () => setSelectedRange(null),
+     });
+   }, [hasOpenCommentForm, setSelectedRange]);
++  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- registers the find shortcut on the global keyboard dispatcher
++  useEffect(
++    () =>
++      registerFileFindShortcut(
++        () => surfaceRef.current,
++        (event) => {
++          if (event.composedPath().some(isEditorContentElement)) return false;
++          const editor = editorRef.current;
++          if (!editor) return false;
++          editor.focus({ preventScroll: true });
++          const content = document.activeElement?.shadowRoot?.activeElement;
++          if (!content) return false;
++          content.dispatchEvent(
++            new KeyboardEvent("keydown", {
++              key: event.key,
++              code: event.code,
++              ctrlKey: event.ctrlKey,
++              metaKey: event.metaKey,
++              shiftKey: event.shiftKey,
++              altKey: event.altKey,
++              bubbles: true,
++              cancelable: true,
++              composed: true,
++            }),
++          );
++        },
++      ),
++    [],
++  );
+   const handleLineSelectionEnd = (range: SelectedLineRange | null) => {
+     setSelectedRange(range);
+     if (range) {
+@@ -876,7 +911,7 @@ function EditableFileSurface({
+ 
+   return (
+     <EditProvider createEditor={createFileEditor}>
+-      <div ref={surfaceRef} className="flex min-h-0 flex-1">
++      <div ref={surfaceRef} tabIndex={-1} className="flex min-h-0 flex-1 outline-none">
+         <Virtualizer
+           className="file-preview-virtualizer min-h-0 flex-1 overflow-auto"
+           config={{
+@@ -953,29 +988,43 @@ function RenderedMarkdownSurface({
+   const saveTarget = { environmentId, cwd, relativePath };
+   useFileSaveSession(saveTarget, onPendingChange);
+ 
++  const findSurfaceRef = useRef<HTMLDivElement>(null);
++  const find = useFileFind(findSurfaceRef);
++
+   return (
+-    <ScrollArea className="min-h-0 flex-1">
+-      <FileMarkdownPreview
+-        text={contents}
+-        cwd={cwd}
+-        relativePath={relativePath}
+-        threadRef={threadRef}
+-        workspaceMutationId={workspaceMutationId}
+-        onTaskListChange={
+-          readOnly
+-            ? undefined
+-            : ({ markerOffset, checked }) => {
+-                const currentContents =
+-                  getOptimisticProjectFileQueryData(environmentId, cwd, relativePath)?.contents ??
+-                  contents;
+-                const nextContents = setMarkdownTaskChecked(currentContents, markerOffset, checked);
+-                if (nextContents === currentContents) return;
+-                setProjectFileQueryData(environmentId, cwd, relativePath, nextContents);
+-                changeFileSaveSession(saveTarget, nextContents);
+-              }
+-        }
+-      />
+-    </ScrollArea>
++    <div
++      ref={findSurfaceRef}
++      tabIndex={-1}
++      className="relative flex min-h-0 flex-1 flex-col outline-none"
++    >
++      <FileFindBar {...find} />
++      <ScrollArea className="min-h-0 flex-1">
++        <FileMarkdownPreview
++          text={contents}
++          cwd={cwd}
++          relativePath={relativePath}
++          threadRef={threadRef}
++          workspaceMutationId={workspaceMutationId}
++          onTaskListChange={
++            readOnly
++              ? undefined
++              : ({ markerOffset, checked }) => {
++                  const currentContents =
++                    getOptimisticProjectFileQueryData(environmentId, cwd, relativePath)?.contents ??
++                    contents;
++                  const nextContents = setMarkdownTaskChecked(
++                    currentContents,
++                    markerOffset,
++                    checked,
++                  );
++                  if (nextContents === currentContents) return;
++                  setProjectFileQueryData(environmentId, cwd, relativePath, nextContents);
++                  changeFileSaveSession(saveTarget, nextContents);
++                }
++          }
++        />
++      </ScrollArea>
++    </div>
+   );
+ }
+ 
+diff --git a/apps/web/src/components/files/fileFind.ts b/apps/web/src/components/files/fileFind.ts
+new file mode 100644
+index 00000000..ae7cc65d
+--- /dev/null
++++ b/apps/web/src/components/files/fileFind.ts
+@@ -0,0 +1,81 @@
++import { registerCommands } from "../../shortcuts/dispatcher";
++
++export const FILE_FIND_HIGHLIGHT_NAME = "t3-file-find";
++export const FILE_FIND_ACTIVE_HIGHLIGHT_NAME = "t3-file-find-active";
++
++export function findTextRanges(root: Node, query: string, exclude: Node | null = null): Range[] {
++  if (query.length === 0) return [];
++  const needle = query.toLocaleLowerCase();
++  const document = root.ownerDocument ?? (root as Document);
++  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
++    acceptNode: (node) =>
++      exclude?.contains(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
++  });
++  const ranges: Range[] = [];
++  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
++    const text = (node as Text).data;
++    const lowered = text.toLocaleLowerCase();
++    const haystack = lowered.length === text.length ? lowered : text;
++    const target = lowered.length === text.length ? needle : query;
++    for (let index = haystack.indexOf(target); index !== -1;) {
++      const range = document.createRange();
++      range.setStart(node, index);
++      range.setEnd(node, index + target.length);
++      ranges.push(range);
++      index = haystack.indexOf(target, index + target.length);
++    }
++  }
++  return ranges;
++}
++
++export function wrapFindIndex(index: number, total: number): number {
++  if (total <= 0) return 0;
++  return ((index % total) + total) % total;
++}
++
++function highlightsSupported(): boolean {
++  return typeof CSS !== "undefined" && "highlights" in CSS && typeof Highlight !== "undefined";
++}
++
++export function paintFindHighlights(ranges: readonly Range[], activeIndex: number): void {
++  if (!highlightsSupported()) return;
++  const active = ranges[activeIndex];
++  CSS.highlights.set(
++    FILE_FIND_HIGHLIGHT_NAME,
++    new Highlight(...ranges.filter((range) => range !== active)),
++  );
++  CSS.highlights.set(FILE_FIND_ACTIVE_HIGHLIGHT_NAME, new Highlight(...(active ? [active] : [])));
++}
++
++export function clearFindHighlights(): void {
++  if (!highlightsSupported()) return;
++  CSS.highlights.delete(FILE_FIND_HIGHLIGHT_NAME);
++  CSS.highlights.delete(FILE_FIND_ACTIVE_HIGHLIGHT_NAME);
++}
++
++export function isFileSurfaceActive(surface: HTMLElement | null): boolean {
++  const activeElement = document.activeElement;
++  return surface !== null && activeElement !== null && surface.contains(activeElement);
++}
++
++/** Claims the find shortcut while focus is inside `surface`, ahead of the thread find. */
++export function registerFileFindShortcut(
++  surface: () => HTMLElement | null,
++  onFind: (event: KeyboardEvent) => boolean | void,
++): () => void {
++  return registerCommands(
++    {
++      "chat.find": (event: KeyboardEvent) => {
++        if (onFind(event) === false) return false;
++        event.preventDefault();
++        event.stopPropagation();
++        return true;
++      },
++    },
++    {
++      capture: true,
++      when: (event) => event.isTrusted && isFileSurfaceActive(surface()),
++      context: () => ({ previewFocus: false }),
++    },
++  );
++}
+diff --git a/apps/web/src/index.css b/apps/web/src/index.css
+index 15dd5e14..c3a884e9 100644
+--- a/apps/web/src/index.css
++++ b/apps/web/src/index.css
+@@ -404,7 +404,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+ }
+ 
+ /* Paint find results without changing rendered markdown or copied text. */
+-::highlight(t3-thread-find) {
++::highlight(t3-thread-find),
++::highlight(t3-file-find) {
+   color: var(--app-theme-search-match-foreground, oklch(0.216164 0.028283 77.423));
+   background-color: var(--app-theme-search-match-background, oklch(0.915 0.11 85));
+ 
+@@ -414,7 +415,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+   }
+ }
+ 
+-::highlight(t3-thread-find-active) {
++::highlight(t3-thread-find-active),
++::highlight(t3-file-find-active) {
+   color: var(--app-theme-search-match-active-foreground, oklch(0.216164 0.028283 77.423));
+   background-color: var(
+     --app-theme-search-match-active-background,
