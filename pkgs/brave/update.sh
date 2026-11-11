@@ -28,7 +28,7 @@ hash=$(nix store prefetch-file --json "$url" | jq -r .hash)
 
 sed -i \
   -e "s|^  version = \"$current\";$|  version = \"$latest\";|" \
-  -e "s|^        hash = \"sha256-.*\";$|        hash = \"$hash\";|" \
+  -e "s|^\( *\)hash = \"sha256-.*\";$|\1hash = \"$hash\";|" \
   default.nix
 
 echo "brave: $current -> $latest"
