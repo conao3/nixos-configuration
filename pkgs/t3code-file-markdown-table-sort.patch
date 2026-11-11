@@ -1,0 +1,451 @@
+diff --git a/apps/web/src/components/ChatMarkdown.browser.test.tsx b/apps/web/src/components/ChatMarkdown.browser.test.tsx
+index 9a56cdf8..6cb2895a 100644
+--- a/apps/web/src/components/ChatMarkdown.browser.test.tsx
++++ b/apps/web/src/components/ChatMarkdown.browser.test.tsx
+@@ -11,6 +11,7 @@ import { filesystemEnvironment } from "../state/filesystem";
+ import { useRightPanelStore } from "../rightPanelStore";
+ import { setMarkdownTaskChecked } from "./files/filePreviewMode";
+ import { HostImageUrlContext } from "./chat/hostImageUrl";
++import { MarkdownTableSortableContext } from "./chat/MarkdownTable";
+ 
+ const { workspaceSearch, filesystemMetadata } = vi.hoisted(() => ({
+   workspaceSearch: vi.fn(),
+@@ -458,3 +459,66 @@ describe("ChatMarkdown Windows file links", () => {
+     }
+   });
+ });
++
++describe("sortable tables", () => {
++  const table = [
++    "| Name | Price |",
++    "| --- | ---: |",
++    "| unit | CAD |",
++    "| apple | 1,200 |",
++    "| banana | 30 |",
++    "| cherry |  |",
++    "| durian | 450 |",
++  ].join("\n");
++  const columnTexts = (container: HTMLElement, column: number) =>
++    [...container.querySelectorAll("tbody tr")].map(
++      (row) => row.querySelectorAll("td")[column]?.textContent ?? "",
++    );
++  const renderSortable = () =>
++    render(
++      <MarkdownTableSortableContext value>
++        <ChatMarkdown cwd="/tmp/project" text={table} />
++      </MarkdownTableSortableContext>,
++    );
++
++  it("sorts body rows by numeric value and keeps the source text", async () => {
++    setup();
++    await using screen = await renderSortable();
++    const header = () => screen.container.querySelectorAll("thead tr:last-child > *")[1]!;
++    expect(columnTexts(screen.container, 1)).toEqual(["CAD", "1,200", "30", "", "450"]);
++    await act(() => (header() as HTMLElement).click());
++    expect(columnTexts(screen.container, 1)).toEqual(["30", "450", "1,200", "CAD", ""]);
++    expect(header().getAttribute("aria-sort")).toBe("ascending");
++    await act(() => (header() as HTMLElement).click());
++    expect(columnTexts(screen.container, 1)).toEqual(["CAD", "1,200", "450", "30", ""]);
++    await act(() => (header() as HTMLElement).click());
++    expect(columnTexts(screen.container, 1)).toEqual(["CAD", "1,200", "30", "", "450"]);
++  });
++
++  it("changes how many leading rows stay as headers", async () => {
++    setup();
++    await using screen = await renderSortable();
++    await userEvent.click(
++      page.elementLocator(buttonsLabelled(screen.container, "More header rows")[0]!),
++    );
++    expect(screen.container.querySelectorAll("thead tr")).toHaveLength(2);
++    const header = screen.container.querySelectorAll("thead tr:last-child > *")[1]!;
++    await act(() => (header as HTMLElement).click());
++    expect(columnTexts(screen.container, 1)).toEqual(["30", "450", "1,200", ""]);
++    await userEvent.click(
++      page.elementLocator(buttonsLabelled(screen.container, "Fewer header rows")[0]!),
++    );
++    await userEvent.click(
++      page.elementLocator(buttonsLabelled(screen.container, "Fewer header rows")[0]!),
++    );
++    expect(screen.container.querySelector("thead")).toBeNull();
++    expect(screen.container.querySelectorAll("tbody tr")).toHaveLength(6);
++  });
++
++  it("leaves chat tables unsortable", async () => {
++    setup();
++    await using screen = await renderText(table);
++    expect(screen.container.querySelector("[aria-sort]")).toBeNull();
++    expect(buttonsLabelled(screen.container, "More header rows")).toHaveLength(0);
++  });
++});
+diff --git a/apps/web/src/components/chat/MarkdownTable.tsx b/apps/web/src/components/chat/MarkdownTable.tsx
+index ee1e1825..815d4e1b 100644
+--- a/apps/web/src/components/chat/MarkdownTable.tsx
++++ b/apps/web/src/components/chat/MarkdownTable.tsx
+@@ -1,5 +1,17 @@
+ import { Check, Copy } from "lucide";
+-import { useRef, type ComponentProps } from "react";
++import {
++  Children,
++  cloneElement,
++  createContext,
++  isValidElement,
++  use,
++  useRef,
++  useState,
++  type ComponentProps,
++  type KeyboardEvent,
++  type ReactElement,
++  type ReactNode,
++} from "react";
+ 
+ import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+ import {
+@@ -12,8 +24,127 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
+ import { ScrollArea } from "../ui/scroll-area";
+ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
+ import { reportMarkdownActionFailure } from "./markdownActionFailure";
++import {
++  markdownNodeText,
++  nextMarkdownTableSort,
++  sortMarkdownTableRowIndices,
++  type MarkdownTableSort,
++} from "./markdownTableSort";
+ 
+-export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
++export const MarkdownTableSortableContext = createContext(false);
++
++type ElementWithChildren = ReactElement<{ children?: ReactNode }>;
++
++function childElements(node: ReactNode): ElementWithChildren[] {
++  return Children.toArray(node).filter((child): child is ElementWithChildren =>
++    isValidElement(child),
++  );
++}
++
++function tableRows(children: ReactNode): {
++  headRows: ElementWithChildren[];
++  rows: ElementWithChildren[];
++} {
++  const headRows: ElementWithChildren[] = [];
++  const bodyRows: ElementWithChildren[] = [];
++  for (const section of childElements(children)) {
++    const rows = childElements(section.props.children);
++    if (section.type === "thead") headRows.push(...rows);
++    else bodyRows.push(...rows);
++  }
++  return { headRows, rows: [...headRows, ...bodyRows] };
++}
++
++function SortableTable({ children, ...props }: ComponentProps<"table">) {
++  const { headRows, rows } = tableRows(children);
++  const [headerRowCount, setHeaderRowCount] = useState(headRows.length);
++  const [sort, setSort] = useState<MarkdownTableSort | null>(null);
++  const headerCount = Math.min(headerRowCount, rows.length);
++  const keyedRows = rows.map((row, index) => cloneElement(row, { key: `row-${index}` }));
++  const header = keyedRows.slice(0, headerCount);
++  const body = keyedRows.slice(headerCount);
++  const sortedBody =
++    sort === null
++      ? body
++      : sortMarkdownTableRowIndices(
++          body.map((row) =>
++            markdownNodeText(childElements(row.props.children)[sort.column]?.props.children),
++          ),
++          sort.direction,
++        ).map((index) => body[index]!);
++
++  const toggleSort = (column: number) =>
++    setSort((current) => nextMarkdownTableSort(current, column));
++  const sortRow = (row: ElementWithChildren) =>
++    cloneElement(
++      row,
++      undefined,
++      childElements(row.props.children).map((cell, column) => {
++        const direction = sort?.column === column ? sort.direction : null;
++        return cloneElement(
++          cell as ReactElement<ComponentProps<"th">>,
++          {
++            "aria-sort": direction ?? "none",
++            className: "cursor-pointer select-none",
++            tabIndex: 0,
++            onClick: () => toggleSort(column),
++            onKeyDown: (event: KeyboardEvent<HTMLTableCellElement>) => {
++              if (event.key !== "Enter" && event.key !== " ") return;
++              event.preventDefault();
++              toggleSort(column);
++            },
++          },
++          cell.props.children,
++          <span aria-hidden="true" className="ms-1 inline-block w-[1ch] text-muted-foreground">
++            {direction === "ascending" ? "▲" : direction === "descending" ? "▼" : ""}
++          </span>,
++        );
++      }),
++    );
++
++  return (
++    <MarkdownTableFrame
++      table={
++        <table {...props}>
++          {header.length > 0 ? (
++            <thead>
++              {header.map((row, index) => (index === header.length - 1 ? sortRow(row) : row))}
++            </thead>
++          ) : null}
++          {sortedBody.length > 0 ? <tbody>{sortedBody}</tbody> : null}
++        </table>
++      }
++      controls={
++        <div className="me-auto flex items-center gap-0.5 text-xs text-muted-foreground">
++          <span className="me-1">Header rows</span>
++          <Button
++            type="button"
++            variant="ghost-muted"
++            size="icon-xs"
++            aria-label="Fewer header rows"
++            disabled={headerCount === 0}
++            onClick={() => setHeaderRowCount(Math.max(0, headerCount - 1))}
++          >
++            −
++          </Button>
++          <span className="min-w-[2ch] text-center tabular-nums">{headerCount}</span>
++          <Button
++            type="button"
++            variant="ghost-muted"
++            size="icon-xs"
++            aria-label="More header rows"
++            disabled={headerCount >= rows.length}
++            onClick={() => setHeaderRowCount(Math.min(rows.length, headerCount + 1))}
++          >
++            +
++          </Button>
++        </div>
++      }
++    />
++  );
++}
++
++function MarkdownTableFrame({ table, controls }: { table: ReactNode; controls?: ReactNode }) {
+   const containerRef = useRef<HTMLDivElement | null>(null);
+   const { copyToClipboard, isCopied: copied } = useCopyToClipboard<"markdown" | "csv">({
+     timeout: 1200,
+@@ -36,10 +167,11 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+   return (
+     <div ref={containerRef} className="chat-markdown-table-container">
+       <ScrollArea radius="none" chainVerticalScroll scrollFade className="w-full max-w-full">
+-        <table {...props}>{children}</table>
++        {table}
+       </ScrollArea>
+       {/* Stays within the row's px-1: the chat lane clips sideways overflow. */}
+       <div className="mt-0.5 -mx-1 flex items-center justify-end select-none">
++        {controls}
+         <Menu>
+           <Tooltip>
+             <TooltipTrigger
+@@ -69,3 +201,10 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+     </div>
+   );
+ }
++
++export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
++  if (use(MarkdownTableSortableContext)) {
++    return <SortableTable {...props}>{children}</SortableTable>;
++  }
++  return <MarkdownTableFrame table={<table {...props}>{children}</table>} />;
++}
+diff --git a/apps/web/src/components/chat/markdownTableSort.test.ts b/apps/web/src/components/chat/markdownTableSort.test.ts
+new file mode 100644
+index 00000000..784a816f
+--- /dev/null
++++ b/apps/web/src/components/chat/markdownTableSort.test.ts
+@@ -0,0 +1,78 @@
++import { createElement } from "react";
++import { describe, expect, it } from "vite-plus/test";
++
++import {
++  markdownNodeText,
++  nextMarkdownTableSort,
++  parseMarkdownCellNumber,
++  sortMarkdownTableRowIndices,
++} from "./markdownTableSort";
++
++describe("parseMarkdownCellNumber", () => {
++  it("reads numbers with thousands separators, units and signs", () => {
++    expect(parseMarkdownCellNumber("1,234")).toBe(1234);
++    expect(parseMarkdownCellNumber("¥12,000")).toBe(12000);
++    expect(parseMarkdownCellNumber("$1,234.50")).toBe(1234.5);
++    expect(parseMarkdownCellNumber("-3,000 円")).toBe(-3000);
++    expect(parseMarkdownCellNumber("−2.5")).toBe(-2.5);
++    expect(parseMarkdownCellNumber("▲500")).toBe(-500);
++    expect(parseMarkdownCellNumber("12.5%")).toBe(12.5);
++    expect(parseMarkdownCellNumber("１，２００")).toBe(1200);
++    expect(parseMarkdownCellNumber("CA$1,800/月")).toBe(1800);
++  });
++
++  it("leaves dates, versions and words as text", () => {
++    expect(parseMarkdownCellNumber("2026-11-08")).toBeNull();
++    expect(parseMarkdownCellNumber("1.2.3")).toBeNull();
++    expect(parseMarkdownCellNumber("10:30")).toBeNull();
++    expect(parseMarkdownCellNumber("Toronto")).toBeNull();
++    expect(parseMarkdownCellNumber("")).toBeNull();
++  });
++});
++
++describe("sortMarkdownTableRowIndices", () => {
++  it("sorts numbers by value, not by their characters", () => {
++    expect(sortMarkdownTableRowIndices(["1,000", "200", "30", "4,000,000"], "ascending")).toEqual([
++      2, 1, 0, 3,
++    ]);
++    expect(sortMarkdownTableRowIndices(["1,000", "200", "30"], "descending")).toEqual([0, 1, 2]);
++  });
++
++  it("puts numbers before text and empty cells last in both directions", () => {
++    expect(sortMarkdownTableRowIndices(["b", "", "10", "a", "2"], "ascending")).toEqual([
++      4, 2, 3, 0, 1,
++    ]);
++    expect(sortMarkdownTableRowIndices(["b", "", "10", "a", "2"], "descending")).toEqual([
++      0, 3, 2, 4, 1,
++    ]);
++  });
++
++  it("keeps the source order of equal cells", () => {
++    expect(sortMarkdownTableRowIndices(["x", "y", "x"], "ascending")).toEqual([0, 2, 1]);
++    expect(sortMarkdownTableRowIndices(["x", "y", "x"], "descending")).toEqual([1, 0, 2]);
++  });
++
++  it("orders text with embedded numbers naturally", () => {
++    expect(
++      sortMarkdownTableRowIndices(["10:30", "9:15", "2026-11-08", "2026-01-31"], "ascending"),
++    ).toEqual([1, 0, 3, 2]);
++  });
++});
++
++describe("nextMarkdownTableSort", () => {
++  it("cycles ascending, descending and unsorted on one column", () => {
++    const ascending = nextMarkdownTableSort(null, 1);
++    expect(ascending).toEqual({ column: 1, direction: "ascending" });
++    const descending = nextMarkdownTableSort(ascending, 1);
++    expect(descending).toEqual({ column: 1, direction: "descending" });
++    expect(nextMarkdownTableSort(descending, 1)).toBeNull();
++    expect(nextMarkdownTableSort(descending, 2)).toEqual({ column: 2, direction: "ascending" });
++  });
++});
++
++describe("markdownNodeText", () => {
++  it("joins the text of nested elements", () => {
++    const node = createElement("span", null, "¥", createElement("strong", null, "1,200"), " 円");
++    expect(markdownNodeText(node)).toBe("¥1,200 円");
++  });
++});
+diff --git a/apps/web/src/components/chat/markdownTableSort.ts b/apps/web/src/components/chat/markdownTableSort.ts
+new file mode 100644
+index 00000000..74bca79a
+--- /dev/null
++++ b/apps/web/src/components/chat/markdownTableSort.ts
+@@ -0,0 +1,68 @@
++import { isValidElement, type ReactNode } from "react";
++
++export type MarkdownTableSortDirection = "ascending" | "descending";
++
++export interface MarkdownTableSort {
++  readonly column: number;
++  readonly direction: MarkdownTableSortDirection;
++}
++
++const NUMERIC_CELL = /^(\D{0,4}?)([-+−▲]?)(\D{0,4}?)(\d+(?:\.\d+)?|\.\d+)(\D{0,8})$/u;
++const NEGATIVE_SIGNS = new Set(["-", "−", "▲"]);
++const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
++
++export function markdownNodeText(node: ReactNode): string {
++  if (node === null || node === undefined || typeof node === "boolean") return "";
++  if (typeof node === "string" || typeof node === "number") return String(node);
++  if (Array.isArray(node)) return node.map(markdownNodeText).join("");
++  if (isValidElement(node)) {
++    return markdownNodeText((node.props as { children?: ReactNode }).children);
++  }
++  return "";
++}
++
++export function parseMarkdownCellNumber(text: string): number | null {
++  const compact = text.normalize("NFKC").replace(/[\s,]/gu, "");
++  const match = NUMERIC_CELL.exec(compact);
++  if (!match) return null;
++  const [, , sign = "", , digits = ""] = match;
++  const value = Number(digits);
++  if (!Number.isFinite(value)) return null;
++  return NEGATIVE_SIGNS.has(sign) ? -value : value;
++}
++
++function compareCellTexts(left: string, right: string): number {
++  const leftNumber = parseMarkdownCellNumber(left);
++  const rightNumber = parseMarkdownCellNumber(right);
++  if (leftNumber !== null && rightNumber !== null) return leftNumber - rightNumber;
++  if (leftNumber !== null) return -1;
++  if (rightNumber !== null) return 1;
++  return collator.compare(left, right);
++}
++
++export function sortMarkdownTableRowIndices(
++  cellTexts: readonly string[],
++  direction: MarkdownTableSortDirection,
++): number[] {
++  const factor = direction === "ascending" ? 1 : -1;
++  const texts = cellTexts.map((text) => text.trim());
++  return texts
++    .map((_, index) => index)
++    .sort((leftIndex, rightIndex) => {
++      const left = texts[leftIndex] ?? "";
++      const right = texts[rightIndex] ?? "";
++      if (left === "" || right === "") {
++        if (left === right) return leftIndex - rightIndex;
++        return left === "" ? 1 : -1;
++      }
++      return factor * compareCellTexts(left, right) || leftIndex - rightIndex;
++    });
++}
++
++export function nextMarkdownTableSort(
++  current: MarkdownTableSort | null,
++  column: number,
++): MarkdownTableSort | null {
++  if (current?.column !== column) return { column, direction: "ascending" };
++  return current.direction === "ascending" ? { column, direction: "descending" } : null;
++}
+diff --git a/apps/web/src/components/files/FileMarkdownPreview.tsx b/apps/web/src/components/files/FileMarkdownPreview.tsx
+index 19df3f66..e896218d 100644
+--- a/apps/web/src/components/files/FileMarkdownPreview.tsx
++++ b/apps/web/src/components/files/FileMarkdownPreview.tsx
+@@ -1,6 +1,7 @@
+ import type { ScopedThreadRef } from "@t3tools/contracts";
+ 
+ import ChatMarkdown from "~/components/ChatMarkdown";
++import { MarkdownTableSortableContext } from "~/components/chat/MarkdownTable";
+ import { resolvePathLinkTarget } from "@t3tools/shared/fileLinks";
+ import { maskMarkdownFrontmatter } from "@t3tools/shared/markdownFrontmatter";
+ 
+@@ -24,14 +25,16 @@ export function FileMarkdownPreview(props: {
+       : props.cwd;
+ 
+   return (
+-    <ChatMarkdown
+-      text={maskMarkdownFrontmatter(props.text)}
+-      cwd={props.cwd}
+-      imageBaseDir={imageBaseDir}
+-      threadRef={props.threadRef}
+-      workspaceMutationId={props.workspaceMutationId}
+-      className="mx-auto max-w-4xl px-6 py-5"
+-      onTaskListChange={props.onTaskListChange}
+-    />
++    <MarkdownTableSortableContext value>
++      <ChatMarkdown
++        text={maskMarkdownFrontmatter(props.text)}
++        cwd={props.cwd}
++        imageBaseDir={imageBaseDir}
++        threadRef={props.threadRef}
++        workspaceMutationId={props.workspaceMutationId}
++        className="mx-auto max-w-4xl px-6 py-5"
++        onTaskListChange={props.onTaskListChange}
++      />
++    </MarkdownTableSortableContext>
+   );
+ }
