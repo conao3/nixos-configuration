@@ -57,7 +57,10 @@ in
              pace: pace_points}')
           payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
             '{files: {"claude-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
+          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null 2>&1 || {
+            ${pkgs.coreutils}/bin/sleep 20
+            echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
+          }
         ''}";
       };
     };
@@ -126,7 +129,10 @@ in
              month_pace: pace_points(.Summary.Month.ResetsAt; month_window_secs)}')
           payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
             '{files: {"opencode-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
+          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null 2>&1 || {
+            ${pkgs.coreutils}/bin/sleep 20
+            echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
+          }
         ''}";
       };
     };
@@ -144,7 +150,7 @@ in
     opencode-usage-update = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "*:0/15";
+        OnCalendar = "*:02/15";
         Persistent = true;
       };
     };
