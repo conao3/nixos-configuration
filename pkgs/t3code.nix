@@ -19,6 +19,7 @@ let
         ./t3code-user-message-jump.patch
         ./t3code-environment-label-aliases.patch
         ./t3code-no-inline-visuals.patch
+        ./t3code-no-history-swipe.patch
       ];
     });
   };

@@ -1,0 +1,20 @@
+diff --git a/apps/web/src/components/AppSidebarLayout.tsx b/apps/web/src/components/AppSidebarLayout.tsx
+index 91df5616..78c1395e 100644
+--- a/apps/web/src/components/AppSidebarLayout.tsx
++++ b/apps/web/src/components/AppSidebarLayout.tsx
+@@ -38,7 +38,6 @@ import {
+   usePanelNavigationSuppression,
+ } from "../panelAnimations";
+ import { BackgroundThreadAnnouncer } from "./BackgroundThreadAnnouncer";
+-import { HistorySwipeNavigation } from "./HistorySwipeNavigation";
+ import ThreadSidebar from "./Sidebar";
+ import { SidebarBrandWidthProbe } from "./sidebar/SidebarChrome";
+ import { isAppModalPage } from "./sidebar/mainAppLocation";
+@@ -475,7 +474,6 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
+         {children}
+         <BackgroundThreadAnnouncer />
+         <SidebarControl />
+-        {isElectron ? <HistorySwipeNavigation /> : null}
+       </SidebarProvider>
+     </PanelAnimationSuppressionProvider>
+   );
