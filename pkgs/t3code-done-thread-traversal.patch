@@ -5,7 +5,7 @@ index c20789e2a9..f02a9c6d37 100644
 @@ -837,6 +837,37 @@ export function resolveAdjacentThreadId<T>(input: {
    return currentIndex < threadIds.length - 1 ? (threadIds[currentIndex + 1] ?? null) : null;
  }
-
+ 
 +export function isSidebarThreadAwaitingUser(
 +  thread: ThreadStatusInput & SidebarThreadStatusInput,
 +): boolean {
