@@ -2,14 +2,15 @@ diff --git a/apps/web/src/components/Sidebar.logic.ts b/apps/web/src/components/
 index c20789e2a9..f02a9c6d37 100644
 --- a/apps/web/src/components/Sidebar.logic.ts
 +++ b/apps/web/src/components/Sidebar.logic.ts
-@@ -837,6 +837,36 @@ export function resolveAdjacentThreadId<T>(input: {
+@@ -837,6 +837,37 @@ export function resolveAdjacentThreadId<T>(input: {
    return currentIndex < threadIds.length - 1 ? (threadIds[currentIndex + 1] ?? null) : null;
  }
- 
-+export function isSidebarThreadDone(
+
++export function isSidebarThreadAwaitingUser(
 +  thread: ThreadStatusInput & SidebarThreadStatusInput,
 +): boolean {
-+  return resolveSidebarThreadStatus(thread) === "ready" && hasUnseenCompletion(thread);
++  const status = resolveSidebarThreadStatus(thread);
++  return status === "input" || (status === "ready" && hasUnseenCompletion(thread));
 +}
 +
 +export function resolveAdjacentDoneThreadId<T>(input: {
@@ -55,7 +56,7 @@ index 18aa27709e..c59faee4a8 100644
    orderItemsByPreferredIds,
    planSidebarThreadDrop,
    reduceSidebarProjectScopeMenuState,
-+  isSidebarThreadDone,
++  isSidebarThreadAwaitingUser,
 +  resolveAdjacentDoneThreadId,
    resolveAdjacentThreadId,
 +  resolveThreadLastVisitedAt,
@@ -77,7 +78,7 @@ index 18aa27709e..c59faee4a8 100644
 +            isDone: (threadKey) => {
 +              const thread = threadByKey.get(threadKey);
 +              if (!thread) return false;
-+              return isSidebarThreadDone({
++              return isSidebarThreadAwaitingUser({
 +                ...thread,
 +                lastVisitedAt: resolveThreadLastVisitedAt(
 +                  thread.lastVisitedAt,
