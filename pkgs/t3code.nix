@@ -18,6 +18,7 @@ let
         ./t3code-title-regenerate-every-10-messages.patch
         ./t3code-user-message-jump.patch
         ./t3code-environment-label-aliases.patch
+        ./t3code-no-inline-visuals.patch
       ];
     });
   };
