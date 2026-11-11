@@ -27,7 +27,10 @@ in
     description = "Portless HTTPS proxy (port 443)";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
-    environment.PORTLESS_STATE_DIR = "/home/conao/.portless";
+    environment = {
+      PORTLESS_STATE_DIR = "/home/conao/.portless";
+      PORTLESS_WILDCARD = "1";
+    };
     serviceConfig = {
       Type = "simple";
       ExecStart = "${portlessPackage}/bin/portless proxy start --foreground --port 443 --https --skip-trust";

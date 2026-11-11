@@ -8,11 +8,11 @@
 }:
 stdenvNoCC.mkDerivation rec {
   pname = "portless";
-  version = "0.13.0";
+  version = "0.17.0";
 
   src = fetchurl {
     url = "https://registry.npmjs.org/portless/-/portless-${version}.tgz";
-    hash = "sha256-9Nulh7bMTBF6oGnWtt6RdiJ3ZJKumHgnKf2SKkA+omg=";
+    hash = "sha256-NfloyjjU9h7yw5BdX0BEbuExbEA693l/iKwNJcG9uEs=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
