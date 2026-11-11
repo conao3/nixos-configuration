@@ -5,7 +5,8 @@
 }:
 let
   llmQuota = inputs.rust-llm-quota.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  gistId = "d8f1032c67ac68b1b97a5b46f392c44f";
+  claudeGistId = "d8f1032c67ac68b1b97a5b46f392c44f";
+  opencodeGistId = "9e942331b1843bd4acb90c293050f493";
 in
 {
   systemd.user.services = {
@@ -57,10 +58,7 @@ in
              pace: pace_points}')
           payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
             '{files: {"claude-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null 2>&1 || {
-            ${pkgs.coreutils}/bin/sleep 20
-            echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
-          }
+          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${claudeGistId}" --input - >/dev/null
         ''}";
       };
     };
@@ -129,10 +127,7 @@ in
              month_pace: pace_points(.Summary.Month.ResetsAt; month_window_secs)}')
           payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
             '{files: {"opencode-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null 2>&1 || {
-            ${pkgs.coreutils}/bin/sleep 20
-            echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${gistId}" --input - >/dev/null
-          }
+          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${opencodeGistId}" --input - >/dev/null
         ''}";
       };
     };
@@ -150,7 +145,7 @@ in
     opencode-usage-update = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "*:02/15";
+        OnCalendar = "*:0/15";
         Persistent = true;
       };
     };
