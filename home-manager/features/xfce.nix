@@ -168,6 +168,18 @@ in
     Hidden=true
   '';
 
+  xdg.configFile."autostart/org.fcitx.Fcitx5.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Fcitx 5
+    Exec=/run/current-system/sw/bin/fcitx5 -r -d
+    NoDisplay=true
+    Terminal=false
+    StartupNotify=false
+    X-GNOME-AutoRestart=false
+    X-GNOME-Autostart-Notify=false
+  '';
+
   services.dunst = {
     enable = !pkgs.stdenv.hostPlatform.isDarwin;
     settings = {
