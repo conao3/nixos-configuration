@@ -950,6 +950,7 @@
         "rust-fetch-usage-limit": "rust-fetch-usage-limit",
         "rust-llm-quota": "rust-llm-quota",
         "sops-nix": "sops-nix",
+        "t3code-gpui": "t3code-gpui",
         "treefmt-nix": "treefmt-nix_6"
       }
     },
@@ -1078,6 +1079,32 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "t3code-gpui": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794476905,
+        "narHash": "sha256-hOBaVm3wGxl9jQosgCo/tow2hyHWEEnk+RmjvivvpHw=",
+        "ref": "refs/heads/master",
+        "rev": "0682f1b4aa2ee9d687510b5781b1ce5693722423",
+        "revCount": 8,
+        "type": "git",
+        "url": "ssh://git@github.com/conao3/rust-t3code-gpui.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/conao3/rust-t3code-gpui.git"
       }
     },
     "treefmt-nix": {

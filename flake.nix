@@ -96,6 +96,12 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
+    t3code-gpui = {
+      url = "git+ssh://git@github.com/conao3/rust-t3code-gpui.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
     outbound-manifest = {
       url = "github:conao3/rust-outbound-manifest";
       inputs.nixpkgs.follows = "nixpkgs";

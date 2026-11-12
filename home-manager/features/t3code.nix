@@ -247,6 +247,7 @@ in
   home.packages = [
     t3codePackages.t3code
     t3codePackages.t3code-desktop
+    inputs.t3code-gpui.packages.${system}.default
   ];
 
   sops = lib.mkIf isEos {
