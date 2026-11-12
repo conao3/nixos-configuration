@@ -16,7 +16,7 @@ else
 	systemctl --user daemon-reload || true
 	systemctl --user restart timers.target || true
 	# xfce4-appfinder は起動時の desktop エントリ (Exec の store path) を保持し続け、switch 後も古い版のアプリを起動する。止めて次回起動時に読み直させる
-	-pkill -x xfce4-appfinder
+	-pkill -f '^xfce4-appfinder( |$$)'
 	# sxhkd (voice-type の F9 などのホットキー) は設定ファイルを USR1 で再読み込みする。動いていなければ何もしない
 	-pkill -USR1 -x sxhkd
 	@cat $(HOME)/.claude/settings-warnings.log 2>/dev/null || true
