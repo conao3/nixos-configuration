@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 let
   # 1Password CLI はデスクトップアプリの承認を「制御端末 (tty) + その開始時刻」単位で覚える。
   # エージェントの Bash は呼び出しごとに tty の無いプロセスで動くため、op のたびに Authorize が出る。
@@ -64,4 +64,7 @@ in
     Exec=1password --silent
     X-GNOME-Autostart-enabled=true
   '';
+
+  xdg.configFile."chrome-devtools/profiles/conao3/NativeMessagingHosts/com.1password.1password.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/google-chrome/NativeMessagingHosts/com.1password.1password.json";
 }
