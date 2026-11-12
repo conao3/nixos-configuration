@@ -45,6 +45,11 @@
     '';
   };
 
+  services.upower = {
+    percentageAction = 1;
+    criticalPowerAction = "PowerOff";
+  };
+
   virtualisation.libvirtd.enable = lib.mkForce false;
 
   services.xserver.xkb.options = "ctrl:nocaps";
