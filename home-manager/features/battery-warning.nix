@@ -23,7 +23,7 @@ let
 
       <span size='x-large'>電源につないでください。1% になると電源が切れます。</span>" &
         dialog=$!
-        pw-play "$sound" &
+        timeout 2 pw-play --volume 0.3 "$sound" &
       }
 
       while true; do
