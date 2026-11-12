@@ -1094,11 +1094,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794476905,
-        "narHash": "sha256-hOBaVm3wGxl9jQosgCo/tow2hyHWEEnk+RmjvivvpHw=",
+        "lastModified": 1794485623,
+        "narHash": "sha256-5mnwC41E4vLcqLJjkp0yiCSqJGVw6jcRGg+qXj91vsM=",
         "ref": "refs/heads/master",
-        "rev": "0682f1b4aa2ee9d687510b5781b1ce5693722423",
-        "revCount": 8,
+        "rev": "46aa182e1e29ba5568f533a23b7fec74e6127716",
+        "revCount": 30,
         "type": "git",
         "url": "ssh://git@github.com/conao3/rust-t3code-gpui.git"
       },
