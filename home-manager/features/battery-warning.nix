@@ -4,12 +4,10 @@ let
     name = "battery-warning";
     runtimeInputs = [
       pkgs.coreutils
-      pkgs.pipewire
       pkgs.zenity
     ];
     text = ''
       bat=/sys/class/power_supply/BAT0
-      sound=${pkgs.sound-theme-freedesktop}/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga
       warned=100
       dialog=""
 
@@ -23,7 +21,6 @@ let
 
       <span size='x-large'>電源につないでください。1% になると電源が切れます。</span>" &
         dialog=$!
-        timeout 2 pw-play --volume 0.3 "$sound" &
       }
 
       while true; do
