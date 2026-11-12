@@ -7,6 +7,7 @@ let
   llmQuota = inputs.rust-llm-quota.packages.${pkgs.stdenv.hostPlatform.system}.default;
   claudeGistId = "d8f1032c67ac68b1b97a5b46f392c44f";
   opencodeGistId = "9e942331b1843bd4acb90c293050f493";
+  codexGistId = "c2736936496e866768fb6cb331fdaa8a";
 in
 {
   systemd.user.services = {
@@ -131,6 +132,58 @@ in
         ''}";
       };
     };
+
+    codex-usage-update = {
+      description = "Publish Codex usage (agent001) to the widget Gist";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.writeShellScript "codex-usage-update" ''
+          set -u
+          codex_home="$HOME/.agents/.codex.agent001"
+          [ -s "$codex_home/auth.json" ] || exit 0
+
+          raw=$(CODEX_HOME="$codex_home" ${llmQuota}/bin/llm-quota usage get-codex-usage 2>/dev/null) || exit 0
+          usage=$(echo "$raw" | ${pkgs.jq}/bin/jq -c '
+            (.Usage.RateLimit.PrimaryWindow // null) as $w
+            | if $w == null then {} else
+              {email: .Usage.Email, plan_type: .Usage.PlanType,
+               weekly: {used_percent: $w.UsedPercent,
+                        resets_at: ($w.ResetAt | strftime("%Y-%m-%dT%H:%M:%SZ")),
+                        window_seconds: $w.LimitWindowSeconds}}
+              end') || exit 0
+          echo "$usage" | ${pkgs.jq}/bin/jq -e '.weekly' >/dev/null 2>&1 || exit 0
+
+          state_dir="$HOME/.local/share/codex-usage"
+          state="$state_dir/history.json"
+          ${pkgs.coreutils}/bin/mkdir -p "$state_dir"
+          [ -s "$state" ] || echo '{"points":[]}' > "$state"
+
+          now=$(${pkgs.coreutils}/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
+          used=$(echo "$usage" | ${pkgs.jq}/bin/jq -r '.weekly.used_percent')
+          history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$used" \
+            '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$state") || exit 1
+          echo "$history" > "$state"
+          points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
+
+          shaped=$(echo "$usage" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" '
+            def pace_points:
+              (.weekly.resets_at | fromdateiso8601) as $r
+              | ($now | fromdateiso8601) as $n
+              | (.weekly.window_seconds) as $secs
+              | ($r - $secs) as $s
+              | [range($s; ([$n, $r] | min); 900)
+                 | {at: strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    u: ((1000 - ((. - $s) / $secs * 1000 | round)) / 10)}];
+            {email, plan_type, weekly,
+             updated_at: $now,
+             history: ($history | map({at: .at, u: (100 - .u)})),
+             pace: pace_points}')
+          payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
+            '{files: {"codex-usage.json": {content: $content}}}')
+          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${codexGistId}" --input - >/dev/null
+        ''}";
+      };
+    };
   };
 
   systemd.user.timers = {
@@ -143,6 +196,14 @@ in
     };
 
     opencode-usage-update = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "*:0/15";
+        Persistent = true;
+      };
+    };
+
+    codex-usage-update = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnCalendar = "*:0/15";
