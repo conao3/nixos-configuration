@@ -7,6 +7,7 @@ let
   t3code = llmAgents.t3code.override {
     t3code-unwrapped = llmAgents.t3code.unwrapped.overrideAttrs (old: {
       patches = (old.patches or [ ]) ++ [
+        ./t3code-sol-medium-effort.patch
         ./t3code-html-preview-file-revision.patch
         ./t3code-opencode-console-go-usage.patch
         ./t3code-full-access-no-approval.patch

@@ -1,0 +1,8 @@
+diff --git a/apps/server/src/provider/CodexProvider.ts b/apps/server/src/provider/CodexProvider.ts
+--- a/apps/server/src/provider/CodexProvider.ts
++++ b/apps/server/src/provider/CodexProvider.ts
+@@ -166,3 +166,4 @@
+ export function codexDefaultReasoningEffortOverride(model: string): "medium" | undefined {
+-  return codexModelFamily(model) === "gpt-6-astra" ? "medium" : undefined;
++  return ["gpt-6-astra", "gpt-6.1-sol"].includes(codexModelFamily(model)) ? "medium" : undefined;
+ }
