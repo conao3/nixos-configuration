@@ -9,6 +9,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./battery.nix
     (inputs.nix-flakes + "/nixos/substituters.nix")
   ];
 
@@ -24,26 +25,6 @@
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
 
   boot.kernelParams = [ "i915.enable_psr=0" ];
-
-  # ThinkPad の充電しきい値。70% を下回ると充電を始め、80% で止める (80% 以上は AC から直接給電)。
-  systemd.services.battery-charge-threshold = {
-    description = "Set battery charge thresholds";
-    wantedBy = [
-      "multi-user.target"
-      "post-resume.target"
-    ];
-    after = [ "post-resume.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      bat=/sys/class/power_supply/BAT0
-      echo 70 > $bat/charge_control_start_threshold
-      echo 80 > $bat/charge_control_end_threshold
-      echo 70 > $bat/charge_control_start_threshold
-    '';
-  };
 
   services.upower = {
     percentageAction = 1;

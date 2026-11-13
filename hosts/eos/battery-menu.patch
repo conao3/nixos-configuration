@@ -1,0 +1,67 @@
+--- a/panel-plugins/power-manager-plugin/power-manager-button.c
++++ b/panel-plugins/power-manager-plugin/power-manager-button.c
+@@ -1574,6 +1574,55 @@
+ #endif
+ 
+ 
++static void
++battery_charge_finished (GPid pid, gint status, gpointer data)
++{
++  GError *error = NULL;
++  if (!g_spawn_check_wait_status (status, &error))
++  {
++    xfce_dialog_show_error (NULL, error, "%s", "充電上限を変更できませんでした");
++    g_error_free (error);
++  }
++  g_spawn_close_pid (pid);
++}
++
++static void
++battery_charge_selected (GtkCheckMenuItem *item, gpointer data)
++{
++  GError *error = NULL;
++  GPid pid;
++  gchar *argv[] = { "/run/wrappers/bin/sudo", "-n", "@batteryChargeHelper@", data, NULL };
++  if (!gtk_check_menu_item_get_active (item))
++    return;
++  if (!g_spawn_async (NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, &error))
++  {
++    xfce_dialog_show_error (NULL, error, "%s", "充電上限を変更できませんでした");
++    g_error_free (error);
++    return;
++  }
++  g_child_watch_add (pid, battery_charge_finished, NULL);
++}
++
++static void
++battery_charge_menu (GtkWidget *menu)
++{
++  gchar *limit = NULL;
++  GtkWidget *normal, *full;
++  if (!g_file_get_contents ("/sys/class/power_supply/BAT0/charge_control_end_threshold", &limit, NULL, NULL))
++    return;
++  normal = gtk_radio_menu_item_new_with_label (NULL, "普段用：80%で停止");
++  full = gtk_radio_menu_item_new_with_label_from_widget (GTK_RADIO_MENU_ITEM (normal), "外出用：100%まで充電");
++  gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (normal), g_str_has_prefix (limit, "80"));
++  gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (full), g_str_has_prefix (limit, "100"));
++  g_free (limit);
++  g_signal_connect (normal, "toggled", G_CALLBACK (battery_charge_selected), "80");
++  g_signal_connect (full, "toggled", G_CALLBACK (battery_charge_selected), "100");
++  gtk_menu_shell_append (GTK_MENU_SHELL (menu), normal);
++  gtk_menu_shell_append (GTK_MENU_SHELL (menu), full);
++  gtk_widget_show (normal);
++  gtk_widget_show (full);
++}
++
+ void
+ power_manager_button_show_menu (PowerManagerButton *button)
+ {
+@@ -1651,6 +1700,8 @@
+     gtk_widget_show_all (mi);
+     gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
+   }
++
++  battery_charge_menu (menu);
+ 
+   /* Presentation mode checkbox */
+ #ifdef XFCE_PLUGIN
