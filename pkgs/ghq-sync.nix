@@ -6,6 +6,7 @@
   gnused,
   parallel,
   ghq,
+  openssh,
 }:
 
 writeShellScriptBin "ghq-sync" ''
@@ -21,6 +22,10 @@ writeShellScriptBin "ghq-sync" ''
                           sync the repositories of OWNER; may be given more
                           than once (default: conao3, sancode-org)
     --repo=PATH           sync only the repository at PATH
+    -j N, --jobs=N        concurrent repositories (default: 8)
+    --connect-timeout=N   SSH connection timeout in seconds (default: 10)
+    --fetch-retries=N     extra fetch attempts (default: 1)
+    --no-ssh-reuse        disable per-run SSH connection sharing
   EOF
   }
 
@@ -33,7 +38,7 @@ writeShellScriptBin "ghq-sync" ''
 
   resolve_long_option() {
     local given="$1" name match="" count=0
-    for name in help owner repo; do
+    for name in help owner repo jobs connect-timeout fetch-retries no-ssh-reuse; do
       [ "$name" = "$given" ] && { echo "$name"; return 0; }
       case "$name" in
         "$given"*) match="$name"; count=$((count + 1)) ;;
@@ -45,6 +50,10 @@ writeShellScriptBin "ghq-sync" ''
 
   owners=()
   repo=""
+  jobs=8
+  connect_timeout=10
+  fetch_retries=1
+  ssh_reuse=1
   positional=()
 
   while [ $# -gt 0 ]; do
@@ -67,6 +76,11 @@ writeShellScriptBin "ghq-sync" ''
             ;;
         esac
         option="$(resolve_long_option "$name")" || die "no such option: --$name"
+        if [ "$option" = "no-ssh-reuse" ]; then
+          [ "$has_value" -eq 0 ] || die "--no-ssh-reuse option does not take a value"
+          ssh_reuse=0
+          continue
+        fi
         if [ "$option" = "help" ]; then
           [ "$has_value" -eq 0 ] || die "--help option does not take a value"
           usage
@@ -80,7 +94,18 @@ writeShellScriptBin "ghq-sync" ''
         case "$option" in
           owner) owners+=("$value") ;;
           repo) repo="$value" ;;
+          jobs) jobs="$value" ;;
+          connect-timeout) connect_timeout="$value" ;;
+          fetch-retries) fetch_retries="$value" ;;
         esac
+        ;;
+      -j)
+        [ $# -gt 0 ] || die "-j option requires 1 argument"
+        jobs="$1"
+        shift
+        ;;
+      -j*)
+        jobs="''${arg#-j}"
         ;;
       -h)
         usage
@@ -108,6 +133,28 @@ writeShellScriptBin "ghq-sync" ''
     [ -n "$owner" ] || die "OWNER must not be empty"
   done
 
+  [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || die "jobs must be a positive integer"
+  [[ "$connect_timeout" =~ ^[1-9][0-9]*$ ]] || die "connect-timeout must be a positive integer"
+  [[ "$fetch_retries" =~ ^(0|[1-9][0-9]*)$ ]] || die "fetch-retries must be a non-negative integer"
+
+  cleanup_ssh_control() {
+    local socket
+    for socket in "$GHQ_SYNC_SSH_CONTROL_DIR"/*; do
+      [ -S "$socket" ] || continue
+      ${openssh}/bin/ssh -S "$socket" -O exit localhost >/dev/null 2>&1 || true
+    done
+    ${coreutils}/bin/rm -rf -- "$GHQ_SYNC_SSH_CONTROL_DIR"
+  }
+
+  init_ssh_control() {
+    [ "$ssh_reuse" -eq 1 ] || return 0
+    if [ -z "''${GHQ_SYNC_SSH_CONTROL_DIR:-}" ]; then
+      GHQ_SYNC_SSH_CONTROL_DIR="$(${coreutils}/bin/mktemp -d /tmp/ghqs.XXXXXX)" || exit 1
+      export GHQ_SYNC_SSH_CONTROL_DIR
+      trap cleanup_ssh_control EXIT
+    fi
+  }
+
   if [ -n "$repo" ]; then
     [ "''${#owners[@]}" -eq 0 ] || die "--repo cannot be used with --owner"
 
@@ -127,10 +174,27 @@ writeShellScriptBin "ghq-sync" ''
       exit 0
     fi
 
-    if ! ${git}/bin/git -C "$repo" fetch --quiet; then
-      echo "FETCH-FAIL"
-      exit 1
+    ssh_command="''${GIT_SSH_COMMAND:-$(${git}/bin/git -C "$repo" config --get core.sshCommand || true)}"
+    [ -n "$ssh_command" ] || ssh_command="${openssh}/bin/ssh"
+    init_ssh_control
+    control_options=""
+    if [ "$ssh_reuse" -eq 1 ]; then
+      ssh_key="$(printf '%s' "$ssh_command" | ${coreutils}/bin/sha256sum)"
+      ssh_key="''${ssh_key:0:8}"
+      control_options="-o ControlMaster=auto -o ControlPersist=60 -o ControlPath=$GHQ_SYNC_SSH_CONTROL_DIR/$ssh_key-%C"
     fi
+    export GIT_SSH_COMMAND="$ssh_command -o ConnectTimeout=$connect_timeout -o ConnectionAttempts=1 $control_options"
+
+    fetch_attempt=0
+    until ${git}/bin/git -C "$repo" fetch --quiet; do
+      if [ "$fetch_attempt" -ge "$fetch_retries" ]; then
+        echo "FETCH-FAIL"
+        exit 1
+      fi
+      fetch_attempt=$((fetch_attempt + 1))
+      echo "fetch retry $fetch_attempt/$fetch_retries" >&2
+      ${coreutils}/bin/sleep 1
+    done
 
     behind="$(${git}/bin/git -C "$repo" rev-list --count 'HEAD..@{u}')"
     if [ "$behind" -gt 0 ]; then
@@ -168,6 +232,9 @@ writeShellScriptBin "ghq-sync" ''
 
   results_dir="''${log%.log}.results"
 
+  init_ssh_control
+  child_options=()
+  [ "$ssh_reuse" -eq 1 ] || child_options+=(--no-ssh-reuse)
   rc=0
   ${ghq}/bin/ghq list -p | ${gnugrep}/bin/grep -F "''${owner_patterns[@]}" \
     | while IFS= read -r r; do
@@ -176,7 +243,7 @@ writeShellScriptBin "ghq-sync" ''
     | ${gnused}/bin/sed 's|/\.git$||' \
     | ${gnugrep}/bin/grep -v '^$' \
     | ${coreutils}/bin/sort -u \
-    | ${parallel}/bin/parallel $bar_opt --joblog "$log" --results "$results_dir" "$0" --repo {} || rc=$?
+    | ${parallel}/bin/parallel $bar_opt --jobs "$jobs" --joblog "$log" --results "$results_dir" "$0" "''${child_options[@]}" --jobs "$jobs" --connect-timeout "$connect_timeout" --fetch-retries "$fetch_retries" --repo {} || rc=$?
 
   declare -A repo_by_seq=()
   declare -A exit_by_seq=()
