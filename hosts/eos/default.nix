@@ -72,22 +72,15 @@
   services.resolved = {
     enable = true;
     settings.Resolve = {
-      DNS = [
-        "1.1.1.1#cloudflare-dns.com"
-        "1.0.0.1#cloudflare-dns.com"
-        "2606:4700:4700::1111#cloudflare-dns.com"
-        "2606:4700:4700::1001#cloudflare-dns.com"
-      ];
-      DNSOverTLS = "opportunistic";
-      Domains = [ "~." ];
+      DNSOverTLS = "false";
       LLMNR = false;
       MulticastDNS = false;
     };
   };
 
   networking.networkmanager = {
-    dns = lib.mkForce "none";
-    settings.main.systemd-resolved = false;
+    dns = "systemd-resolved";
+    settings.main.systemd-resolved = true;
     wifi.macAddress = "stable";
     dispatcherScripts = [
       {
