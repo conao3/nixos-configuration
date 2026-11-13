@@ -123,7 +123,7 @@ index 18aa2770..1981a9e6 100644
      orderedThreadKeys,
 +    routeDraftIdForRows,
      routeRowThreadKey,
-     routeTerminalOpen,
+     routeThreadRef,
 +    scopedProjectKeys,
      threadByKey,
    ]);

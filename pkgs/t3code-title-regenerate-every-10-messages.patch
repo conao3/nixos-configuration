@@ -48,6 +48,6 @@ index f20ca8bdc9..7da28adfd1 100644
 +      ]);
 +      projection = applyToProjection(projection, event);
 +    }
-     const modelSelection = command.modelSelection ?? projection.thread.modelSelection;
+     let modelSelection = command.modelSelection ?? projection.thread.modelSelection;
      let dispatchMode = resolveMessageDispatchIntent(
        projection,

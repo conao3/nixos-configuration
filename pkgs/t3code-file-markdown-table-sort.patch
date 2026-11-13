@@ -82,7 +82,7 @@ index ee1e1825..815d4e1b 100644
 --- a/apps/web/src/components/chat/MarkdownTable.tsx
 +++ b/apps/web/src/components/chat/MarkdownTable.tsx
 @@ -1,5 +1,17 @@
- import { Check, Copy } from "lucide";
+ import { CheckIcon, CopyIcon } from "lucide-react";
 -import { useRef, type ComponentProps } from "react";
 +import {
 +  Children,

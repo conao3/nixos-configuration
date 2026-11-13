@@ -906,11 +906,13 @@ diff --git a/apps/web/test/fakeEnvironment.ts b/apps/web/test/fakeEnvironment.ts
 index 44cd45d1..3e203eb8 100644
 --- a/apps/web/test/fakeEnvironment.ts
 +++ b/apps/web/test/fakeEnvironment.ts
-@@ -185,6 +185,7 @@ function run(threadId: ThreadId, id: RunId, ordinal: number, userMessageId: stri
+@@ -195,8 +195,9 @@ function run(threadId: ThreadId, id: RunId, ordinal: number, userMessageId: stri
  export interface FakeThread {
    /** Makes this a side chat of that thread. */
    readonly sideChatOf?: ThreadId;
 +  readonly launchedFrom?: ThreadId;
+   /** Makes this an older settled thread the shell leaves out; only its family read returns it. */
+   readonly olderSettled?: true;
    readonly id: ThreadId;
    readonly title: string;
    readonly runs: ReadonlyArray<OrchestrationV2Run>;

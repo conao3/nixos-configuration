@@ -13,7 +13,7 @@ index 91df5616..78c1395e 100644
 @@ -475,7 +474,6 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
          {children}
          <BackgroundThreadAnnouncer />
-         <SidebarControl />
+         <SidebarControl showSidebar={showSidebar} />
 -        {isElectron ? <HistorySwipeNavigation /> : null}
        </SidebarProvider>
      </PanelAnimationSuppressionProvider>
