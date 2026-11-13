@@ -43,6 +43,10 @@ with tempfile.TemporaryDirectory(prefix="ghq-sync-test-") as directory:
     ssh = root / "ssh"
     ssh.write_text(f"#!{sys.executable}\n" + """import json, os, pathlib, subprocess, sys
 root = pathlib.Path(os.environ['TEST_STATE'])
+if os.environ.get('TEST_SWAP_LINK'):
+    link = pathlib.Path(os.environ['TEST_SWAP_LINK'])
+    link.unlink()
+    link.symlink_to(os.environ['TEST_SWAP_TARGET'])
 with (root / 'ssh-args').open('a') as f:
     f.write(json.dumps(sys.argv[1:]) + '\\n')
 failures = root / 'failures'
@@ -93,9 +97,24 @@ sys.exit(subprocess.call(['sh', '-c', sys.argv[-1]]))
     assert "ConnectTimeout=4" in (root / "ssh-args").read_text()
     (root / "failures").write_text("1")
     assert "FETCH-FAIL" in run(binary, "--jobs=2", "--fetch-retries=0", expected=1).stdout
+    second = repo.parent / "second"
+    git("clone", str(remote), str(second))
+    git("remote", "set-url", "origin", f"ssh://example.invalid{remote}", cwd=second)
+    git("config", "core.sshCommand", str(ssh), cwd=second)
+    entry = root / "ghq-sync"
+    entry.symlink_to(binary)
+    replacement = root / "replacement"
+    replacement.write_text(f"#!{sys.executable}\nraise SystemExit(73)\n")
+    replacement.chmod(0o700)
+    env["TEST_SWAP_LINK"] = str(entry)
+    env["TEST_SWAP_TARGET"] = str(replacement)
+    run(str(entry), "--jobs=1")
+    assert entry.resolve() == replacement
+    env.pop("TEST_SWAP_LINK")
+    env.pop("TEST_SWAP_TARGET")
     git("checkout", "--detach", cwd=repo)
     assert "SKIP(detached-head)" in run(binary, "--repo", str(repo)).stdout
     git("checkout", "master", cwd=repo)
     git("branch", "--unset-upstream", cwd=repo)
     assert "SKIP(no-upstream)" in run(binary, "--repo", str(repo)).stdout
-    print("PASS: options, SSH timeout, retry recovery/exhaustion, autostash, push, all-repository propagation, failures, skips")
+    print("PASS: options, SSH timeout, retry recovery/exhaustion, autostash, push, all-repository propagation, failures, skips, executable pinning")

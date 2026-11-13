@@ -233,6 +233,7 @@ writeShellScriptBin "ghq-sync" ''
   results_dir="''${log%.log}.results"
 
   init_ssh_control
+  sync_executable="$(${coreutils}/bin/readlink -f "$0")" || exit 1
   child_options=()
   [ "$ssh_reuse" -eq 1 ] || child_options+=(--no-ssh-reuse)
   rc=0
@@ -243,7 +244,7 @@ writeShellScriptBin "ghq-sync" ''
     | ${gnused}/bin/sed 's|/\.git$||' \
     | ${gnugrep}/bin/grep -v '^$' \
     | ${coreutils}/bin/sort -u \
-    | ${parallel}/bin/parallel $bar_opt --jobs "$jobs" --joblog "$log" --results "$results_dir" "$0" "''${child_options[@]}" --jobs "$jobs" --connect-timeout "$connect_timeout" --fetch-retries "$fetch_retries" --repo {} || rc=$?
+    | ${parallel}/bin/parallel $bar_opt --jobs "$jobs" --joblog "$log" --results "$results_dir" "$sync_executable" "''${child_options[@]}" --jobs "$jobs" --connect-timeout "$connect_timeout" --fetch-retries "$fetch_retries" --repo {} || rc=$?
 
   declare -A repo_by_seq=()
   declare -A exit_by_seq=()
