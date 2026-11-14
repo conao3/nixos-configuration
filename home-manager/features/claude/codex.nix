@@ -7,6 +7,7 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
+  codexPackage = pkgs.callPackage ../../../pkgs/codex.nix { fallbackPackage = llmAgents.codex; };
   fuguProvider = {
     name = "Sakana API";
     base_url = "https://api.sakana.ai/v1";
@@ -23,7 +24,7 @@ in
     # standalone installer 形式ではないため起動に失敗する。対話起動と resume / fork には
     # --no-daemon を足す (exec など他のサブコマンドはこの flag を受け付けない)。
     executable = "${pkgs.writeShellScript "codex-no-daemon" ''
-      real=${llmAgents.codex}/bin/codex
+      real=${codexPackage}/bin/codex
       case "''${1-}" in
         "" | -*) exec "$real" --no-daemon "$@" ;;
         resume | fork)

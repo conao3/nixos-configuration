@@ -29,6 +29,8 @@ in
       '';
       meta = basePackage.meta or { };
     };
-    cliPackage = inputs.llm-agents.packages.${system}.codex;
+    cliPackage = pkgs.callPackage ../../pkgs/codex.nix {
+      fallbackPackage = inputs.llm-agents.packages.${system}.codex;
+    };
   };
 }

@@ -6,6 +6,7 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
+  codexPackage = pkgs.callPackage ../../../pkgs/codex.nix { fallbackPackage = llmAgents.codex; };
   opencodeWrapperArgs = [
     "--run"
     ''export OPENCODE_DB="$OPENCODE_CONFIG_DIR/opencode.db" XDG_STATE_HOME="$OPENCODE_CONFIG_DIR/state"''
@@ -53,7 +54,7 @@ in
         };
       };
       codex = {
-        package = llmAgents.codex;
+        package = codexPackage;
         envVar = "CODEX_HOME";
         homeDir = ".codex";
         share = {
