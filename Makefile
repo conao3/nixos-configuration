@@ -12,6 +12,10 @@ ifeq ($(UNAME_S),Darwin)
 	sudo -H nix run nix-darwin -- switch --flake . --show-trace |& $(NOM)
 else
 	nix flake archive >/dev/null
+	mkdir -p .claude-dev/scratch
+	nix build --dry-run --no-link --log-format raw '.#nixosConfigurations."$(shell hostname)".config.system.build.toplevel' > .claude-dev/scratch/switch-plan.log 2>&1
+	cat .claude-dev/scratch/switch-plan.log
+	bash scripts/check-large-builds.sh < .claude-dev/scratch/switch-plan.log
 	sudo nixos-rebuild switch --flake . --log-format internal-json -v 2>&1 | $(NOM) --json
 	systemctl --user daemon-reload || true
 	systemctl --user restart timers.target || true
