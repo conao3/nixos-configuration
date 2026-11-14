@@ -24,6 +24,11 @@
 
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
 
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+
   boot.kernelParams = [ "i915.enable_psr=0" ];
 
   services.upower = {
