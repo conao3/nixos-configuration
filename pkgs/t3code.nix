@@ -1,10 +1,12 @@
 {
   inputs,
+  pkgs,
   system,
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
   t3code = llmAgents.t3code.override {
+    codex = pkgs.callPackage ./codex.nix { fallbackPackage = llmAgents.codex; };
     t3code-unwrapped = llmAgents.t3code.unwrapped.overrideAttrs (old: {
       patches = (old.patches or [ ]) ++ [
         ./t3code-sol-medium-effort.patch

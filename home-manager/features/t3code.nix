@@ -8,7 +8,7 @@
   ...
 }:
 let
-  t3codePackages = import ../../pkgs/t3code.nix { inherit inputs system; };
+  t3codePackages = import ../../pkgs/t3code.nix { inherit inputs pkgs system; };
   isEos =
     pkgs.stdenv.hostPlatform.isLinux
     && osConfig != null

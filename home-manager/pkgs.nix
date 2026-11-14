@@ -177,6 +177,11 @@
       ];
 
       inputPackages = [
+        (inputs.llm-agents.packages.${system}.codex-acp.override {
+          codex = pkgs.callPackage ../pkgs/codex.nix {
+            fallbackPackage = inputs.llm-agents.packages.${system}.codex;
+          };
+        })
         inputs.awsr.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.keg.packages.${system}.default
@@ -200,7 +205,6 @@
         aperant
         ck
         claude-agent-acp
-        codex-acp
         copilot-language-server
         # eca
         # gastown
