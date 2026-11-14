@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Keep source-built tools reusable across system nixpkgs updates.
+    nixpkgs-tools.url = "github:NixOS/nixpkgs/4fe25e12eb9f4c744966dd3de5a05246cf098601";
     flake-parts.url = "github:hercules-ci/flake-parts"; # has no nixpkgs dependency
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -16,10 +18,7 @@
       url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    llm-agents = {
-      url = "github:numtide/llm-agents.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    llm-agents.url = "github:numtide/llm-agents.nix";
     nix-claude-code = {
       url = "github:ryoppippi/nix-claude-code";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,11 +37,11 @@
     };
     gitm = {
       url = "github:conao3/bash-gitm";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
     };
     pype = {
       url = "github:conao3/python-pype";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -50,11 +49,11 @@
     };
     rust-fetch-usage-limit = {
       url = "github:conao3/rust-fetch-usage-limit";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
     };
     rust-llm-quota = {
       url = "github:conao3/rust-llm-quota";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
     };
     devo = {
       url = "github:conao3/rust-devo";
@@ -62,49 +61,49 @@
     };
     agent-friction = {
       url = "git+ssh://git@github.com/conao3/rust-agent-friction.git";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     chrome-devtools = {
       url = "github:conao3/rust-chrome-devtools";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     document-packet = {
       url = "github:conao3/rust-document-packet";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     overhear = {
       url = "github:conao3/rust-overhear";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     awsr = {
       url = "github:conao3/rust-awscli";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     idea-routine = {
       url = "git+ssh://git@github.com/conao3/rust-idea-routine.git";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     t3code-gpui = {
       url = "git+ssh://git@github.com/conao3/rust-t3code-gpui.git";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
     outbound-manifest = {
       url = "github:conao3/rust-outbound-manifest";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };

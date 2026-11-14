@@ -44,7 +44,6 @@ lint-all:
 .PHONY: update
 update:
 	nix flake update --log-format internal-json -v 2>&1 | $(NOM) --json
-	nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/$$(curl -sL https://raw.githubusercontent.com/numtide/llm-agents.nix/main/flake.lock | jq -r '.nodes.nixpkgs.locked.rev') --log-format internal-json -v 2>&1 | $(NOM) --json
 
 MEMORY ?= 4096
 CORES ?= 2
