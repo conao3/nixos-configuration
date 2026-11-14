@@ -6,5 +6,6 @@
     ++ [
       ../home-manager/features/battery-warning.nix
       ../home-manager/features/internal-panel-120hz.nix
+      ../home-manager/features/demo-mode.nix
     ];
 }
