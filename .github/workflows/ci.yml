@@ -32,7 +32,7 @@ jobs:
           printf '{ }\n' > /tmp/nix-flakes-ci/nix-flakes-registry.nix
           mkdir -p /tmp/nix-flakes-ci/nixos
           printf '{ }\n' > /tmp/nix-flakes-ci/nixos/substituters.nix
-          for name in agent-friction idea-routine; do
+          for name in agent-friction idea-routine t3code-gpui; do
             mkdir -p "/tmp/nix-flakes-ci/$name"
             cat > "/tmp/nix-flakes-ci/$name/flake.nix" <<'STUB'
           {
@@ -51,6 +51,7 @@ jobs:
             --override-input nix-flakes path:/tmp/nix-flakes-ci
             --override-input agent-friction path:/tmp/nix-flakes-ci/agent-friction
             --override-input idea-routine path:/tmp/nix-flakes-ci/idea-routine
+            --override-input t3code-gpui path:/tmp/nix-flakes-ci/t3code-gpui
           )
           nix build .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel --dry-run --show-trace "${overrides[@]}"
           nix build .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel --dry-run --show-trace "${overrides[@]}"
