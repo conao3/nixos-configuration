@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   system,
   inputs,
   ...
@@ -182,6 +183,7 @@
             fallbackPackage = inputs.llm-agents.packages.${system}.codex;
           };
         })
+        (lib.lowPrio inputs.llm-agents.packages.${system}.bb-app)
         inputs.awsr.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.keg.packages.${system}.default
