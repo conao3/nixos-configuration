@@ -29,7 +29,7 @@ let
 
       # 引数 (秘密を含みうる) は pane のシェル履歴に残さず、0700 の一時ディレクトリのスクリプトに置く
       {
-        printf 'op'
+        printf '/run/wrappers/bin/op'
         printf ' %q' "$@"
         printf ' <%q >%q 2>%q\n' "$dir/in" "$dir/out" "$dir/err"
         printf 'echo $? >%q.tmp && mv %q.tmp %q\n' "$dir/rc" "$dir/rc" "$dir/rc"
