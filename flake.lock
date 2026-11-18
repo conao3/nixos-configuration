@@ -116,11 +116,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794749608,
-        "narHash": "sha256-GXqx9KHdk3ajcJ3NnOkNp0rDn7e+e/QkinoToJYKcYo=",
+        "lastModified": 1795035707,
+        "narHash": "sha256-F6pZUEcl2GXFR1+IDIkImzWs2fHwBGVPh4Jxg0XXIuU=",
         "owner": "conao3",
         "repo": "rust-chrome-devtools",
-        "rev": "86a7006337284a33b25b0d96c607f13df1385c77",
+        "rev": "640ec667fb22b243b6af6e1f09835796b95faad6",
         "type": "github"
       },
       "original": {
