@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   inputs,
   system,
@@ -123,7 +124,15 @@ in
     };
   };
 
-  xdg.configFile."devin/AGENTS.md".source = ./AGENTS.md;
+  home.file =
+    let
+      devinHome = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.agents/.devin.conao3";
+    in
+    {
+      ".agents/.devin.conao3/AGENTS.md".source = ./AGENTS.md;
+      ".config/devin".source = devinHome;
+      ".local/share/devin".source = devinHome;
+    };
 
   home.packages = [
     # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
