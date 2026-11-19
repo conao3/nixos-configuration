@@ -312,5 +312,17 @@ in
     mergeT3Settings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
       ${t3SettingsMerge} "$HOME/.t3/userdata/settings.json" ${t3SettingsOps} ${t3SettingsSeedFile}
     '';
+
+    # The acpRegistry provider (acp_devin) inspects the agent against this
+    # cached ACP Registry index and stays unavailable until it exists.
+    seedAcpRegistryIndex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      index="$HOME/.t3/caches/acp-registry/registry.json"
+      if [ ! -s "$index" ]; then
+        $DRY_RUN_CMD mkdir -p "$(dirname "$index")"
+        $DRY_RUN_CMD ${pkgs.curl}/bin/curl -fsS --max-time 30 -o "$index" \
+          https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json \
+          || echo "warning: could not fetch the ACP Registry index into $index" >&2
+      fi
+    '';
   };
 }
