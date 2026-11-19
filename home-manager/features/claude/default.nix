@@ -39,7 +39,10 @@ in
 
     types = {
       claude = {
-        package = inputs.nix-claude-code.packages.${system}.default;
+        package = pkgs.callPackage ../../../pkgs/yolo-flag.nix { } {
+          package = inputs.nix-claude-code.packages.${system}.default;
+          flags = [ "--dangerously-skip-permissions" ];
+        };
         envVar = "CLAUDE_CONFIG_DIR";
         homeDir = ".claude";
         instructionsFile = "CLAUDE.md";

@@ -20,7 +20,15 @@
       comma = pkgs.callPackage ../pkgs/comma.nix {
         inherit (inputs.nix-index-database.packages.${system}) comma-with-db;
       };
-      devin-cli = pkgs.callPackage ../pkgs/devin-cli.nix { };
+      devin-cli = pkgs.callPackage ../pkgs/yolo-flag.nix { } {
+        package = pkgs.callPackage ../pkgs/devin-cli.nix { };
+        flags = [
+          "--permission-mode"
+          "dangerous"
+          "--respect-workspace-trust"
+          "false"
+        ];
+      };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       document-packet = inputs.document-packet.packages.${system}.default;
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { };
