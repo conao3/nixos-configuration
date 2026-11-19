@@ -27,6 +27,7 @@
       linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
+      musewire = inputs.musewire.packages.${system}.default;
       outbound-manifest = inputs.outbound-manifest.packages.${system}.default;
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
@@ -85,6 +86,7 @@
         linear-cli
         mo
         modal
+        musewire
         neil
         ngrok
         nkf

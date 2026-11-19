@@ -29,7 +29,7 @@ jobs:
           printf '{ }\n' > /tmp/nix-flakes-ci/nix-flakes-registry.nix
           mkdir -p /tmp/nix-flakes-ci/nixos
           printf '{ }\n' > /tmp/nix-flakes-ci/nixos/substituters.nix
-          for name in agent-friction idea-routine t3code-gpui; do
+          for name in agent-friction idea-routine musewire t3code-gpui; do
             mkdir -p "/tmp/nix-flakes-ci/$name"
             cat > "/tmp/nix-flakes-ci/$name/flake.nix" <<'STUB'
           {
@@ -49,6 +49,7 @@ jobs:
             --override-input nix-flakes path:/tmp/nix-flakes-ci
             --override-input agent-friction path:/tmp/nix-flakes-ci/agent-friction
             --override-input idea-routine path:/tmp/nix-flakes-ci/idea-routine
+            --override-input musewire path:/tmp/nix-flakes-ci/musewire
             --override-input t3code-gpui path:/tmp/nix-flakes-ci/t3code-gpui
           )
           nix fmt "${overrides[@]}" -- --fail-on-change .
