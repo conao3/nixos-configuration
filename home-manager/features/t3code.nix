@@ -75,6 +75,17 @@ let
     };
   };
 
+  devinProviderInstance = {
+    driver = "acpRegistry";
+    displayName = "Devin";
+    enabled = true;
+    config = {
+      source = "registry";
+      agentId = "devin";
+      commandPath = "/etc/profiles/per-user/conao/bin/devin";
+    };
+  };
+
   # Initial content of ~/.t3/userdata/settings.json, used only when the
   # file does not exist yet. After that the file is T3 Code's own: the
   # merge below applies only the OpenCode provider instances and keeps every
@@ -154,6 +165,7 @@ let
       };
       opencode_cgpu_modal = cgpuProviderInstance;
       opencode_agent001 = opencodeAgent001ProviderInstance;
+      acp_devin = devinProviderInstance;
     };
   };
 
@@ -172,6 +184,14 @@ let
             "opencode_agent001"
           ];
           value = opencodeAgent001ProviderInstance;
+        }
+        {
+          op = "force";
+          path = [
+            "providerInstances"
+            "acp_devin"
+          ];
+          value = devinProviderInstance;
         }
       ]
       ++
