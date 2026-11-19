@@ -2,11 +2,11 @@
 
 callPackage (import ./make-brave.nix rec {
   pname = "brave";
-  version = "1.99.57";
+  version = "1.100.58";
   archives = {
     x86_64-linux = {
       url = "https://github.com/brave/brave-browser/releases/download/v${version}/brave-browser_${version}_amd64.deb";
-      hash = "sha256-jNFMV/f9bXnf2aJUUBdbVDihsRtWX/XQitmRtwLen9U=";
+      hash = "sha256-LZ0eZk79YDQ8dzJMg2vkAsvlfOElSZdVhN+n0HPxVqU=";
     };
   };
   optStem = "brave";
