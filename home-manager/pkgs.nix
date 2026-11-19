@@ -65,6 +65,7 @@
         dev
         dev-stop
         devenv
+        devin-cli
         diffutils
         dig
         document-packet
