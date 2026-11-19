@@ -123,6 +123,8 @@ in
     };
   };
 
+  xdg.configFile."devin/AGENTS.md".source = ./AGENTS.md;
+
   home.packages = [
     # Claude Code の音声入力 (/voice) が録音に使う (`rec` コマンド)。無いと「Voice mode requires SoX」で有効化できない
     pkgs.sox
