@@ -25,9 +25,7 @@ let
 in
 runCommand "${package.name}-yolo"
   {
-    meta = (package.meta or { }) // {
-      mainProgram = name;
-    };
+    meta.mainProgram = name;
   }
   ''
     mkdir -p $out/bin
