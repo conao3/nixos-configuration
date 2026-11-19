@@ -20,6 +20,7 @@
       comma = pkgs.callPackage ../pkgs/comma.nix {
         inherit (inputs.nix-index-database.packages.${system}) comma-with-db;
       };
+      devin-cli = pkgs.callPackage ../pkgs/devin-cli.nix { };
       cosense-cli = pkgs.callPackage ../pkgs/cosense-cli.nix { src = inputs.cosense-cli; };
       document-packet = inputs.document-packet.packages.${system}.default;
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { };
