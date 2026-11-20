@@ -3,7 +3,8 @@ let
   # 1Password CLI はデスクトップアプリの承認を「制御端末 (tty) + その開始時刻」単位で覚える。
   # エージェントの Bash は呼び出しごとに tty の無いプロセスで動くため、op のたびに Authorize が出る。
   # op-agent は常駐 tmux session `op-auth` の pane (tty が固定) で op を実行し、
-  # 承認を 1 回で済ませる (最後の使用から 10 分、最長 12 時間有効)。
+  # 承認を 1 回で済ませる。承認は 10 分使わないと切れるので、同じ pane で 4 分おきに
+  # op whoami を打ち、最長の 12 時間まで保つ (認可の切れた tty の whoami はダイアログを出さない)。
   opAgent = pkgs.writeShellApplication {
     name = "op-agent";
     runtimeInputs = [
@@ -14,7 +15,14 @@ let
       session=op-auth
       timeout=''${OP_AGENT_TIMEOUT:-180}
 
+      keepalive=''${XDG_RUNTIME_DIR:-/tmp}/op-agent-keepalive.pid
+
       tmux has-session -t "$session" 2>/dev/null || tmux new-session -d -s "$session"
+
+      if ! { [ -f "$keepalive" ] && kill -0 "$(cat "$keepalive")" 2>/dev/null; }; then
+        tmux send-keys -t "$session" -l " (while sleep 240; do /run/wrappers/bin/op whoami >/dev/null 2>&1; done) & echo \$! >$keepalive"
+        tmux send-keys -t "$session" Enter
+      fi
 
       dir=$(mktemp -d "''${XDG_RUNTIME_DIR:-/tmp}/op-agent.XXXXXX")
       trap 'rm -rf "$dir"' EXIT
