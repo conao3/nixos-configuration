@@ -93,7 +93,7 @@
 
 - それ以外のレポジトリ（他者・組織所有）はユーザーが明示的に commit と指示することが必要。指示は当該作業単位（一連の commit batch）に対する許可と解釈する。別の論理タスク（別 PR、独立した作業単位）に移ったら、たとえ同セッション内でも再度の明示指示を取り直す。
 - commit 直前に `git diff --cached` で staged 内容を必ず目視する。
-- commit メッセージは当該レポジトリの慣習に合わせる。`git log --oneline` で過去 commit の実例（言語、prefix の形式、scope の取り方）を確認してから書く。慣習例: lowercase 英語 + `feat:` / `fix:` / `<package>:` / 日本語 + `feat(scope):` など、レポごとに異なる。
+- commit メッセージは、この 2 つの owner の repo では英語で書く。それ以外の repo は当該レポジトリの言語に合わせる。prefix の形式と scope の取り方は、どの repo でも `git log --oneline` で過去 commit の実例を確認して合わせる。慣習例: `feat:` / `fix:` / `<package>:` / `feat(scope):` など、レポごとに異なる。
 - push も、この 2 つの owner の repo では 1 回ごとの許可を取らずに行う。force push とリモートのブランチ・タグの削除・書き換えは、1 回ごとに明示の許可を取る。それ以外の repo の push は、1 回ごとにユーザーの明示許可を取ってから行う。
 
 ## 長期記憶への貢献

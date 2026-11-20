@@ -78,7 +78,7 @@ output token は input token より単価が高い (input の約 5 倍)。冗長
   ```
 
 - commit 直前に `git diff --cached` で staged 内容を目視する。
-- commit メッセージは当該 repo の慣習に合わせる (`git log --oneline` で過去 commit の形式を確認してから書く)。
+- commit メッセージは、conao3 と sancode-org 配下の repo では英語で書く。それ以外の repo は当該 repo の言語に合わせる。prefix と scope の形は `git log --oneline` で過去 commit を確認して合わせる。
 - Co-authored-by フッターは付けない。
 - `--no-verify` / `--no-gpg-sign` 等で hook / signing を skip しない。
 - `git add -A` / `git add .` で untracked を巻き込まない。specific path で add する。
