@@ -133,6 +133,7 @@ in
     in
     {
       ".agents/.devin.conao3/AGENTS.md".source = ./AGENTS.md;
+      ".devin/global_rules.md".source = ./devin-global-rules.md;
       ".config/devin".source = devinHome;
       ".local/share/devin".source = devinHome;
     };
