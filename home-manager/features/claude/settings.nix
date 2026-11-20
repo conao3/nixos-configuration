@@ -63,7 +63,7 @@ in
         # web / Remote Control セッションの commit・PR 本文へ付く Claude-Session トレーラーを外す
         sessionUrl = false;
       };
-      language = "japanese";
+      language = "english";
       advisorModel = "fable";
       autoMemoryEnabled = false;
       autoMemoryDirectory = "~/.agents/share/auto-memory";
