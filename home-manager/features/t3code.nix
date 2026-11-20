@@ -16,7 +16,7 @@ let
 
   hostName = osConfig.networking.hostName;
 
-  threadTitleInstructions = "タイトルは日本語で書き、末尾に半角スペースで区切って分類のタグを付ける (例: 「トロントの住居探し #住居 #カナダ」)。タグは # に続く 1 語で、作業の領域を表す (例: #求職 #会計 #住居 #英語 #ルーチン #t3code #nixos)。タグの数に上限はなく、当てはまる領域の分だけ付ける。前のタイトルのタグが今の作業に合っていれば、同じタグを使う。";
+  threadTitleInstructions = "Write the title in English, and end it with category tags separated by single spaces (e.g. \"Find a home in Toronto #housing #canada\"). Each tag is # followed by one lowercase English word naming the area of the work (e.g. #job #accounting #housing #english #routine #t3code #nixos). Add as many tags as apply. Keep the tags of the previous title when they still fit the current work.";
 
   claudeLaunchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md --append-system-prompt \"このセッションが動いているホストは ${lib.removePrefix "conao-nixos-" hostName} (${hostName})。\"";
 
