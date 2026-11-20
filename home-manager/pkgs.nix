@@ -103,10 +103,13 @@
         obsidian
         outbound-manifest
         parallel
+        perl
         portless
         postgresql
+        python3
         rar
         rlwrap
+        ruby
         sqldef
         sqlite
         ssm-session-manager-plugin
