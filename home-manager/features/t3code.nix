@@ -220,8 +220,8 @@ let
           op = "force";
           path = [ "textGenerationModelSelection" ];
           value = {
-            instanceId = "opencode_agent001";
-            model = "opencode-go/deepseek-v4.1-flash";
+            instanceId = "claude_conao3";
+            model = "claude-haiku-5-5";
           };
         }
       ]
