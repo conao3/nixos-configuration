@@ -70,6 +70,17 @@ let
     };
   };
 
+  # bb-plugins/tweaks carries the features that T3 Code gets from
+  # pkgs/t3code-*.patch. Its commands take the keys the T3 Code patches use,
+  # and Alt+P is freed from bb's provider cycling for them.
+  tweaksPluginSource = "git:https://github.com/conao3/nixos-configuration";
+  keyboardShortcuts = {
+    "modelPicker.cycleProvider" = "disabled";
+    "plugin:tweaks/next-user-message" = "Alt+n";
+    "plugin:tweaks/previous-user-message" = "Alt+p";
+    "plugin:tweaks/next-attention-thread" = "Alt+o";
+  };
+
   customAgentsFile = pkgs.writeText "bb-custom-agents.json" (builtins.toJSON customAgents);
 
   # The settings live in bb's database, so they are applied through the
@@ -89,6 +100,17 @@ let
     )}
     ${bbCli} plugin config provider-acp set customAgents "$(${jq} -c . ${customAgentsFile})" >/dev/null || warn "customAgents"
     ${bbCli} settings general defaultProviderId claude-code >/dev/null || warn "defaultProviderId"
+    if ! ${bbCli} plugin list 2>/dev/null | grep -q '^tweaks@'; then
+      ${bbCli} plugin install ${tweaksPluginSource} --subdirectory bb-plugins/tweaks --yes >/dev/null || warn "the tweaks plugin"
+    fi
+    ${bbCli} plugin disable inline-vis >/dev/null || warn "inline-vis"
+    ${bbCli} settings experiment threadRowMetadata true >/dev/null || warn "threadRowMetadata"
+    ${bbCli} thread-list prefs set showRowMetadata true >/dev/null || warn "showRowMetadata"
+    ${lib.concatStrings (
+      lib.mapAttrsToList (command: shortcut: ''
+        ${bbCli} settings keyboard set ${command} ${shortcut} >/dev/null || warn "the shortcut of ${command}"
+      '') keyboardShortcuts
+    )}
     ${lib.optionalString isEos ''
       tailnet_name=$(${tailscale} status --json | ${jq} -r '.Self.DNSName | rtrimstr(".")')
       if [ -n "$tailnet_name" ]; then
