@@ -60,10 +60,12 @@ let
     runtimeInputs = [
       pkgs.coreutils
       pkgs.jq
+      t3
       vb
     ];
     text = builtins.readFile ../../pkgs/agent-board-notify.sh;
   };
+  viewUrl = if serveOn != null then "https://${serveOn}" else lib.removeSuffix "/api/board" boardUrl;
   environment = [
     "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin"
     "BOARD_URL=${boardUrl}"
@@ -114,26 +116,6 @@ in
         };
         Install.WantedBy = [ "default.target" ];
       };
-      agent-board-notify = {
-        Unit = {
-          Description = "Vercel Board notify: tell Muse when a work/ task is blocked or failed";
-          After = [
-            "network-online.target"
-            "agent-board.service"
-          ];
-          StartLimitIntervalSec = 0;
-        };
-        Service = {
-          ExecStart = "${notify}/bin/agent-board-notify";
-          Environment = environment ++ [
-            "BOARD_PROFILE=notify-${host}"
-            "AGENT_BOARD_VIEW=https://${serveOn}"
-          ];
-          Restart = "always";
-          RestartSec = 10;
-        };
-        Install.WantedBy = [ "default.target" ];
-      };
     }
     // {
       # 人がタスクのスレッドに返信したら、そのタスクを担当したエージェントのスレッドに続きを渡す。
@@ -147,6 +129,26 @@ in
         Service = {
           ExecStart = "${replies}/bin/agent-board-replies";
           Environment = environment ++ [ "BOARD_PROFILE=replies-${host}" ];
+          Restart = "always";
+          RestartSec = 10;
+        };
+        Install.WantedBy = [ "default.target" ];
+      };
+      agent-board-notify = {
+        Unit = {
+          Description = "Vercel Board notify: tell the creator of a work/ task when it is completed, blocked or failed";
+          After = [ "network-online.target" ] ++ lib.optional (serveOn != null) "agent-board.service";
+          StartLimitIntervalSec = 0;
+        };
+        Service = {
+          ExecStart = "${notify}/bin/agent-board-notify";
+          Environment =
+            environment
+            ++ [
+              "BOARD_PROFILE=notify-${host}"
+              "AGENT_BOARD_VIEW=${viewUrl}"
+            ]
+            ++ lib.optional (serveOn != null) "AGENT_BOARD_MUSE=1";
           Restart = "always";
           RestartSec = 10;
         };

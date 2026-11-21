@@ -6,14 +6,15 @@ if [ -s "$cursor_file" ]; then
   args+=(--after "$(cat "$cursor_file")")
 fi
 vb "${args[@]}" | while read -r event; do
-  if jq -e '.type == "message.posted" and .message.re != null and .message.by.profile == null' <<<"$event" >/dev/null; then
+  if jq -e '.type == "message.posted" and .message.re != null' <<<"$event" >/dev/null; then
     task=$(jq -r '.message.re' <<<"$event")
-    root=$(vb read "$task" --json | jq -c '.message | {host: .labels.host, harness: .labels.harness, thread: .labels.thread, state: .task.state}')
+    root=$(vb read "$task" --json | jq -c '.message | {host: .labels.host, harness: .labels.harness, thread: .labels.thread, state: .task.state, creator: .by.actor}')
     host=$(jq -r '.host // empty' <<<"$root")
     harness=$(jq -r '.harness // empty' <<<"$root")
     thread=$(jq -r '.thread // empty' <<<"$root")
     task_state=$(jq -r '.state // empty' <<<"$root")
-    if [ "$host" = "$AGENT_BOARD_HOST" ] && [ -n "$thread" ]; then
+    creator=$(jq -r '.creator' <<<"$root")
+    if [ "$host" = "$AGENT_BOARD_HOST" ] && [ -n "$thread" ] && jq -e --arg creator "$creator" '.message.by.profile == null or .message.by.actor == $creator' <<<"$event" >/dev/null; then
       echo "reply on task $task ($task_state) for $harness thread $thread"
       case "$task_state" in
         blocked) vb tasks unblock "$task" ;;
