@@ -15,6 +15,8 @@ in
 appimageTools.wrapType2 {
   inherit pname version src;
 
+  dieWithParent = false;
+
   extraInstallCommands = ''
     install -Dm644 ${contents}/bb.desktop $out/share/applications/bb-desktop.desktop
     substituteInPlace $out/share/applications/bb-desktop.desktop \
