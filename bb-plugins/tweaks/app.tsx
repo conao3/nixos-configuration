@@ -163,16 +163,17 @@ async function jumpToUserMessage(
     step === 1
       ? rows[offsets.findIndex((offset) => offset > 1)]
       : rows[offsets.findLastIndex((offset) => offset < -1)];
+  container.dispatchEvent(new WheelEvent("wheel"));
   if (target === undefined) {
     container.scrollTo({
       top: step === 1 ? container.scrollHeight : 0,
-      behavior: "smooth",
+      behavior: "instant",
     });
     return;
   }
   container.scrollBy({
     top: target.getBoundingClientRect().top - top,
-    behavior: "smooth",
+    behavior: "instant",
   });
 }
 
