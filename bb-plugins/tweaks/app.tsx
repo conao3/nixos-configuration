@@ -1,0 +1,283 @@
+import { useEffect, useRef } from "react";
+import {
+  definePluginApp,
+  experimental_useSidebarThreads,
+  useBbNavigate,
+  useSdk,
+  useSidebarThreadDraftIds,
+} from "@get-bb/plugin-sdk/app";
+import type {
+  BbNavigate,
+  ExperimentalThreadRowMetadataProps,
+  PluginFileOpenerProps,
+  PluginSidebarThread,
+} from "@get-bb/plugin-sdk/app";
+import { cn } from "@/lib/utils";
+import { applyTableSort, nextSortState, type SortState } from "./table-sort";
+
+const HOST_NAME_PREFIX = /^conao-nixos-/u;
+
+function hostLabel(name: string): string {
+  return name.replace(HOST_NAME_PREFIX, "");
+}
+
+interface AppState {
+  navigate: BbNavigate | null;
+  sdk: ReturnType<typeof useSdk> | null;
+  threads: readonly PluginSidebarThread[];
+  primaryHostId: string | null;
+  draftIds: ReadonlySet<string>;
+}
+
+const appState: AppState = {
+  navigate: null,
+  sdk: null,
+  threads: [],
+  primaryHostId: null,
+  draftIds: new Set(),
+};
+
+function AppStateBridge() {
+  const navigate = useBbNavigate();
+  const sdk = useSdk();
+  const sidebar = experimental_useSidebarThreads();
+  const draftIds = useSidebarThreadDraftIds();
+  useEffect(() => {
+    appState.navigate = navigate;
+    appState.sdk = sdk;
+    appState.threads = sidebar.threads;
+    appState.primaryHostId = sidebar.experimental_hosts?.[0]?.id ?? null;
+    appState.draftIds = draftIds;
+  });
+  return null;
+}
+
+function HostChip({ thread }: ExperimentalThreadRowMetadataProps) {
+  const sidebar = experimental_useSidebarThreads();
+  if (thread.host === null) return null;
+  const isPrimary = sidebar.experimental_hosts?.[0]?.id === thread.host.id;
+  return (
+    <span
+      title={thread.host.name}
+      className={cn(
+        "rounded px-1 text-[0.6875rem] leading-4",
+        isPrimary
+          ? "bg-muted text-muted-foreground"
+          : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+      )}
+    >
+      {hostLabel(thread.host.name)}
+    </span>
+  );
+}
+
+function needsAttention(thread: PluginSidebarThread): boolean {
+  return (
+    !thread.isHidden &&
+    !thread.isArchived &&
+    (thread.isUnread ||
+      thread.hasPendingInteraction ||
+      appState.draftIds.has(thread.id))
+  );
+}
+
+function sidebarOrder(): string[] {
+  const rendered = Array.from(
+    document.querySelectorAll<HTMLElement>("a[data-sidebar-thread-id]"),
+    (anchor) => anchor.dataset.sidebarThreadId ?? "",
+  ).filter((id) => id !== "");
+  const seen = new Set(rendered);
+  const rest = appState.threads
+    .filter((thread) => !seen.has(thread.id))
+    .toSorted((a, b) => b.updatedAt - a.updatedAt)
+    .map((thread) => thread.id);
+  return [...new Set(rendered), ...rest];
+}
+
+function goToAttentionThread(currentId: string | null, step: 1 | -1): void {
+  const byId = new Map(appState.threads.map((thread) => [thread.id, thread]));
+  const order = sidebarOrder().filter((id) => byId.has(id));
+  if (order.length === 0) return;
+  const start = currentId === null ? -1 : order.indexOf(currentId);
+  for (let offset = 1; offset <= order.length; offset += 1) {
+    const index =
+      (((start === -1 && step === -1 ? 0 : start) + step * offset) %
+        order.length +
+        order.length) %
+      order.length;
+    const id = order[index];
+    const thread = id === undefined ? undefined : byId.get(id);
+    if (thread !== undefined && id !== currentId && needsAttention(thread)) {
+      appState.navigate?.toThread(thread.id);
+      return;
+    }
+  }
+}
+
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (
+    let parent = element.parentElement;
+    parent !== null;
+    parent = parent.parentElement
+  ) {
+    const overflowY = getComputedStyle(parent).overflowY;
+    if (
+      (overflowY === "auto" || overflowY === "scroll") &&
+      parent.scrollHeight > parent.clientHeight
+    ) {
+      return parent;
+    }
+  }
+  return null;
+}
+
+const JUMP_MARGIN_PX = 12;
+
+async function jumpToUserMessage(
+  threadId: string,
+  step: 1 | -1,
+): Promise<void> {
+  const sdk = appState.sdk;
+  if (sdk === null) return;
+  const outline = await sdk.threads.conversationOutline({
+    threadId,
+    role: "user",
+  });
+  const rows = outline.items
+    .map((item) =>
+      document.querySelector<HTMLElement>(
+        `[data-timeline-row-id="${CSS.escape(item.id)}"]`,
+      ),
+    )
+    .filter((row): row is HTMLElement => row !== null)
+    .toSorted((a, b) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+    );
+  const first = rows[0];
+  if (first === undefined) return;
+  const container = scrollParent(first);
+  if (container === null) return;
+  const top = container.getBoundingClientRect().top + JUMP_MARGIN_PX;
+  const offsets = rows.map((row) => row.getBoundingClientRect().top - top);
+  const target =
+    step === 1
+      ? rows[offsets.findIndex((offset) => offset > 1)]
+      : rows[offsets.findLastIndex((offset) => offset < -1)];
+  if (target === undefined) {
+    container.scrollTo({
+      top: step === 1 ? container.scrollHeight : 0,
+      behavior: "smooth",
+    });
+    return;
+  }
+  container.scrollBy({
+    top: target.getBoundingClientRect().top - top,
+    behavior: "smooth",
+  });
+}
+
+const SORT_STYLE = `
+[data-tweaks-table-sort] th { cursor: pointer; user-select: none; }
+[data-tweaks-table-sort] th[data-tweaks-sort="ascending"]::after { content: " \\25B2"; font-size: 0.75em; }
+[data-tweaks-table-sort] th[data-tweaks-sort="descending"]::after { content: " \\25BC"; font-size: 0.75em; }
+`;
+
+function SortableMarkdownFile({ Original }: PluginFileOpenerProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (root === null) return;
+    const sorts = new Map<HTMLTableElement, SortState>();
+    const observer = new MutationObserver(() => {
+      reapply();
+    });
+    const observe = () => {
+      observer.observe(root, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    };
+    const reapply = () => {
+      observer.disconnect();
+      for (const [table, state] of sorts) {
+        if (root.contains(table)) applyTableSort(table, state);
+        else sorts.delete(table);
+      }
+      observe();
+    };
+    const onClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const cell = event.target.closest("th");
+      const table = cell?.closest("table");
+      if (cell == null || table == null || !root.contains(table)) return;
+      if (event.target.closest("a, button") !== null) return;
+      const state = nextSortState(sorts.get(table), cell.cellIndex);
+      sorts.set(table, state);
+      reapply();
+    };
+    root.addEventListener("click", onClick);
+    observe();
+    return () => {
+      root.removeEventListener("click", onClick);
+      observer.disconnect();
+    };
+  }, []);
+  return (
+    <div ref={rootRef} data-tweaks-table-sort="" className="contents">
+      <style>{SORT_STYLE}</style>
+      <Original />
+    </div>
+  );
+}
+
+export default definePluginApp((app) => {
+  app.slots.experimental_appOverlay({
+    id: "state",
+    component: AppStateBridge,
+  });
+
+  app.slots.experimental_threadRowMetadata({
+    id: "host",
+    order: 0,
+    component: HostChip,
+  });
+
+  app.commands.register({
+    id: "next-attention-thread",
+    title: "Go to next thread needing attention",
+    run: ({ threadId }) => {
+      goToAttentionThread(threadId, 1);
+    },
+  });
+  app.commands.register({
+    id: "previous-attention-thread",
+    title: "Go to previous thread needing attention",
+    run: ({ threadId }) => {
+      goToAttentionThread(threadId, -1);
+    },
+  });
+  app.commands.register({
+    id: "next-user-message",
+    title: "Scroll to next user message",
+    isAvailable: ({ threadId }) => threadId !== null,
+    run: async ({ threadId }) => {
+      if (threadId !== null) await jumpToUserMessage(threadId, 1);
+    },
+  });
+  app.commands.register({
+    id: "previous-user-message",
+    title: "Scroll to previous user message",
+    isAvailable: ({ threadId }) => threadId !== null,
+    run: async ({ threadId }) => {
+      if (threadId !== null) await jumpToUserMessage(threadId, -1);
+    },
+  });
+
+  app.slots.fileOpener({
+    id: "sortable-markdown",
+    title: "Markdown with sortable tables",
+    extensions: ["md", "markdown"],
+    component: SortableMarkdownFile,
+  });
+});
