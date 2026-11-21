@@ -235,6 +235,10 @@
               specialArgs = { inherit inputs; };
               modules = [ ./hosts/agent-vm ];
             };
+            "conao-nixos-minimal" = inputs.nixpkgs.lib.nixosSystem {
+              system = linuxSystem;
+              modules = [ ./hosts/minimal ];
+            };
           };
 
           darwinConfigurations = {

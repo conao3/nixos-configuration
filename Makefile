@@ -39,6 +39,7 @@ lint-all:
 	nix eval .#nixosConfigurations.conao-nixos-helios.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 	nix eval .#nixosConfigurations.conao-nixos-eos.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 	nix eval .#nixosConfigurations.conao-nixos-agent.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
+	nix eval .#nixosConfigurations.conao-nixos-minimal.config.system.build.toplevel.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 	nix eval .#darwinConfigurations.yamashita-naoya-con0178-3.system.drvPath 2>&1 >/dev/null | grep "evaluation warning:" && exit 1 || true
 
 .PHONY: update
@@ -68,6 +69,11 @@ vm-agent:
 	while [ ! -S /tmp/virtiofsd-dev-repos.sock ]; do sleep 0.1; done; \
 	QEMU_OPTS="-m $(MEMORY) -smp $(CORES) -object memory-backend-memfd,id=mem,share=on,size=$(MEMORY)M -machine memory-backend=mem" ./result/bin/run-conao-nixos-agent-vm; \
 	kill $$VIRTIOFSD_PID 2>/dev/null || true
+
+.PHONY: vm-minimal
+vm-minimal:
+	nix build -L .#nixosConfigurations.conao-nixos-minimal.config.system.build.vm --out-link result-minimal --log-format internal-json -v 2>&1 | $(NOM) --json
+	./result-minimal/bin/run-conao-nixos-minimal-vm
 
 .PHONY: vm-agent-switch
 vm-agent-switch:
