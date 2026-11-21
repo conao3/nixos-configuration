@@ -153,9 +153,9 @@ async function jumpToUserMessage(
     .toSorted((a, b) =>
       a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
     );
-  const first = rows[0];
-  if (first === undefined) return;
-  const container = scrollParent(first);
+  const anchor =
+    rows[0] ?? document.querySelector<HTMLElement>("[data-timeline-row-id]");
+  const container = anchor === null ? null : scrollParent(anchor);
   if (container === null) return;
   const top = container.getBoundingClientRect().top + JUMP_MARGIN_PX;
   const offsets = rows.map((row) => row.getBoundingClientRect().top - top);
@@ -169,12 +169,13 @@ async function jumpToUserMessage(
       top: step === 1 ? container.scrollHeight : 0,
       behavior: "instant",
     });
-    return;
+  } else {
+    container.scrollBy({
+      top: target.getBoundingClientRect().top - top,
+      behavior: "instant",
+    });
   }
-  container.scrollBy({
-    top: target.getBoundingClientRect().top - top,
-    behavior: "instant",
-  });
+  container.dispatchEvent(new Event("scroll"));
 }
 
 const SORT_STYLE = `
