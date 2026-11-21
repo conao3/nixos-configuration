@@ -3,11 +3,11 @@ import {
   definePluginApp,
   experimental_useSidebarThreads,
   useBbNavigate,
-  useSdk,
   useSidebarThreadDraftIds,
 } from "@get-bb/plugin-sdk/app";
 import type {
   BbNavigate,
+  ExperimentalMessageMetadataProps,
   ExperimentalThreadRowMetadataProps,
   PluginFileOpenerProps,
   PluginSidebarThread,
@@ -23,7 +23,6 @@ function hostLabel(name: string): string {
 
 interface AppState {
   navigate: BbNavigate | null;
-  sdk: ReturnType<typeof useSdk> | null;
   threads: readonly PluginSidebarThread[];
   primaryHostId: string | null;
   draftIds: ReadonlySet<string>;
@@ -31,7 +30,6 @@ interface AppState {
 
 const appState: AppState = {
   navigate: null,
-  sdk: null,
   threads: [],
   primaryHostId: null,
   draftIds: new Set(),
@@ -39,12 +37,10 @@ const appState: AppState = {
 
 function AppStateBridge() {
   const navigate = useBbNavigate();
-  const sdk = useSdk();
   const sidebar = experimental_useSidebarThreads();
   const draftIds = useSidebarThreadDraftIds();
   useEffect(() => {
     appState.navigate = navigate;
-    appState.sdk = sdk;
     appState.threads = sidebar.threads;
     appState.primaryHostId = sidebar.experimental_hosts?.[0]?.id ?? null;
     appState.draftIds = draftIds;
@@ -133,26 +129,20 @@ function scrollParent(element: HTMLElement): HTMLElement | null {
 
 const JUMP_MARGIN_PX = 12;
 
-async function jumpToUserMessage(
-  threadId: string,
-  step: 1 | -1,
-): Promise<void> {
-  const sdk = appState.sdk;
-  if (sdk === null) return;
-  const outline = await sdk.threads.conversationOutline({
-    threadId,
-    role: "user",
-  });
-  const rows = outline.items
-    .map((item) =>
-      document.querySelector<HTMLElement>(
-        `[data-timeline-row-id="${CSS.escape(item.id)}"]`,
-      ),
-    )
-    .filter((row): row is HTMLElement => row !== null)
-    .toSorted((a, b) =>
-      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
-    );
+function UserMessageMarker({ message }: ExperimentalMessageMetadataProps) {
+  if (message.role !== "user" || message.initiator !== "user") return null;
+  return <span hidden data-tweaks-user-message={message.threadId} />;
+}
+
+function jumpToUserMessage(threadId: string, step: 1 | -1): void {
+  const rows = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      `[data-tweaks-user-message="${CSS.escape(threadId)}"]`,
+    ),
+    (marker) =>
+      marker.closest<HTMLElement>("[data-timeline-row-id]") ??
+      marker.parentElement,
+  ).filter((row): row is HTMLElement => row !== null);
   const anchor =
     rows[0] ?? document.querySelector<HTMLElement>("[data-timeline-row-id]");
   const container = anchor === null ? null : scrollParent(anchor);
@@ -245,6 +235,11 @@ export default definePluginApp((app) => {
     component: HostChip,
   });
 
+  app.slots.experimental_messageMetadata({
+    id: "user-message-marker",
+    component: UserMessageMarker,
+  });
+
   app.commands.register({
     id: "next-attention-thread",
     title: "Go to next thread needing attention",
@@ -263,16 +258,16 @@ export default definePluginApp((app) => {
     id: "next-user-message",
     title: "Scroll to next user message",
     isAvailable: ({ threadId }) => threadId !== null,
-    run: async ({ threadId }) => {
-      if (threadId !== null) await jumpToUserMessage(threadId, 1);
+    run: ({ threadId }) => {
+      if (threadId !== null) jumpToUserMessage(threadId, 1);
     },
   });
   app.commands.register({
     id: "previous-user-message",
     title: "Scroll to previous user message",
     isAvailable: ({ threadId }) => threadId !== null,
-    run: async ({ threadId }) => {
-      if (threadId !== null) await jumpToUserMessage(threadId, -1);
+    run: ({ threadId }) => {
+      if (threadId !== null) jumpToUserMessage(threadId, -1);
     },
   });
 
