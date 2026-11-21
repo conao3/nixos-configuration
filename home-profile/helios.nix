@@ -8,5 +8,11 @@
       ../home-manager/features/codex-desktop.nix
       ../home-manager/features/dev-ca.nix
       ../home-manager/features/t3code-server.nix
+      (import ../home-manager/features/agent-board.nix {
+        host = "helios";
+        boardUrl = "http://127.0.0.1:4100/api/board";
+        harnesses = [ "t3" ];
+        serveOn = "conao-nixos-helios.tail6dd115.ts.net";
+      })
     ];
 }
