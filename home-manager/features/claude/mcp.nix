@@ -17,7 +17,8 @@
     penpot.url = "https://design.penpot.app/mcp/stream?userToken=\${PENPOT_MCP_KEY}";
     devin = {
       url = "https://mcp.devin.ai/mcp";
-      bearerTokenEnvVar = "DEVIN_API_KEY";
+      bearerTokenFile = "~/.config/devin-mcp/key";
+      enableFor = [ "claude" ];
     };
     freee.url = "https://mcp.freee.co.jp/mcp";
     flovia = {

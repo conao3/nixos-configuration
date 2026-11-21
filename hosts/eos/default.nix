@@ -20,6 +20,10 @@
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
+    secrets.devin-api-key = {
+      owner = "conao";
+      path = "/home/conao/.config/devin-mcp/key";
+    };
   };
 
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];

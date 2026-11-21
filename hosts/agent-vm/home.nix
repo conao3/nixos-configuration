@@ -247,7 +247,9 @@ in
     secrets = {
       siliconflow-api-key = { };
       linear-api-key = { };
-      devin-api-key = { };
+      devin-api-key = {
+        path = "${homeDir}/.config/devin-mcp/key";
+      };
       n8n-api-key = { };
       openclaw-dot-env = {
         path = "${homeDir}/.openclaw/.env";

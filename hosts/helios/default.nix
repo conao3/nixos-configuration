@@ -71,7 +71,10 @@ in
     };
     secrets.matterbridge-telegram-token = { };
     secrets.linear-api-key = { };
-    secrets.devin-api-key = { };
+    secrets.devin-api-key = {
+      owner = "conao";
+      path = "/home/conao/.config/devin-mcp/key";
+    };
     secrets.n8n-api-key = { };
     secrets.cli-proxy-api-key = { };
     secrets.penpot-mcp-key = { };
