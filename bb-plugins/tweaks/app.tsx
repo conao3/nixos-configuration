@@ -48,16 +48,21 @@ function AppStateBridge() {
   return null;
 }
 
-function HostChip({ thread }: ExperimentalThreadRowMetadataProps) {
-  const sidebar = experimental_useSidebarThreads();
+function usePrimaryHostId(): string | null {
+  return experimental_useSidebarThreads().experimental_hosts?.[0]?.id ?? null;
+}
+
+function HostChip({
+  thread,
+  data: primaryHostId,
+}: ExperimentalThreadRowMetadataProps<string | null>) {
   if (thread.host === null) return null;
-  const isPrimary = sidebar.experimental_hosts?.[0]?.id === thread.host.id;
   return (
     <span
       title={thread.host.name}
       className={cn(
         "rounded px-1 text-[0.6875rem] leading-4",
-        isPrimary
+        thread.host.id === primaryHostId
           ? "bg-muted text-muted-foreground"
           : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
       )}
@@ -229,9 +234,10 @@ export default definePluginApp((app) => {
     component: AppStateBridge,
   });
 
-  app.slots.experimental_threadRowMetadata({
+  app.slots.experimental_threadRowMetadata<string | null>({
     id: "host",
     order: 0,
+    useData: usePrimaryHostId,
     component: HostChip,
   });
 

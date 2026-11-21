@@ -27,6 +27,8 @@
     "app.tsx",
     "table-sort.ts",
     "table-sort.test.ts",
+    "title.ts",
+    "title.test.ts",
     "lib"
   ]
 }

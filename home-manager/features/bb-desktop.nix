@@ -81,6 +81,14 @@ let
     "plugin:tweaks/next-attention-thread" = "Alt+o";
   };
 
+  # The same title instructions as T3 Code's threadTitleInstructions. The
+  # plugin pipes its prompt to this command at the end of a thread's first
+  # turn and then every tenth user message.
+  tweaksSettings = {
+    titleInstructions = "Write the title in English, and end it with category tags separated by single spaces (e.g. \"Find a home in Toronto #housing #canada\"). Each tag is # followed by one lowercase English word naming the area of the work (e.g. #job #accounting #housing #english #routine #t3code #nixos). Add as many tags as apply. Keep the tags of the previous title when they still fit the current work.";
+    titleCommand = "cd /tmp && ${envBin} CLAUDE_CONFIG_DIR=${home}/.agents/.claude.conao3 ${profileBin}/claude -p --model claude-haiku-5-5 --system-prompt 'You write titles for coding-agent conversations.' --setting-sources '' --strict-mcp-config --no-session-persistence";
+  };
+
   customAgentsFile = pkgs.writeText "bb-custom-agents.json" (builtins.toJSON customAgents);
 
   # The settings live in bb's database, so they are applied through the
@@ -103,6 +111,11 @@ let
     if ! ${bbCli} plugin list 2>/dev/null | grep -q '^tweaks@'; then
       ${bbCli} plugin install ${tweaksPluginSource} --subdirectory bb-plugins/tweaks --yes >/dev/null || warn "the tweaks plugin"
     fi
+    ${lib.concatStrings (
+      lib.mapAttrsToList (name: value: ''
+        ${bbCli} plugin config tweaks set ${name} ${lib.escapeShellArg value} >/dev/null || warn "tweaks ${name}"
+      '') tweaksSettings
+    )}
     ${bbCli} plugin disable inline-vis >/dev/null || warn "inline-vis"
     ${bbCli} settings experiment threadRowMetadata true >/dev/null || warn "threadRowMetadata"
     ${bbCli} thread-list prefs set showRowMetadata true >/dev/null || warn "showRowMetadata"

@@ -1,5 +1,6 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
 import { z } from "zod";
+import { buildTitlePrompt, cleanTitle, runTitleCommand } from "./title";
 
 const TITLE_INTERVAL_KEY_PREFIX = "title-interval:";
 
@@ -21,6 +22,18 @@ export default async function plugin(bb: BbPluginApi) {
       label: "Regenerate a thread's title every N user messages (0 turns it off)",
       default: 10,
     },
+    titleInstructions: {
+      type: "string",
+      label:
+        "Instructions for thread titles (used with the title command; empty keeps bb's own titles)",
+      default: "",
+    },
+    titleCommand: {
+      type: "string",
+      label:
+        "Shell command that reads a title prompt on stdin and prints the title",
+      default: "",
+    },
     deleteFinishedOnceAutomations: {
       type: "boolean",
       label: "Delete one-shot automations after a successful run",
@@ -28,11 +41,33 @@ export default async function plugin(bb: BbPluginApi) {
     },
   });
 
-  async function regenerateTitleOnInterval(threadId: string): Promise<void> {
-    const { titleRegenerateEvery } = await settings.get();
+  async function writeTitle(
+    threadId: string,
+    currentTitle: string | null,
+    instructions: string,
+    command: string,
+  ): Promise<void> {
+    const outline = await bb.sdk.threads.conversationOutline({ threadId });
+    const output = await runTitleCommand(
+      command,
+      buildTitlePrompt(instructions, currentTitle, outline.items),
+    );
+    const title = cleanTitle(output);
+    if (title === null) throw new Error("title command printed no title");
+    await bb.sdk.threads.update({ threadId, title });
+  }
+
+  async function regenerateTitleOnInterval(
+    threadId: string,
+    currentTitle: string | null,
+  ): Promise<void> {
+    const { titleRegenerateEvery, titleInstructions, titleCommand } =
+      await settings.get();
     if (!Number.isInteger(titleRegenerateEvery) || titleRegenerateEvery < 1) {
       return;
     }
+    const custom =
+      titleInstructions.trim() !== "" && titleCommand.trim() !== "";
     const outline = await bb.sdk.threads.conversationOutline({
       threadId,
       role: "user",
@@ -44,15 +79,20 @@ export default async function plugin(bb: BbPluginApi) {
     await bb.storage.kv.set(key, interval);
     if (
       previous === undefined
-        ? outline.items.length % titleRegenerateEvery !== 0
+        ? !custom && outline.items.length % titleRegenerateEvery !== 0
         : interval < previous
     ) {
       return;
     }
-    await bb.sdk.threads.experimental_regenerateTitle({ threadId });
+    if (custom) {
+      await writeTitle(threadId, currentTitle, titleInstructions, titleCommand);
+    } else {
+      await bb.sdk.threads.experimental_regenerateTitle({ threadId });
+    }
     bb.log.info(`regenerated title ${JSON.stringify({
       threadId,
       userMessages: outline.items.length,
+      custom,
     })}`);
   }
 
@@ -91,7 +131,7 @@ export default async function plugin(bb: BbPluginApi) {
   }
 
   bb.events.on("thread.idle", async ({ thread }) => {
-    await regenerateTitleOnInterval(thread.id);
+    await regenerateTitleOnInterval(thread.id, thread.title);
     await deleteFinishedOnceAutomations(thread.projectId);
   });
 
