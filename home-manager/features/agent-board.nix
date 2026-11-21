@@ -55,6 +55,15 @@ let
     ];
     text = builtins.readFile ../../pkgs/agent-board-replies.sh;
   };
+  notify = pkgs.writeShellApplication {
+    name = "agent-board-notify";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.jq
+      vb
+    ];
+    text = builtins.readFile ../../pkgs/agent-board-notify.sh;
+  };
   environment = [
     "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin"
     "BOARD_URL=${boardUrl}"
@@ -102,6 +111,26 @@ in
           ];
           Restart = "on-failure";
           RestartSec = 5;
+        };
+        Install.WantedBy = [ "default.target" ];
+      };
+      agent-board-notify = {
+        Unit = {
+          Description = "Vercel Board notify: tell Muse when a work/ task is blocked or failed";
+          After = [
+            "network-online.target"
+            "agent-board.service"
+          ];
+          StartLimitIntervalSec = 0;
+        };
+        Service = {
+          ExecStart = "${notify}/bin/agent-board-notify";
+          Environment = environment ++ [
+            "BOARD_PROFILE=notify-${host}"
+            "AGENT_BOARD_VIEW=https://${serveOn}"
+          ];
+          Restart = "always";
+          RestartSec = 10;
         };
         Install.WantedBy = [ "default.target" ];
       };
