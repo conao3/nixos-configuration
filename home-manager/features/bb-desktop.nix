@@ -72,18 +72,19 @@ let
   # running server. A switch while bb is not running skips them; the next
   # switch with bb running applies them.
   bbConfigure = pkgs.writeShellScript "bb-configure" ''
-    set -euo pipefail
+    set -uo pipefail
     if ! ${pkgs.curl}/bin/curl -fsS --max-time 2 -o /dev/null http://127.0.0.1:38886/health; then
       echo "bb: server not running; skipped applying bb settings" >&2
       exit 0
     fi
+    warn() { echo "warning: bb: could not apply $1" >&2; }
     ${lib.concatStrings (
       lib.mapAttrsToList (name: value: ''
-        printf '%s' ${lib.escapeShellArg value} | ${bbCli} machine env set ${name} >/dev/null
+        printf '%s' ${lib.escapeShellArg value} | ${bbCli} machine env set ${name} >/dev/null || warn "machine env ${name}"
       '') machineEnv
     )}
-    ${bbCli} plugin config provider-acp set customAgents "$(${lib.getExe pkgs.jq} -c . ${customAgentsFile})" >/dev/null
-    ${bbCli} settings general defaultProviderId claude-code >/dev/null
+    ${bbCli} plugin config provider-acp set customAgents "$(${lib.getExe pkgs.jq} -c . ${customAgentsFile})" >/dev/null || warn "customAgents"
+    ${bbCli} settings general defaultProviderId claude-code >/dev/null || warn "defaultProviderId"
   '';
 in
 lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
