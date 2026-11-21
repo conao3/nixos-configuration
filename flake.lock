@@ -544,11 +544,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795079731,
-        "narHash": "sha256-6/NxdQDRSDlVGhH8jFTvLbnXbkhn2PoxSuGxyH8Oyik=",
+        "lastModified": 1795242932,
+        "narHash": "sha256-vMJIlBM66F16uuovXt2BktmM36+8x34Cm0iYI5dZjnI=",
         "ref": "refs/heads/master",
-        "rev": "e9b7337ad01c6707c8f5eb5abd7420f7bba6cb40",
-        "revCount": 3,
+        "rev": "363b5e9c63209abecca8fd19e45c91683bc6faaa",
+        "revCount": 4,
         "type": "git",
         "url": "ssh://git@github.com/conao3/rust-musewire.git"
       },
