@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   definePluginApp,
+  useBbContext,
   experimental_useSidebarThreads,
   useBbNavigate,
   useComposer,
@@ -66,7 +67,9 @@ async function fetchClientHostName(): Promise<string | null> {
 function SelfHostDefault() {
   const composer = useComposer();
   const hostId = useSelfHostId();
+  const { threadId } = useBbContext();
   const pending = useRef(true);
+  if (threadId !== null) pending.current = true;
   useEffect(
     () =>
       composer.onSubmitted(() => {
@@ -76,7 +79,12 @@ function SelfHostDefault() {
   );
   const environment = composer.selection?.environment;
   useEffect(() => {
-    if (!pending.current || hostId === null || environment === undefined) {
+    if (
+      !pending.current ||
+      threadId !== null ||
+      hostId === null ||
+      environment === undefined
+    ) {
       return;
     }
     pending.current = false;
