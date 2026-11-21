@@ -9,6 +9,18 @@ let
   t3 = (import ../../pkgs/t3code.nix { inherit inputs pkgs system; }).t3code;
 in
 {
+  home.packages = [
+    (pkgs.writeShellApplication {
+      name = "t3-thread-monitor";
+      runtimeInputs = [
+        pkgs.coreutils
+        pkgs.jq
+        t3
+      ];
+      text = builtins.readFile ../../pkgs/t3-thread-monitor.sh;
+    })
+  ];
+
   # T3 Code の headless server 常駐 (他ホストの T3 から接続先ノードとして使う)。
   # 組み込みの `t3 service install` は固定ランタイムの検証に失敗する (nix 環境) ため systemd で直接管理する。
   # デスクトップアプリの 3773 と衝突しないよう 3774 に bind し、Tailscale Serve で 8443 に公開する
