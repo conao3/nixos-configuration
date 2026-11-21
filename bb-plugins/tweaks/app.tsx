@@ -37,24 +37,28 @@ const appState: AppState = {
   draftIds: new Set(),
 };
 
-let selfHostId: string | null = null;
+interface SelfHostState {
+  hostId: string | null;
+  threadVisits: number;
+}
+
+let selfHostState: SelfHostState = { hostId: null, threadVisits: 0 };
 const selfHostListeners = new Set<() => void>();
 
-function setSelfHostId(id: string | null): void {
-  if (id === selfHostId) return;
-  selfHostId = id;
+function updateSelfHostState(next: Partial<SelfHostState>): void {
+  selfHostState = { ...selfHostState, ...next };
   for (const listener of selfHostListeners) listener();
 }
 
-function subscribeSelfHostId(listener: () => void): () => void {
+function subscribeSelfHostState(listener: () => void): () => void {
   selfHostListeners.add(listener);
   return () => {
     selfHostListeners.delete(listener);
   };
 }
 
-function useSelfHostId(): string | null {
-  return useSyncExternalStore(subscribeSelfHostId, () => selfHostId);
+function useSelfHostState(): SelfHostState {
+  return useSyncExternalStore(subscribeSelfHostState, () => selfHostState);
 }
 
 async function fetchClientHostName(): Promise<string | null> {
@@ -66,10 +70,13 @@ async function fetchClientHostName(): Promise<string | null> {
 
 function SelfHostDefault() {
   const composer = useComposer();
-  const hostId = useSelfHostId();
-  const { threadId } = useBbContext();
+  const { hostId, threadVisits } = useSelfHostState();
   const pending = useRef(true);
-  if (threadId !== null) pending.current = true;
+  const seenVisits = useRef(threadVisits);
+  if (seenVisits.current !== threadVisits) {
+    seenVisits.current = threadVisits;
+    pending.current = true;
+  }
   useEffect(
     () =>
       composer.onSubmitted(() => {
@@ -79,12 +86,7 @@ function SelfHostDefault() {
   );
   const environment = composer.selection?.environment;
   useEffect(() => {
-    if (
-      !pending.current ||
-      threadId !== null ||
-      hostId === null ||
-      environment === undefined
-    ) {
+    if (!pending.current || hostId === null || environment === undefined) {
       return;
     }
     pending.current = false;
@@ -110,6 +112,7 @@ function AppStateBridge() {
   const sidebar = experimental_useSidebarThreads();
   const draftIds = useSidebarThreadDraftIds();
   const hosts = sidebar.experimental_hosts;
+  const { threadId } = useBbContext();
   useEffect(() => {
     appState.navigate = navigate;
     appState.threads = sidebar.threads;
@@ -128,10 +131,15 @@ function AppStateBridge() {
   }, []);
   useEffect(() => {
     if (hosts === undefined || clientHostName === undefined) return;
-    setSelfHostId(
-      hosts.find((host) => host.name === clientHostName)?.id ?? null,
-    );
+    const hostId =
+      hosts.find((host) => host.name === clientHostName)?.id ?? null;
+    if (hostId !== selfHostState.hostId) updateSelfHostState({ hostId });
   }, [hosts, clientHostName]);
+  useEffect(() => {
+    if (threadId !== null) {
+      updateSelfHostState({ threadVisits: selfHostState.threadVisits + 1 });
+    }
+  }, [threadId]);
   return null;
 }
 
