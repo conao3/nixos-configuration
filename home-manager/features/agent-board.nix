@@ -42,13 +42,24 @@ let
         while read -r owner; do
           from+=(--from "$owner")
         done < <(vb actors --json | jq -r '.actors[] | select(.kind == "person") | .id')
-        exec vb tasks run --ready work/ --label host=${host} --label harness=${harness} "''${from[@]}" --wait 10m --json -- agent-board-worker ${harness}
+        exec vb tasks run --ready work/ --label host=${host} --label harness=${harness} "''${from[@]}" --wait 10m --json -- agent-board-worker run ${harness}
       '';
     };
+  replies = pkgs.writeShellApplication {
+    name = "agent-board-replies";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.jq
+      vb
+      worker
+    ];
+    text = builtins.readFile ../../pkgs/agent-board-replies.sh;
+  };
   environment = [
     "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin"
     "BOARD_URL=${boardUrl}"
     "AGENT_BOARD_BB=${inputs.llm-agents.packages.${system}.bb-app}/bin/bb"
+    "AGENT_BOARD_HOST=${host}"
   ];
   runnerService = harness: {
     name = "agent-board-runner-${harness}";
@@ -91,6 +102,24 @@ in
           ];
           Restart = "on-failure";
           RestartSec = 5;
+        };
+        Install.WantedBy = [ "default.target" ];
+      };
+    }
+    // {
+      # 人がタスクのスレッドに返信したら、そのタスクを担当したエージェントのスレッドに続きを渡す。
+      # 人待ちは解除し、失敗は着手可に戻して runner に取らせ、完了済みはスレッドへ直接送る
+      agent-board-replies = {
+        Unit = {
+          Description = "Vercel Board replies: hand the owner's replies on host=${host} tasks to the agent thread";
+          After = [ "network-online.target" ] ++ lib.optional (serveOn != null) "agent-board.service";
+          StartLimitIntervalSec = 0;
+        };
+        Service = {
+          ExecStart = "${replies}/bin/agent-board-replies";
+          Environment = environment ++ [ "BOARD_PROFILE=replies-${host}" ];
+          Restart = "always";
+          RestartSec = 10;
         };
         Install.WantedBy = [ "default.target" ];
       };
