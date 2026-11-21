@@ -48,7 +48,7 @@ export default async function plugin(bb: BbPluginApi) {
     },
   });
 
-  bb.http.route("GET", "client-host", async (c) => {
+  bb.http.route("GET", "/client-host", async (c) => {
     const { tailscaleCommand } = await settings.get();
     const hostName = await clientHostName(
       c.req.header("x-forwarded-for"),
