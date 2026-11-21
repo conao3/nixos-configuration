@@ -16,6 +16,10 @@ let
   home = config.home.homeDirectory;
   profileBin = "${config.home.profileDirectory}/bin";
   bbCli = "${inputs.llm-agents.packages.${system}.bb-app}/bin/bb";
+  bbApp = "${inputs.llm-agents.packages.${system}.bb-app}/bin/bb-app";
+  tailscale = "/run/current-system/sw/bin/tailscale";
+  jq = lib.getExe pkgs.jq;
+  bbServerPort = "38886";
   envBin = "${pkgs.coreutils}/bin/env";
 
   # Global machine variables: bb's built-in claude-code and codex providers
@@ -73,7 +77,7 @@ let
   # switch with bb running applies them.
   bbConfigure = pkgs.writeShellScript "bb-configure" ''
     set -uo pipefail
-    if ! ${pkgs.curl}/bin/curl -fsS --max-time 2 -o /dev/null http://127.0.0.1:38886/health; then
+    if ! ${pkgs.curl}/bin/curl -fsS --max-time 2 -o /dev/null http://127.0.0.1:${bbServerPort}/health; then
       echo "bb: server not running; skipped applying bb settings" >&2
       exit 0
     fi
@@ -83,8 +87,20 @@ let
         printf '%s' ${lib.escapeShellArg value} | ${bbCli} machine env set ${name} >/dev/null || warn "machine env ${name}"
       '') machineEnv
     )}
-    ${bbCli} plugin config provider-acp set customAgents "$(${lib.getExe pkgs.jq} -c . ${customAgentsFile})" >/dev/null || warn "customAgents"
+    ${bbCli} plugin config provider-acp set customAgents "$(${jq} -c . ${customAgentsFile})" >/dev/null || warn "customAgents"
     ${bbCli} settings general defaultProviderId claude-code >/dev/null || warn "defaultProviderId"
+    ${lib.optionalString isEos ''
+      tailnet_name=$(${tailscale} status --json | ${jq} -r '.Self.DNSName | rtrimstr(".")')
+      if [ -n "$tailnet_name" ]; then
+        server_url="https://$tailnet_name:${bbServerPort}"
+        ${tailscale} serve --bg --https ${bbServerPort} http://127.0.0.1:${bbServerPort} >/dev/null || warn "tailscale serve"
+        ${bbApp} config set BB_APP_URL "$server_url" >/dev/null || warn "BB_APP_URL"
+        ${bbCli} settings general machineServerUrl "$server_url" >/dev/null || warn "machineServerUrl"
+        ${bbCli} settings general defaultMachineAccess direct >/dev/null || warn "defaultMachineAccess"
+      else
+        warn "the tailnet name of this host"
+      fi
+    ''}
   '';
 in
 lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
@@ -94,6 +110,11 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
 
   home.file.".bb/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${home}/ghq/github.com/conao3/agents-share/src/notes/bb-session.md";
+
+  xdg.configFile."systemd/user/bb-host-daemon-.service.d/claude.conf".text = ''
+    [Service]
+    Environment=BB_CLAUDE_CODE_EXECUTABLE=${profileBin}/claude
+  '';
 
   home.activation.configureBb = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     $DRY_RUN_CMD ${bbConfigure}
