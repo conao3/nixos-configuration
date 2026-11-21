@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   definePluginApp,
   experimental_useSidebarThreads,
   useBbNavigate,
+  useComposer,
   useSidebarThreadDraftIds,
 } from "@get-bb/plugin-sdk/app";
 import type {
@@ -35,29 +36,24 @@ const appState: AppState = {
   draftIds: new Set(),
 };
 
-const MACHINE_KEY_PREFIX = "bb.promptbox.machine-";
-const SELF_HOST_KEY = "bb.tweaks.self-host-id";
-const ORIGINAL_GET_ITEM = Symbol.for("bb.tweaks.original-get-item");
-
-type PatchedStorage = Storage & { [ORIGINAL_GET_ITEM]?: Storage["getItem"] };
-
-const storagePrototype: PatchedStorage = Storage.prototype;
-const originalGetItem =
-  storagePrototype[ORIGINAL_GET_ITEM] ?? storagePrototype.getItem;
-storagePrototype[ORIGINAL_GET_ITEM] = originalGetItem;
-
-let selfHostId = originalGetItem.call(localStorage, SELF_HOST_KEY);
-
-storagePrototype.getItem = function getItem(this: Storage, key: string) {
-  return selfHostId !== null && key.startsWith(MACHINE_KEY_PREFIX)
-    ? selfHostId
-    : originalGetItem.call(this, key);
-};
+let selfHostId: string | null = null;
+const selfHostListeners = new Set<() => void>();
 
 function setSelfHostId(id: string | null): void {
+  if (id === selfHostId) return;
   selfHostId = id;
-  if (id === null) localStorage.removeItem(SELF_HOST_KEY);
-  else localStorage.setItem(SELF_HOST_KEY, id);
+  for (const listener of selfHostListeners) listener();
+}
+
+function subscribeSelfHostId(listener: () => void): () => void {
+  selfHostListeners.add(listener);
+  return () => {
+    selfHostListeners.delete(listener);
+  };
+}
+
+function useSelfHostId(): string | null {
+  return useSyncExternalStore(subscribeSelfHostId, () => selfHostId);
 }
 
 async function fetchClientHostName(): Promise<string | null> {
@@ -65,6 +61,40 @@ async function fetchClientHostName(): Promise<string | null> {
   if (!response.ok) throw new Error(`client-host: ${response.status}`);
   const body: { hostName: string | null } = await response.json();
   return body.hostName;
+}
+
+function SelfHostDefault() {
+  const composer = useComposer();
+  const hostId = useSelfHostId();
+  const pending = useRef(true);
+  useEffect(
+    () =>
+      composer.onSubmitted(() => {
+        pending.current = true;
+      }),
+    [composer],
+  );
+  const environment = composer.selection?.environment;
+  useEffect(() => {
+    if (!pending.current || hostId === null || environment === undefined) {
+      return;
+    }
+    pending.current = false;
+    if (
+      environment.type !== "provider" ||
+      environment.machine?.type === "new" ||
+      environment.machine?.hostId === hostId
+    ) {
+      return;
+    }
+    void composer.setSelection({
+      environment: {
+        ...environment,
+        machine: { type: "existing", hostId },
+      },
+    });
+  });
+  return null;
 }
 
 function AppStateBridge() {
@@ -281,6 +311,12 @@ export default definePluginApp((app) => {
   app.slots.experimental_appOverlay({
     id: "state",
     component: AppStateBridge,
+  });
+
+  app.composer.customize({
+    id: "self-host",
+    scopes: ["new-thread"],
+    actions: [{ id: "self-host-default", component: SelfHostDefault }],
   });
 
   app.slots.experimental_threadRowMetadata<string | null>({
