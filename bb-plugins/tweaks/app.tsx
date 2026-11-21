@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   definePluginApp,
   experimental_useSidebarThreads,
@@ -35,16 +35,65 @@ const appState: AppState = {
   draftIds: new Set(),
 };
 
+const MACHINE_KEY_PREFIX = "bb.promptbox.machine-";
+const SELF_HOST_KEY = "bb.tweaks.self-host-id";
+const ORIGINAL_GET_ITEM = Symbol.for("bb.tweaks.original-get-item");
+
+type PatchedStorage = Storage & { [ORIGINAL_GET_ITEM]?: Storage["getItem"] };
+
+const storagePrototype: PatchedStorage = Storage.prototype;
+const originalGetItem =
+  storagePrototype[ORIGINAL_GET_ITEM] ?? storagePrototype.getItem;
+storagePrototype[ORIGINAL_GET_ITEM] = originalGetItem;
+
+let selfHostId = originalGetItem.call(localStorage, SELF_HOST_KEY);
+
+storagePrototype.getItem = function getItem(this: Storage, key: string) {
+  return selfHostId !== null && key.startsWith(MACHINE_KEY_PREFIX)
+    ? selfHostId
+    : originalGetItem.call(this, key);
+};
+
+function setSelfHostId(id: string | null): void {
+  selfHostId = id;
+  if (id === null) localStorage.removeItem(SELF_HOST_KEY);
+  else localStorage.setItem(SELF_HOST_KEY, id);
+}
+
+async function fetchClientHostName(): Promise<string | null> {
+  const response = await fetch("/api/v1/plugins/tweaks/http/client-host");
+  if (!response.ok) throw new Error(`client-host: ${response.status}`);
+  const body: { hostName: string | null } = await response.json();
+  return body.hostName;
+}
+
 function AppStateBridge() {
   const navigate = useBbNavigate();
   const sidebar = experimental_useSidebarThreads();
   const draftIds = useSidebarThreadDraftIds();
+  const hosts = sidebar.experimental_hosts;
   useEffect(() => {
     appState.navigate = navigate;
     appState.threads = sidebar.threads;
-    appState.primaryHostId = sidebar.experimental_hosts?.[0]?.id ?? null;
+    appState.primaryHostId = hosts?.[0]?.id ?? null;
     appState.draftIds = draftIds;
   });
+  const [clientHostName, setClientHostName] = useState<string | null>();
+  useEffect(() => {
+    let active = true;
+    void fetchClientHostName().then((name) => {
+      if (active) setClientHostName(name);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (hosts === undefined || clientHostName === undefined) return;
+    setSelfHostId(
+      hosts.find((host) => host.name === clientHostName)?.id ?? null,
+    );
+  }, [hosts, clientHostName]);
   return null;
 }
 

@@ -1,5 +1,6 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
 import { z } from "zod";
+import { clientHostName } from "./client-host";
 import { buildTitlePrompt, cleanTitle, runTitleCommand } from "./title";
 
 const TITLE_INTERVAL_KEY_PREFIX = "title-interval:";
@@ -39,6 +40,21 @@ export default async function plugin(bb: BbPluginApi) {
       label: "Delete one-shot automations after a successful run",
       default: true,
     },
+    tailscaleCommand: {
+      type: "string",
+      label:
+        "tailscale command that resolves which tailnet host a browser opens bb from",
+      default: "tailscale",
+    },
+  });
+
+  bb.http.route("GET", "client-host", async (c) => {
+    const { tailscaleCommand } = await settings.get();
+    const hostName = await clientHostName(
+      c.req.header("x-forwarded-for"),
+      tailscaleCommand,
+    );
+    return c.json({ hostName });
   });
 
   async function writeTitle(

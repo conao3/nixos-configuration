@@ -8,7 +8,7 @@
   },
   "bb": {
     "name": "Tweaks",
-    "description": "Host chips on thread rows, jumps to threads needing attention and to user messages, sortable Markdown tables, periodic title regeneration, and cleanup of finished one-shot automations.",
+    "description": "New threads on the host the app is opened from, host chips on thread rows, jumps to threads needing attention and to user messages, sortable Markdown tables, periodic title regeneration, and cleanup of finished one-shot automations.",
     "branding": {
       "icon": "SlidersHorizontal"
     },

@@ -83,8 +83,10 @@ let
 
   # The same title instructions as T3 Code's threadTitleInstructions. The
   # plugin pipes its prompt to this command at the end of a thread's first
-  # turn and then every tenth user message.
+  # turn and then every tenth user message. tailscaleCommand resolves which
+  # tailnet host a browser opens bb from, so a new thread starts on that host.
   tweaksSettings = {
+    tailscaleCommand = tailscale;
     titleInstructions = "Write the title in English, and end it with category tags separated by single spaces (e.g. \"Find a home in Toronto #housing #canada\"). Each tag is # followed by one lowercase English word naming the area of the work (e.g. #job #accounting #housing #english #routine #t3code #nixos). Add as many tags as apply. Keep the tags of the previous title when they still fit the current work.";
     titleCommand = "cd /tmp && ${envBin} CLAUDE_CONFIG_DIR=${home}/.agents/.claude.conao3 ${profileBin}/claude -p --model claude-haiku-5-5 --system-prompt 'You write titles for coding-agent conversations.' --setting-sources '' --strict-mcp-config --no-session-persistence";
   };
