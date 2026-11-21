@@ -67,6 +67,23 @@ sudo nixos-rebuild switch --flake .            # NixOS
 sudo -H nix run nix-darwin -- switch --flake . # macOS
 ```
 
+### Monitor a T3 Code thread on helios
+
+After applying the configuration, run these commands on helios as the user
+running the T3 Code server:
+
+```sh
+t3 thread list --project /path/to/project
+t3-thread-monitor <thread-id>
+```
+
+The monitor prints the initial status and changes to the latest run's status or
+pending request count. It does not print conversation text or modify the thread.
+It exits successfully on completion and nonzero on failure, interruption,
+cancellation, rollback, or a read error. Use
+`timeout 30m t3-thread-monitor --interval 15 <thread-id>` to bound the wait; stopping
+the monitor does not stop the thread.
+
 ## Maintenance
 
 ### Update flake inputs aligned with binary cache

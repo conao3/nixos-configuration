@@ -15,6 +15,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
 
+      - name: Test T3 Code thread monitor
+        run: python3 pkgs/tests/t3-thread-monitor.py
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31.11.5
         with:
