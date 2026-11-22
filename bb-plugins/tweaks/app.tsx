@@ -159,9 +159,27 @@ function ArchiveFollower() {
     at: number;
   } | null>(null);
   useEffect(() => {
+    if (threadId === null) return;
+    let frame = 0;
+    const snapshot = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const order = sidebarOrder();
+        if (order.includes(threadId)) lastView.current = { threadId, order };
+      });
+    };
+    snapshot();
+    const observer = new MutationObserver(snapshot);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [threadId]);
+  useEffect(() => {
     if (threadId !== null) {
       left.current = null;
-      lastView.current = { threadId, order: sidebarOrder() };
+      if (lastView.current?.threadId !== threadId) lastView.current = null;
       return;
     }
     if (lastView.current !== null) {
