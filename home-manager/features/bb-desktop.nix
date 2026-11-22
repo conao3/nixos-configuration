@@ -8,18 +8,18 @@
   ...
 }:
 let
-  isEos =
-    pkgs.stdenv.hostPlatform.isLinux
-    && osConfig != null
-    && osConfig.networking.hostName == "conao-nixos-eos";
+  hostName = if osConfig != null then osConfig.networking.hostName else null;
+  isEos = pkgs.stdenv.hostPlatform.isLinux && hostName == "conao-nixos-eos";
+  isServer = pkgs.stdenv.hostPlatform.isLinux && hostName == "conao-nixos-helios";
 
   home = config.home.homeDirectory;
   profileBin = "${config.home.profileDirectory}/bin";
   bbCli = "${inputs.llm-agents.packages.${system}.bb-app}/bin/bb";
-  bbApp = "${inputs.llm-agents.packages.${system}.bb-app}/bin/bb-app";
   tailscale = "/run/current-system/sw/bin/tailscale";
   jq = lib.getExe pkgs.jq;
   bbServerPort = "38886";
+  bbServerUrl = "https://conao-nixos-helios.tail6dd115.ts.net:38443";
+  bbServerDataDir = ".bb-machines/conao-nixos-eos.tail6dd115.ts.net-38886";
   envBin = "${pkgs.coreutils}/bin/env";
 
   # Global machine variables: bb's built-in claude-code and codex providers
@@ -127,17 +127,10 @@ let
         ${bbCli} settings keyboard set ${command} ${shortcut} >/dev/null || warn "the shortcut of ${command}"
       '') keyboardShortcuts
     )}
-    ${lib.optionalString isEos ''
-      tailnet_name=$(${tailscale} status --json | ${jq} -r '.Self.DNSName | rtrimstr(".")')
-      if [ -n "$tailnet_name" ]; then
-        server_url="https://$tailnet_name:${bbServerPort}"
-        ${tailscale} serve --bg --https ${bbServerPort} http://127.0.0.1:${bbServerPort} >/dev/null || warn "tailscale serve"
-        ${bbApp} config set BB_APP_URL "$server_url" >/dev/null || warn "BB_APP_URL"
-        ${bbCli} settings general machineServerUrl "$server_url" >/dev/null || warn "machineServerUrl"
-        ${bbCli} settings general defaultMachineAccess direct >/dev/null || warn "defaultMachineAccess"
-      else
-        warn "the tailnet name of this host"
-      fi
+    ${lib.optionalString isServer ''
+      ${tailscale} serve --bg --https 38443 http://127.0.0.1:${bbServerPort} >/dev/null || warn "tailscale serve"
+      ${bbCli} settings general machineServerUrl ${bbServerUrl} >/dev/null || warn "machineServerUrl"
+      ${bbCli} settings general defaultMachineAccess direct >/dev/null || warn "defaultMachineAccess"
     ''}
   '';
 in
@@ -146,7 +139,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     (pkgs.callPackage ../../pkgs/bb-desktop.nix { })
   ];
 
-  home.file.".bb/AGENTS.md".source =
+  home.file.${if isServer then "${bbServerDataDir}/AGENTS.md" else ".bb/AGENTS.md"}.source =
     config.lib.file.mkOutOfStoreSymlink "${home}/ghq/github.com/conao3/agents-share/src/notes/bb-session.md";
 
   xdg.configFile."systemd/user/bb-host-daemon-.service.d/claude.conf".text = ''

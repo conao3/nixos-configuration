@@ -17,52 +17,12 @@ let
     exec ${pkgs.nodejs_24}/bin/npx --yes @vercel/board@${version} "$@"
   '';
   t3 = (import ../../pkgs/t3code.nix { inherit inputs pkgs system; }).t3code;
-  worker = pkgs.writeShellApplication {
-    name = "agent-board-worker";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.hostname
-      pkgs.jq
-      t3
-      vb
-    ];
-    text = builtins.readFile ../../pkgs/agent-board-worker.sh;
-  };
-  local = pkgs.writeShellApplication {
-    name = "agent-board-local";
-    runtimeInputs = [
-      t3
-      worker
-    ];
-    text = ''
-      export BOARD_URL=${boardUrl} AGENT_BOARD_HOST=${host} AGENT_BOARD_BB=${
-        inputs.llm-agents.packages.${system}.bb-app
-      }/bin/bb BOARD_PROFILE=local-${host}
-    ''
-    + builtins.readFile ../../pkgs/agent-board-local.sh;
-  };
-  bbCatalog = pkgs.writeShellApplication {
-    name = "agent-board-bb-catalog";
-    runtimeInputs = [
-      pkgs.jq
-      pkgs.openssh
-      local
-    ];
-    text = ''
-      [ "$1 $2 $4" = "provider models --json" ] || exit 2
-      dest=$(jq -r --arg host "$AGENT_BOARD_BB_HOST" '.[$host].ssh // empty' <<<"$AGENT_BOARD_HOSTS")
-      if [ -z "$dest" ]; then
-        exec agent-board-local models "$3"
-      fi
-      exec ssh -o BatchMode=yes -o ConnectTimeout=10 "$dest" agent-board-local models "$3"
-    '';
-  };
+  bb = "${inputs.llm-agents.packages.${system}.bb-app}/bin/bb";
   server = pkgs.writeShellApplication {
     name = "agent-board-server";
     runtimeInputs = [
-      pkgs.openssh
       pkgs.python3
-      local
+      t3
       vb
     ];
     text = "exec python3 ${../../pkgs/agent-board-server.py}";
@@ -71,17 +31,15 @@ let
   environment = [
     "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin"
     "BOARD_URL=${boardUrl}"
+    "BOARD_PROFILE=server-${host}"
+    "AGENT_BOARD_HOST=${host}"
     "AGENT_BOARD_HOSTS=${builtins.toJSON hosts}"
     "AGENT_BOARD_VIEW=${viewUrl}"
-    "AGENT_BOARD_BB_CATALOG=${bbCatalog}/bin/agent-board-bb-catalog"
-    "BOARD_PROFILE=server-${host}"
+    "AGENT_BOARD_BB=${bb}"
   ];
 in
 {
-  home.packages = [
-    vb
-    local
-  ];
+  home.packages = [ vb ];
   home.sessionVariables.BOARD_URL = boardUrl;
 
   # Vercel Board (エージェントの仕事の列)。board は 1 ホストの `vb serve` を Tailscale Serve で tailnet に出し、
@@ -107,7 +65,7 @@ in
         Install.WantedBy = [ "default.target" ];
       };
       # board の管理者。全ホストのタスクの着手と完了、返信の受け渡し、知らせを 1 つのプロセスで受け持ち、
-      # ほかのホストのエージェントは ssh で agent-board-local を実行して動かす
+      # ほかのホストのエージェントは T3 Code の linked environment と bb の machine で動かす
       agent-board-server = {
         Unit = {
           Description = "Vercel Board server: run the work/ tasks of every host, hand replies to their threads and tell their creators";
