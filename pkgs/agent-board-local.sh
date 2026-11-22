@@ -10,11 +10,11 @@ case "${1:-}" in
         ;;
     esac
     ;;
-  nudge)
-    exec agent-board-worker nudge "$2" "$3" "$4"
+  start | wait | nudge)
+    exec agent-board-worker "$@"
     ;;
   *)
-    echo "agent-board-local: usage: agent-board-local send <t3|bb> <thread> < text | nudge <t3|bb> <thread> <task>" >&2
+    echo "agent-board-local: usage: agent-board-local send <t3|bb> <thread> < text | start <t3|bb> <task> | wait <t3|bb> <thread> <runs> | nudge <t3|bb> <thread> <task>" >&2
     exit 2
     ;;
 esac

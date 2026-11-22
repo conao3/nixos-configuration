@@ -11,10 +11,6 @@
       (import ../home-manager/features/agent-board.nix {
         host = "eos";
         boardUrl = "https://conao-nixos-helios.tail6dd115.ts.net/api/board";
-        harnesses = [
-          "bb"
-          "t3"
-        ];
       })
     ];
 }

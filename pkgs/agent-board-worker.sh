@@ -13,9 +13,12 @@ steps() {
   echo "1. Run: $vb read $1
 2. $2
 3. Run: $vb reply $1 \"<your result in a few lines>\" --as worker-$harness$close
-Your turn ending is what marks the task done, so do not end it before step 3: wait for long checks such as CI in the foreground (gh run watch <id> --exit-status), never in the background.
-If you need a decision from the owner, run this instead of step 3 and stop: $vb tasks block $1 \"<the question and the options>\" --as runner-$AGENT_BOARD_HOST-$harness
-Then reply with the single word DONE."
+Your turn ending is what the board manager reads, so do not end it before step 3: wait for long checks such as CI in the foreground (gh run watch <id> --exit-status), never in the background.
+End your turn with a final message whose last line is one of these:
+DONE
+BLOCKED: <the question for the owner and the options, with the one you recommend>
+FAILED: <what you tried and why you could not go on>
+Use BLOCKED instead of step 3 when you need a decision from the owner, and FAILED when you cannot go on. Skip the settle step for both."
 }
 
 intro() {
@@ -43,21 +46,28 @@ archived() {
   [ "$harness" = t3 ] && t3 thread show "$1" --json | jq -e '.thread.archived' >/dev/null
 }
 
+runs() {
+  case "$harness" in
+    t3) t3 thread show "$1" --json | jq -r '.thread.runCount' ;;
+    bb) echo 0 ;;
+  esac
+}
+
 pick_model() {
   local labels class effort pick
   labels=$(vb read "$1" --json | jq -c '.message.labels')
   class=$(jq -r '.model // empty' <<<"$labels")
   effort=$(jq -r '.effort // empty' <<<"$labels")
   if [ -z "$class" ]; then
-    reason="Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|haiku>"
-    return 1
+    echo "Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|haiku>" >&2
+    exit 3
   fi
   local args=(board "$class" --harness "$harness")
   [ "$harness" = bb ] && args+=(--bb "$AGENT_BOARD_BB")
   [ -n "$effort" ] && args+=(--effort "$effort")
   if ! pick=$(python3 "$picker" "${args[@]}" 2>&1); then
-    reason="Task #$1 has model=$class${effort:+ effort=$effort}, which picks no model: $pick"
-    return 1
+    echo "Task #$1 has model=$class${effort:+ effort=$effort}, which picks no model: $pick" >&2
+    exit 3
   fi
   model_args=(--provider "$(jq -r '.provider' <<<"$pick")" --model "$(jq -r '.model' <<<"$pick")")
   if jq -e '.effort' <<<"$pick" >/dev/null; then
@@ -65,61 +75,70 @@ pick_model() {
   fi
 }
 
-reject() {
-  echo "agent-board-worker: $reason" >&2
-  if [ "$mode" = run ]; then
-    vb tasks fail "$1" "$reason"
-    exit 1
-  fi
-  exit 0
-}
-
-start() {
-  local out status=0
-  pick_model "$1" || reject "$1"
-  out=$(t3 thread start --json --title "board task $1" "${model_args[@]}" "${@:3}" "$project" "$2") || status=$?
-  echo "$out"
-  vb label "$1" "thread=$(jq -r '.threadId' <<<"$out")"
-  return "$status"
+spawn() {
+  local thread
+  pick_model "$1"
+  case "$harness" in
+    t3) thread=$(t3 thread start --json --title "board task $1" "${model_args[@]}" "$project" "$2" | jq -r '.threadId') ;;
+    bb)
+      local bb_project
+      bb_project=$("$AGENT_BOARD_BB" project list --json | jq -r --arg path "$project" '.[] | select(any(.sources[]; .path == $path)) | .id')
+      thread=$("$AGENT_BOARD_BB" thread spawn --project "$bb_project" --environment "$project" "${model_args[@]}" --title "board task $1" --prompt "$2" --json | jq -r '.id')
+      ;;
+  esac
+  vb label "$1" "thread=$thread" >/dev/null
+  echo "$thread 0"
 }
 
 send() {
   case "$harness" in
-    t3) t3 thread send "$@" ;;
-    bb) "$AGENT_BOARD_BB" thread tell "$1" --mode auto "$2" ;;
+    t3) t3 thread send "$1" "$2" >/dev/null ;;
+    bb) "$AGENT_BOARD_BB" thread tell "$1" --mode auto "$2" >/dev/null ;;
   esac
 }
 
-case "$mode:$harness" in
-  nudge:t3 | nudge:bb)
-    if archived "$3"; then
-      start "$4" "$(again_new "$4")"
-    else
-      send "$3" "$(again "$4")"
-    fi
-    ;;
-  run:t3)
-    thread=$(vb read "$BOARD_TASK" --json | jq -r '.message.labels.thread // empty')
+case "$mode" in
+  start)
+    task=$3
+    thread=$(vb read "$task" --json | jq -r '.message.labels.thread // empty')
     if [ -n "$thread" ] && ! archived "$thread"; then
-      exec t3 thread send --wait "$thread" "$(again "$BOARD_TASK")"
-    fi
-    start "$BOARD_TASK" "$(first "$BOARD_TASK")" --wait
-    ;;
-  run:bb)
-    thread=$(vb read "$BOARD_TASK" --json | jq -r '.message.labels.thread // empty')
-    if [ -n "$thread" ]; then
-      send "$thread" "$(again "$BOARD_TASK")"
-      sleep 5
+      before=$(runs "$thread")
+      send "$thread" "$(again "$task")"
+      echo "$thread $before"
+    elif [ -n "$thread" ]; then
+      spawn "$task" "$(again_new "$task")"
     else
-      pick_model "$BOARD_TASK" || reject "$BOARD_TASK"
-      bb_project=$("$AGENT_BOARD_BB" project list --json | jq -r --arg path "$project" '.[] | select(any(.sources[]; .path == $path)) | .id')
-      thread=$("$AGENT_BOARD_BB" thread spawn --project "$bb_project" --environment "$project" "${model_args[@]}" --title "board task $BOARD_TASK" --prompt "$(first "$BOARD_TASK")" --json | jq -r '.id')
-      vb label "$BOARD_TASK" "thread=$thread"
+      spawn "$task" "$(first "$task")"
     fi
-    exec "$AGENT_BOARD_BB" thread wait "$thread" --status idle --timeout 60m
+    ;;
+  wait)
+    thread=$3
+    before=$4
+    case "$harness" in
+      t3)
+        until t3 thread show "$thread" --json | jq -e --argjson before "$before" '.thread.runCount > $before and .thread.activeRunId == null' >/dev/null; do
+          sleep 10
+        done
+        t3 thread show "$thread" --json --messages 5 | jq -r '[.messages[] | select(.role == "assistant")] | last | .text // ""'
+        ;;
+      bb)
+        sleep 5
+        "$AGENT_BOARD_BB" thread wait "$thread" --status idle --timeout 24h >/dev/null
+        "$AGENT_BOARD_BB" thread output "$thread"
+        ;;
+    esac
+    ;;
+  nudge)
+    thread=$3
+    task=$4
+    if archived "$thread"; then
+      spawn "$task" "$(again_new "$task")" >/dev/null
+    else
+      send "$thread" "$(again "$task")"
+    fi
     ;;
   *)
-    echo "agent-board-worker: usage: agent-board-worker <run|nudge> <t3|bb> [thread task]" >&2
+    echo "agent-board-worker: usage: agent-board-worker <start|wait|nudge> <t3|bb> ..." >&2
     exit 2
     ;;
 esac
