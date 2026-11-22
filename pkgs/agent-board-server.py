@@ -399,7 +399,10 @@ def run_task(host, harness, profile, task):
     state, text = work(host, harness, profile, task)
     stop.set()
     with critical:
-        if state == "done":
+        claim = task_root(task)["task"]["claim"] or {}
+        if not claim.get("actor", "").endswith(f"+{profile}"):
+            log(f"task {task} is no longer held by {profile}; leaving it as it is")
+        elif state == "done":
             vb("tasks", "complete", task, text or "done", "--as", profile)
         elif state == "blocked":
             vb("tasks", "block", task, text, "--as", profile)
