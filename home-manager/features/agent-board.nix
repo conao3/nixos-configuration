@@ -23,6 +23,7 @@ let
       pkgs.coreutils
       pkgs.hostname
       pkgs.jq
+      pkgs.python3
       t3
       vb
     ];

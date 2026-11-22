@@ -1,6 +1,7 @@
 mode=$1
 harness=$2
 project=$HOME/ghq/github.com/conao3/idea
+picker=$HOME/ghq/github.com/conao3/agents-share/tools/pick-model.py
 vb="BOARD_URL=$BOARD_URL vb"
 
 steps() {
@@ -42,9 +43,41 @@ archived() {
   [ "$harness" = t3 ] && t3 thread show "$1" --json | jq -e '.thread.archived' >/dev/null
 }
 
+pick_model() {
+  local labels class effort pick
+  labels=$(vb read "$1" --json | jq -c '.message.labels')
+  class=$(jq -r '.model // empty' <<<"$labels")
+  effort=$(jq -r '.effort // empty' <<<"$labels")
+  if [ -z "$class" ]; then
+    reason="Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|cheap>"
+    return 1
+  fi
+  local args=(board "$class" --harness "$harness")
+  [ "$harness" = bb ] && args+=(--bb "$AGENT_BOARD_BB")
+  [ -n "$effort" ] && args+=(--effort "$effort")
+  if ! pick=$(python3 "$picker" "${args[@]}" 2>&1); then
+    reason="Task #$1 has model=$class${effort:+ effort=$effort}, which picks no model: $pick"
+    return 1
+  fi
+  model_args=(--provider "$(jq -r '.provider' <<<"$pick")" --model "$(jq -r '.model' <<<"$pick")")
+  if jq -e '.effort' <<<"$pick" >/dev/null; then
+    model_args+=(--reasoning-level "$(jq -r '.effort' <<<"$pick")")
+  fi
+}
+
+reject() {
+  echo "agent-board-worker: $reason" >&2
+  if [ "$mode" = run ]; then
+    vb tasks fail "$1" "$reason"
+    exit 1
+  fi
+  exit 0
+}
+
 start() {
   local out status=0
-  out=$(t3 thread start --json --title "board task $1" "${@:3}" "$project" "$2") || status=$?
+  pick_model "$1" || reject "$1"
+  out=$(t3 thread start --json --title "board task $1" "${model_args[@]}" "${@:3}" "$project" "$2") || status=$?
   echo "$out"
   vb label "$1" "thread=$(jq -r '.threadId' <<<"$out")"
   return "$status"
@@ -78,8 +111,9 @@ case "$mode:$harness" in
       send "$thread" "$(again "$BOARD_TASK")"
       sleep 5
     else
+      pick_model "$BOARD_TASK" || reject "$BOARD_TASK"
       bb_project=$("$AGENT_BOARD_BB" project list --json | jq -r --arg path "$project" '.[] | select(any(.sources[]; .path == $path)) | .id')
-      thread=$("$AGENT_BOARD_BB" thread spawn --project "$bb_project" --environment "$project" --title "board task $BOARD_TASK" --prompt "$(first "$BOARD_TASK")" --json | jq -r '.id')
+      thread=$("$AGENT_BOARD_BB" thread spawn --project "$bb_project" --environment "$project" "${model_args[@]}" --title "board task $BOARD_TASK" --prompt "$(first "$BOARD_TASK")" --json | jq -r '.id')
       vb label "$BOARD_TASK" "thread=$thread"
     fi
     exec "$AGENT_BOARD_BB" thread wait "$thread" --status idle --timeout 60m
