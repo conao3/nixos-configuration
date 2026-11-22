@@ -14,7 +14,10 @@
         boardUrl = "http://127.0.0.1:4100/api/board";
         serveOn = "conao-nixos-helios.tail6dd115.ts.net";
         hosts = {
-          helios = [ "t3" ];
+          helios = [
+            "bb"
+            "t3"
+          ];
           eos = [
             "bb"
             "t3"
