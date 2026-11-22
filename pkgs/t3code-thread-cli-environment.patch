@@ -1,0 +1,93 @@
+--- a/apps/server/src/cli/thread.ts
++++ b/apps/server/src/cli/thread.ts
+@@ -172,7 +172,11 @@
+   });
+ };
+ 
+-const makeThreadTools = (session: McpToolSession, origin: string) => {
++const makeThreadTools = (
++  session: McpToolSession,
++  origin: string,
++  environmentId: Option.Option<string>,
++) => {
+   const unexpected = (tool: string) =>
+     new ThreadToolFailedError({
+       tool,
+@@ -185,7 +189,10 @@
+       schema: S,
+     ): Effect.fn.Return<S["Type"], ThreadServerUnreachableError | ThreadToolFailedError> {
+       const raw = yield* session
+-        .call(tool, args)
++        .call(
++          tool,
++          Option.isSome(environmentId) ? { ...args, environmentId: environmentId.value } : args,
++        )
+         .pipe(Effect.mapError((cause) => new ThreadServerUnreachableError({ origin, cause })));
+       const result = yield* decodeToolResult(raw).pipe(Effect.mapError(() => unexpected(tool)));
+       if (result.isError === true) {
+@@ -204,7 +211,10 @@
+  * outside agent does, and revokes that session when the command ends.
+  */
+ const withThreadTools = Effect.fn("cli.thread.withThreadTools")(function* <A, E, R>(
+-  flags: { readonly baseDir: Option.Option<string> },
++  flags: {
++    readonly baseDir: Option.Option<string>;
++    readonly environment: Option.Option<string>;
++  },
+   run: (tools: ThreadTools) => Effect.Effect<A, E, R>,
+ ) {
+   const logLevel = yield* GlobalFlag.LogLevel;
+@@ -233,7 +243,7 @@
+       authorization: `Bearer ${issued.token}`,
+       clientName: "t3-thread-cli",
+     }).pipe(Effect.mapError((cause) => new ThreadServerUnreachableError({ origin, cause })));
+-    return yield* run(makeThreadTools(session, origin));
++    return yield* run(makeThreadTools(session, origin, flags.environment));
+   }).pipe(
+     Effect.scoped,
+     Effect.provide(
+@@ -540,6 +550,12 @@
+       }),
+   });
+ 
++const environmentFlag = Flag.String("environment").pipe(
++  Flag.withDescription(
++    "Linked environment id (t3 environment list) to act in, instead of this machine's server.",
++  ),
++  Flag.optional,
++);
+ const jsonFlag = Flag.Boolean("json").pipe(
+   Flag.withDescription("Print JSON instead of text."),
+   Flag.withDefault(false),
+@@ -564,6 +580,7 @@
+ 
+ const threadListCommand = Command.make("list", {
+   ...projectLocationFlags,
++  environment: environmentFlag,
+   project: Flag.String("project").pipe(
+     Flag.withDescription("Project id or a path inside the project. Defaults to this directory."),
+     Flag.withDefault("."),
+@@ -600,6 +617,7 @@
+ 
+ const threadStartCommand = Command.make("start", {
+   ...projectLocationFlags,
++  environment: environmentFlag,
+   project: Argument.String("project").pipe(
+     Argument.withDescription("Project id or a path inside the project, such as ."),
+   ),
+@@ -679,6 +697,7 @@
+ 
+ const threadSendCommand = Command.make("send", {
+   ...projectLocationFlags,
++  environment: environmentFlag,
+   thread: threadArgument,
+   message: messageArgument,
+   wait: waitFlag,
+@@ -713,6 +732,7 @@
+ 
+ const threadShowCommand = Command.make("show", {
+   ...projectLocationFlags,
++  environment: environmentFlag,
+   thread: threadArgument,
+   messages: Flag.Int("messages").pipe(
+     Flag.withDescription("How many of the latest messages to print."),

@@ -26,6 +26,7 @@ let
         ./t3code-file-markdown-table-sort.patch
         ./t3code-file-find.patch
         ./t3code-sidebar-launched-threads.patch
+        ./t3code-thread-cli-environment.patch
       ];
     });
   };
