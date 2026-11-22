@@ -88,7 +88,7 @@ def t3_thread(host, thread):
 def repo_path(task):
     channel = task_root(task)["channel"]
     name = channel.removeprefix("work/")
-    found = sorted(Path.home().glob(f"ghq/github.com/*/{name}"))
+    found = sorted(p for p in Path.home().glob("ghq/github.com/*/*") if p.is_dir() and name in (p.name, p.name.replace(".", "-")))
     if "/" in name or len(found) != 1:
         raise ValueError(f"Task #{task} is in channel {channel}, which names no single repository under ~/ghq/github.com/<owner>/. Put repository tasks in work/<repo>.")
     return str(found[0])
