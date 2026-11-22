@@ -44,16 +44,15 @@ archived() {
 }
 
 pick_model() {
-  local message labels class effort pick
-  message=$(vb read "$1" --json | jq -c '.message')
-  labels=$(jq -c '.labels' <<<"$message")
+  local labels class effort pick
+  labels=$(vb read "$1" --json | jq -c '.message.labels')
   class=$(jq -r '.model // empty' <<<"$labels")
   effort=$(jq -r '.effort // empty' <<<"$labels")
   if [ -z "$class" ]; then
     reason="Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|haiku>"
     return 1
   fi
-  local args=(board "$class" --harness "$harness" --channel "$(jq -r '.channel' <<<"$message")")
+  local args=(board "$class" --harness "$harness")
   [ "$harness" = bb ] && args+=(--bb "$AGENT_BOARD_BB")
   [ -n "$effort" ] && args+=(--effort "$effort")
   if ! pick=$(python3 "$picker" "${args[@]}" 2>&1); then
