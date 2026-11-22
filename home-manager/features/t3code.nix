@@ -299,6 +299,7 @@ in
     # home.file sources. Link them into place after activation instead.
     linkAgentSecrets = lib.mkIf isNixos (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        $DRY_RUN_CMD mkdir -p /home/conao/.config/cgpu/modal /home/conao/.config/exa
         $DRY_RUN_CMD ln -sf ${
           config.sops.secrets."cgpu-modal-api-key".path
         } /home/conao/.config/cgpu/modal/api-key
