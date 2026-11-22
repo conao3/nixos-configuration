@@ -1,7 +1,6 @@
 mode=$1
 harness=$2
 project=$HOME/ghq/github.com/conao3/idea
-picker=$HOME/ghq/github.com/conao3/agents-share/tools/pick-model.py
 vb="BOARD_URL=$BOARD_URL vb"
 
 steps() {
@@ -53,31 +52,8 @@ runs() {
   esac
 }
 
-pick_model() {
-  local labels class effort pick
-  labels=$(vb read "$1" --json | jq -c '.message.labels')
-  class=$(jq -r '.model // empty' <<<"$labels")
-  effort=$(jq -r '.effort // empty' <<<"$labels")
-  if [ -z "$class" ]; then
-    echo "Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|haiku>" >&2
-    exit 3
-  fi
-  local args=(board "$class" --harness "$harness")
-  [ "$harness" = bb ] && args+=(--bb "$AGENT_BOARD_BB")
-  [ -n "$effort" ] && args+=(--effort "$effort")
-  if ! pick=$(python3 "$picker" "${args[@]}" 2>&1); then
-    echo "Task #$1 has model=$class${effort:+ effort=$effort}, which picks no model: $pick" >&2
-    exit 3
-  fi
-  model_args=(--provider "$(jq -r '.provider' <<<"$pick")" --model "$(jq -r '.model' <<<"$pick")")
-  if jq -e '.effort' <<<"$pick" >/dev/null; then
-    model_args+=(--reasoning-level "$(jq -r '.effort' <<<"$pick")")
-  fi
-}
-
 spawn() {
   local thread
-  pick_model "$1"
   case "$harness" in
     t3) thread=$(t3 thread start --json --title "board task $1" "${model_args[@]}" "$project" "$2" | jq -r '.threadId') ;;
     bb)
@@ -100,6 +76,7 @@ send() {
 case "$mode" in
   start)
     task=$3
+    model_args=("${@:4}")
     thread=$(vb read "$task" --json | jq -r '.message.labels.thread // empty')
     if [ -n "$thread" ] && ! archived "$thread"; then
       before=$(runs "$thread")
@@ -131,6 +108,7 @@ case "$mode" in
   nudge)
     thread=$3
     task=$4
+    model_args=("${@:5}")
     if archived "$thread"; then
       spawn "$task" "$(again_new "$task")" >/dev/null
     else

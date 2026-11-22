@@ -23,7 +23,6 @@ let
       pkgs.coreutils
       pkgs.hostname
       pkgs.jq
-      pkgs.python3
       t3
       vb
     ];
@@ -42,6 +41,22 @@ let
     ''
     + builtins.readFile ../../pkgs/agent-board-local.sh;
   };
+  bbCatalog = pkgs.writeShellApplication {
+    name = "agent-board-bb-catalog";
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.openssh
+      local
+    ];
+    text = ''
+      [ "$1 $2 $4" = "provider models --json" ] || exit 2
+      dest=$(jq -r --arg host "$AGENT_BOARD_BB_HOST" '.[$host].ssh // empty' <<<"$AGENT_BOARD_HOSTS")
+      if [ -z "$dest" ]; then
+        exec agent-board-local models "$3"
+      fi
+      exec ssh -o BatchMode=yes -o ConnectTimeout=10 "$dest" agent-board-local models "$3"
+    '';
+  };
   server = pkgs.writeShellApplication {
     name = "agent-board-server";
     runtimeInputs = [
@@ -58,6 +73,7 @@ let
     "BOARD_URL=${boardUrl}"
     "AGENT_BOARD_HOSTS=${builtins.toJSON hosts}"
     "AGENT_BOARD_VIEW=${viewUrl}"
+    "AGENT_BOARD_BB_CATALOG=${bbCatalog}/bin/agent-board-bb-catalog"
     "BOARD_PROFILE=server-${host}"
   ];
 in

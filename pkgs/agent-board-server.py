@@ -14,6 +14,8 @@ PENDING = STATE / "pending"
 SSH_DOWN = 255
 SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=4"]
 OUTCOMES = ("DONE", "BLOCKED:", "FAILED:")
+PICKER = Path.home() / "ghq/github.com/conao3/agents-share/tools/pick-model.py"
+BB_HOST = next(host for host, spec in HOSTS.items() if "bb" in spec["harnesses"])
 pending_lock = threading.Lock()
 
 
@@ -149,7 +151,31 @@ def replies(event):
     elif state == "failed":
         vb("tasks", "reopen", task)
     else:
-        deliver(labels["host"], ["nudge", labels["harness"], labels["thread"], task])
+        try:
+            model_args = pick_model(task, labels, labels["harness"])
+        except ValueError as e:
+            log(str(e))
+            model_args = []
+        deliver(labels["host"], ["nudge", labels["harness"], labels["thread"], task, *model_args])
+
+
+def pick_model(task, labels, harness):
+    if "model" not in labels:
+        raise ValueError(f"Task #{task} has no model label. Add one with: vb label {task} model=<fable|opus|sonnet|haiku>")
+    args = [sys.executable, str(PICKER), "board", labels["model"], "--harness", harness]
+    if harness == "bb":
+        args += ["--bb", os.environ["AGENT_BOARD_BB_CATALOG"]]
+    if "effort" in labels:
+        args += ["--effort", labels["effort"]]
+    picked = subprocess.run(args, capture_output=True, text=True, env={**os.environ, "AGENT_BOARD_BB_HOST": BB_HOST})
+    if picked.returncode != 0:
+        effort = f" effort={labels['effort']}" if "effort" in labels else ""
+        raise ValueError(f"Task #{task} has model={labels['model']}{effort}, which picks no model: {(picked.stderr or picked.stdout).strip()}")
+    pick = json.loads(picked.stdout)
+    model_args = ["--provider", pick["provider"], "--model", pick["model"]]
+    if "effort" in pick:
+        model_args += ["--reasoning-level", pick["effort"]]
+    return model_args
 
 
 def until_reachable(host):
@@ -172,7 +198,11 @@ def outcome(text):
 
 
 def work(host, harness, task, profile):
-    started = on_host(host, ["start", harness, task], timeout=600)
+    try:
+        model_args = pick_model(task, task_root(task)["labels"], harness)
+    except ValueError as e:
+        return "failed", str(e)
+    started = on_host(host, ["start", harness, task, *model_args], timeout=600)
     if started.returncode != 0:
         return "failed", started.stderr.strip() or f"agent-board-local start exited {started.returncode}"
     thread, runs = started.stdout.split()[-2:]

@@ -13,8 +13,11 @@ case "${1:-}" in
   start | wait | nudge)
     exec agent-board-worker "$@"
     ;;
+  models)
+    exec "$AGENT_BOARD_BB" provider models "$2" --json
+    ;;
   *)
-    echo "agent-board-local: usage: agent-board-local send <t3|bb> <thread> < text | start <t3|bb> <task> | wait <t3|bb> <thread> <runs> | nudge <t3|bb> <thread> <task>" >&2
+    echo "agent-board-local: usage: agent-board-local send <t3|bb> <thread> < text | start <t3|bb> <task> <model args> | wait <t3|bb> <thread> <runs> | nudge <t3|bb> <thread> <task> <model args> | models <bb provider>" >&2
     exit 2
     ;;
 esac
