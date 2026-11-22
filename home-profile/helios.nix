@@ -14,6 +14,10 @@
         boardUrl = "http://127.0.0.1:4100/api/board";
         harnesses = [ "t3" ];
         serveOn = "conao-nixos-helios.tail6dd115.ts.net";
+        hosts = {
+          helios = null;
+          eos = "conao-nixos-eos";
+        };
       })
     ];
 }

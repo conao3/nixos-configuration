@@ -3,6 +3,7 @@
   boardUrl,
   harnesses,
   serveOn ? null,
+  hosts ? { },
 }:
 {
   inputs,
@@ -46,13 +47,37 @@ let
         exec vb tasks run --ready work/ --label host=${host} --label harness=${harness} "''${from[@]}" --wait 10m --json -- agent-board-worker run ${harness}
       '';
     };
+  local = pkgs.writeShellApplication {
+    name = "agent-board-local";
+    runtimeInputs = [
+      t3
+      worker
+    ];
+    text = ''
+      export BOARD_URL=${boardUrl} AGENT_BOARD_HOST=${host} AGENT_BOARD_BB=${
+        inputs.llm-agents.packages.${system}.bb-app
+      }/bin/bb BOARD_PROFILE=replies-${host}
+    ''
+    + builtins.readFile ../../pkgs/agent-board-local.sh;
+  };
+  deliver = pkgs.writeShellApplication {
+    name = "agent-board-deliver";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.jq
+      pkgs.openssh
+      local
+    ];
+    text = builtins.readFile ../../pkgs/agent-board-deliver.sh;
+  };
   replies = pkgs.writeShellApplication {
     name = "agent-board-replies";
     runtimeInputs = [
       pkgs.coreutils
       pkgs.jq
       vb
-      worker
+      deliver
     ];
     text = builtins.readFile ../../pkgs/agent-board-replies.sh;
   };
@@ -61,8 +86,8 @@ let
     runtimeInputs = [
       pkgs.coreutils
       pkgs.jq
-      t3
       vb
+      deliver
     ];
     text = builtins.readFile ../../pkgs/agent-board-notify.sh;
   };
@@ -72,6 +97,7 @@ let
     "BOARD_URL=${boardUrl}"
     "AGENT_BOARD_BB=${inputs.llm-agents.packages.${system}.bb-app}/bin/bb"
     "AGENT_BOARD_HOST=${host}"
+    "AGENT_BOARD_HOSTS=${builtins.toJSON hosts}"
   ];
   runnerService = harness: {
     name = "agent-board-runner-${harness}";
@@ -92,7 +118,10 @@ let
   };
 in
 {
-  home.packages = [ vb ];
+  home.packages = [
+    vb
+    local
+  ];
   home.sessionVariables.BOARD_URL = boardUrl;
 
   # Vercel Board (エージェントの仕事の列)。board は 1 ホストの `vb serve` を Tailscale Serve で tailnet に出し、
@@ -117,14 +146,15 @@ in
         };
         Install.WantedBy = [ "default.target" ];
       };
-    }
-    // {
       # 人がタスクのスレッドに返信したら、そのタスクを担当したエージェントのスレッドに続きを渡す。
       # 人待ちは解除し、失敗は着手可に戻して runner に取らせ、完了済みはスレッドへ直接送る
       agent-board-replies = {
         Unit = {
-          Description = "Vercel Board replies: hand the owner's replies on host=${host} tasks to the agent thread";
-          After = [ "network-online.target" ] ++ lib.optional (serveOn != null) "agent-board.service";
+          Description = "Vercel Board replies: hand the replies on work/ tasks to the agent thread on its host";
+          After = [
+            "network-online.target"
+            "agent-board.service"
+          ];
           StartLimitIntervalSec = 0;
         };
         Service = {
@@ -138,24 +168,42 @@ in
       agent-board-notify = {
         Unit = {
           Description = "Vercel Board notify: tell the creator of a work/ task when it is completed, blocked or failed";
-          After = [ "network-online.target" ] ++ lib.optional (serveOn != null) "agent-board.service";
+          After = [
+            "network-online.target"
+            "agent-board.service"
+          ];
           StartLimitIntervalSec = 0;
         };
         Service = {
           ExecStart = "${notify}/bin/agent-board-notify";
-          Environment =
-            environment
-            ++ [
-              "BOARD_PROFILE=notify-${host}"
-              "AGENT_BOARD_VIEW=${viewUrl}"
-            ]
-            ++ lib.optional (serveOn != null) "AGENT_BOARD_MUSE=1";
+          Environment = environment ++ [
+            "BOARD_PROFILE=notify-${host}"
+            "AGENT_BOARD_VIEW=${viewUrl}"
+          ];
           Restart = "always";
           RestartSec = 10;
         };
         Install.WantedBy = [ "default.target" ];
       };
+      agent-board-deliver-retry = {
+        Unit.Description = "Vercel Board deliver: retry the notices and replies that could not reach their host";
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${deliver}/bin/agent-board-deliver --retry";
+          Environment = environment;
+        };
+      };
     }
     // builtins.listToAttrs (map runnerService harnesses)
   );
+  systemd.user.timers = lib.mkIf (pkgs.stdenv.hostPlatform.isLinux && serveOn != null) {
+    agent-board-deliver-retry = {
+      Unit.Description = "Vercel Board deliver: retry every minute";
+      Timer = {
+        OnBootSec = "1min";
+        OnUnitActiveSec = "1min";
+      };
+      Install.WantedBy = [ "timers.target" ];
+    };
+  };
 }

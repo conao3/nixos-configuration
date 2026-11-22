@@ -22,12 +22,9 @@ vb read $1 でスレッドを読み、completed なら結果を、blocked なら
 
 to_agent() {
   local text="[factory] Board task #$1, which you created, is now $2. $AGENT_BOARD_VIEW/?thread=$1
-Run: BOARD_URL=$BOARD_URL vb read $1
+Run: BOARD_URL=$AGENT_BOARD_VIEW/api/board vb read $1
 If it is completed, check the result and decide whether to queue follow-up tasks. If it is blocked, answer it with vb reply $1 \"<answer>\" or ask the owner. If it is failed, decide whether to reopen it with vb tasks reopen $1."
-  case "$3" in
-    t3) t3 thread send "$4" "$text" ;;
-    bb) "$AGENT_BOARD_BB" thread tell "$4" --mode auto "$text" ;;
-  esac
+  agent-board-deliver "$5" send "$3" "$4" <<<"$text"
 }
 
 vb "${args[@]}" | while read -r event; do
@@ -40,17 +37,12 @@ vb "${args[@]}" | while read -r event; do
       notify=$(jq -r '.notify' <<<"$root")
       if [ "$type" = "task.${now}" ]; then
         if [ "$notify" = muse ]; then
-          if [ -n "${AGENT_BOARD_MUSE:-}" ]; then
-            to_muse "$task" "$now"
-            echo "notified muse: task $task $now"
-          fi
+          to_muse "$task" "$now"
+          echo "notified muse: task $task $now"
         else
           target=${notify%%:*}
-          thread=${notify#*:}
-          if [ "${target#*@}" = "$AGENT_BOARD_HOST" ]; then
-            to_agent "$task" "$now" "${target%@*}" "$thread"
-            echo "notified $notify: task $task $now"
-          fi
+          to_agent "$task" "$now" "${target%@*}" "${notify#*:}" "${target#*@}"
+          echo "notified $notify: task $task $now"
         fi
       fi
       ;;

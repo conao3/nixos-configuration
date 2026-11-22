@@ -14,12 +14,12 @@ vb "${args[@]}" | while read -r event; do
     thread=$(jq -r '.thread // empty' <<<"$root")
     task_state=$(jq -r '.state // empty' <<<"$root")
     creator=$(jq -r '.creator' <<<"$root")
-    if [ "$host" = "$AGENT_BOARD_HOST" ] && [ -n "$thread" ] && jq -e --arg creator "$creator" '.message.by.profile == null or .message.by.actor == $creator' <<<"$event" >/dev/null; then
+    if [ -n "$host" ] && [ -n "$thread" ] && jq -e --arg creator "$creator" '.message.by.profile == null or .message.by.actor == $creator' <<<"$event" >/dev/null; then
       echo "reply on task $task ($task_state) for $harness thread $thread"
       case "$task_state" in
         blocked) vb tasks unblock "$task" ;;
         failed) vb tasks reopen "$task" ;;
-        completed | canceled | claimed) agent-board-worker nudge "$harness" "$thread" "$task" ;;
+        completed | canceled | claimed) agent-board-deliver "$host" nudge "$harness" "$thread" "$task" </dev/null ;;
       esac
     fi
   fi
