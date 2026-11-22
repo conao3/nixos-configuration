@@ -33,7 +33,7 @@ let
     "BOARD_URL=${boardUrl}"
     "BOARD_PROFILE=server-${host}"
     "AGENT_BOARD_HOST=${host}"
-    "AGENT_BOARD_HOSTS=${builtins.toJSON hosts}"
+    "AGENT_BOARD_HOSTS=${pkgs.writeText "agent-board-hosts.json" (builtins.toJSON hosts)}"
     "AGENT_BOARD_VIEW=${viewUrl}"
     "AGENT_BOARD_BB=${bb}"
   ];

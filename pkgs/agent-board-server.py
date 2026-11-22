@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-HOSTS = json.loads(os.environ["AGENT_BOARD_HOSTS"])
+HOSTS = json.loads(Path(os.environ["AGENT_BOARD_HOSTS"]).read_text())
 HOST = os.environ["AGENT_BOARD_HOST"]
 VIEW = os.environ["AGENT_BOARD_VIEW"]
 BB = os.environ["AGENT_BOARD_BB"]
