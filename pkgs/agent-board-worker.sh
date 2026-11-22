@@ -50,7 +50,7 @@ pick_model() {
   class=$(jq -r '.model // empty' <<<"$labels")
   effort=$(jq -r '.effort // empty' <<<"$labels")
   if [ -z "$class" ]; then
-    reason="Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|cheap>"
+    reason="Task #$1 has no model label. Add one with: vb label $1 model=<fable|opus|sonnet|haiku>"
     return 1
   fi
   local args=(board "$class" --harness "$harness" --channel "$(jq -r '.channel' <<<"$message")")
