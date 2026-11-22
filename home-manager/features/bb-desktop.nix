@@ -121,6 +121,7 @@ let
     ${bbCli} plugin disable inline-vis >/dev/null || warn "inline-vis"
     ${bbCli} settings experiment threadRowMetadata true >/dev/null || warn "threadRowMetadata"
     ${bbCli} thread-list prefs set showRowMetadata true >/dev/null || warn "showRowMetadata"
+    ${bbCli} thread-list prefs set chronologicalSort '"created"' >/dev/null || warn "chronologicalSort"
     ${lib.concatStrings (
       lib.mapAttrsToList (command: shortcut: ''
         ${bbCli} settings keyboard set ${command} ${shortcut} >/dev/null || warn "the shortcut of ${command}"
