@@ -14,7 +14,6 @@ import type {
   PluginFileOpenerProps,
   PluginSidebarThread,
 } from "@get-bb/plugin-sdk/app";
-import { cn } from "@/lib/utils";
 import { applyTableSort, nextSortState, type SortState } from "./table-sort";
 
 const HOST_NAME_PREFIX = /^conao-nixos-/u;
@@ -143,24 +142,22 @@ function AppStateBridge() {
   return null;
 }
 
-function usePrimaryHostId(): string | null {
-  return experimental_useSidebarThreads().experimental_hosts?.[0]?.id ?? null;
+function useOwnHostId(): string | null {
+  const { hostId } = useSelfHostState();
+  const primaryHostId =
+    experimental_useSidebarThreads().experimental_hosts?.[0]?.id ?? null;
+  return hostId ?? primaryHostId;
 }
 
 function HostChip({
   thread,
-  data: primaryHostId,
+  data: ownHostId,
 }: ExperimentalThreadRowMetadataProps<string | null>) {
-  if (thread.host === null) return null;
+  if (thread.host === null || thread.host.id === ownHostId) return null;
   return (
     <span
       title={thread.host.name}
-      className={cn(
-        "rounded px-1 text-[0.6875rem] leading-4",
-        thread.host.id === primaryHostId
-          ? "bg-muted text-muted-foreground"
-          : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-      )}
+      className="rounded bg-amber-500/15 px-1 text-[0.6875rem] leading-4 text-amber-700 dark:text-amber-300"
     >
       {hostLabel(thread.host.name)}
     </span>
@@ -338,7 +335,7 @@ export default definePluginApp((app) => {
   app.slots.experimental_threadRowMetadata<string | null>({
     id: "host",
     order: 0,
-    useData: usePrimaryHostId,
+    useData: useOwnHostId,
     component: HostChip,
   });
 
