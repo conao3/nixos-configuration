@@ -44,9 +44,8 @@ in
           history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$util" \
             '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$state") || exit 1
           echo "$history" > "$state"
-          points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
 
-          shaped=$(echo "$usage" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" '
+          echo "$usage" | ${pkgs.jq}/bin/jq -cj --arg now "$now" --slurpfile state "$state" '
             def pace_points:
               (.seven_day.resets_at | gsub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) as $r
               | ($now | fromdateiso8601) as $n
@@ -56,11 +55,8 @@ in
                     u: ((1000 - ((. - $s) / 604800 * 1000 | round)) / 10)}];
             {five_hour, seven_day, seven_day_opus, seven_day_sonnet,
              updated_at: $now,
-             history: ($history | map({at: .at, u: (100 - .u)})),
-             pace: pace_points}')
-          payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
-            '{files: {"claude-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${claudeGistId}" --input - >/dev/null
+             history: ($state[0].points | map({at: .at, u: (100 - .u)})),
+             pace: pace_points}' | ${pkgs.jq}/bin/jq -Rs '{files: {"claude-usage.json": {content: .}}}' | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${claudeGistId}" --input - >/dev/null
         ''}";
       };
     };
@@ -89,15 +85,13 @@ in
           history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$used" \
             '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$state") || exit 1
           echo "$history" > "$state"
-          points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
 
           month_used=$(echo "$raw" | ${pkgs.jq}/bin/jq -r '100 - .Summary.Month.PercentLeft')
           month_history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$month_used" \
             '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$month_state") || exit 1
           echo "$month_history" > "$month_state"
-          month_points=$(echo "$month_history" | ${pkgs.jq}/bin/jq -c '.points')
 
-          shaped=$(echo "$raw" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" --argjson month_history "$month_points" '
+          echo "$raw" | ${pkgs.jq}/bin/jq -cj --arg now "$now" --slurpfile state "$state" --slurpfile month_state "$month_state" '
             def win: if . == null then null else
               {used_usd: .UsedUsd, limit_usd: .LimitUsd,
                percent_left: .PercentLeft, resets_at: .ResetsAt}
@@ -123,13 +117,10 @@ in
              five_hour: (.Summary.FiveHour | win),
              week: (.Summary.Week | win),
              month: (.Summary.Month | win),
-             history: ($history | map({at: .at, u: (100 - .u)})),
+             history: ($state[0].points | map({at: .at, u: (100 - .u)})),
              pace: pace_points(.Summary.Week.ResetsAt; 604800),
-             month_history: ($month_history | map({at: .at, u: (100 - .u)})),
-             month_pace: pace_points(.Summary.Month.ResetsAt; month_window_secs)}')
-          payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
-            '{files: {"opencode-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${opencodeGistId}" --input - >/dev/null
+             month_history: ($month_state[0].points | map({at: .at, u: (100 - .u)})),
+             month_pace: pace_points(.Summary.Month.ResetsAt; month_window_secs)}' | ${pkgs.jq}/bin/jq -Rs '{files: {"opencode-usage.json": {content: .}}}' | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${opencodeGistId}" --input - >/dev/null
         ''}";
       };
     };
@@ -164,9 +155,8 @@ in
           history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$used" \
             '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$state") || exit 1
           echo "$history" > "$state"
-          points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
 
-          shaped=$(echo "$usage" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" '
+          echo "$usage" | ${pkgs.jq}/bin/jq -cj --arg now "$now" --slurpfile state "$state" '
             def pace_points:
               (.weekly.resets_at | fromdateiso8601) as $r
               | ($now | fromdateiso8601) as $n
@@ -177,11 +167,8 @@ in
                     u: ((1000 - ((. - $s) / $secs * 1000 | round)) / 10)}];
             {email, plan_type, weekly,
              updated_at: $now,
-             history: ($history | map({at: .at, u: (100 - .u)})),
-             pace: pace_points}')
-          payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
-            '{files: {"codex-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${codexGistId}" --input - >/dev/null
+             history: ($state[0].points | map({at: .at, u: (100 - .u)})),
+             pace: pace_points}' | ${pkgs.jq}/bin/jq -Rs '{files: {"codex-usage.json": {content: .}}}' | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${codexGistId}" --input - >/dev/null
         ''}";
       };
     };
@@ -236,9 +223,8 @@ in
           history=$(${pkgs.jq}/bin/jq -c --arg at "$now" --argjson u "$used" \
             '.points = ((.points + [{at: $at, u: $u}]) | .[-2880:])' "$state") || exit 1
           echo "$history" > "$state"
-          points=$(echo "$history" | ${pkgs.jq}/bin/jq -c '.points')
 
-          shaped=$(echo "$usage" | ${pkgs.jq}/bin/jq -c --arg now "$now" --argjson history "$points" '
+          echo "$usage" | ${pkgs.jq}/bin/jq -cj --arg now "$now" --slurpfile state "$state" '
             def pace_points:
               (.weekly.resets_at | fromdateiso8601) as $r
               | ($now | fromdateiso8601) as $n
@@ -249,11 +235,8 @@ in
                     u: ((1000 - ((. - $s) / $secs * 1000 | round)) / 10)}];
             {plan, weekly, daily, hide_daily_quota, overage_balance_usd, plan_start, plan_end,
              updated_at: $now,
-             history: ($history | map({at: .at, u: (100 - .u)})),
-             pace: pace_points}')
-          payload=$(${pkgs.jq}/bin/jq -cn --arg content "$shaped" \
-            '{files: {"devin-usage.json": {content: $content}}}')
-          echo "$payload" | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${devinGistId}" --input - >/dev/null
+             history: ($state[0].points | map({at: .at, u: (100 - .u)})),
+             pace: pace_points}' | ${pkgs.jq}/bin/jq -Rs '{files: {"devin-usage.json": {content: .}}}' | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${devinGistId}" --input - >/dev/null
         ''}";
       };
     };
