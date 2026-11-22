@@ -7,6 +7,7 @@
       ../home-manager/features/cherry-studio.nix
       ../home-manager/features/codex-desktop.nix
       ../home-manager/features/dev-ca.nix
+      ../home-manager/features/sellaite-dashboard.nix
       ../home-manager/features/t3code-server.nix
       (import ../home-manager/features/agent-board.nix {
         host = "helios";

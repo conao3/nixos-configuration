@@ -84,6 +84,12 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
+    sellaite = {
+      url = "github:conao3/rust-sellaite";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
     awsr = {
       url = "github:conao3/rust-awscli";
       inputs.nixpkgs.follows = "nixpkgs";
