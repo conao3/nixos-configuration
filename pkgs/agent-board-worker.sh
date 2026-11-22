@@ -8,7 +8,7 @@ steps() {
   local close=""
   if [ "$harness" = t3 ]; then
     close="
-4. Archive this thread: call the T3 Code tool t3_thread_organize with action archive and no threadId."
+4. Settle this thread: call the T3 Code tool t3_thread_organize with action settle and no threadId."
   fi
   echo "1. Run: $vb read $1
 2. $2
