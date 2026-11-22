@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 import subprocess
 import sys
 import threading
@@ -12,12 +13,15 @@ VIEW = os.environ["AGENT_BOARD_VIEW"]
 BB = os.environ["AGENT_BOARD_BB"]
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "agent-board"
 PENDING = STATE / "pending"
+LANES = STATE / "lanes"
 PROJECT = str(Path.home() / "ghq/github.com/conao3/idea")
 PICKER = Path.home() / "ghq/github.com/conao3/agents-share/tools/pick-model.py"
 AGENTS_NOTE = Path.home() / ".agents/share/notes/vercel-board.md"
 OUTCOMES = ("DONE", "BLOCKED:", "FAILED:")
 VB = f"BOARD_URL={VIEW}/api/board vb"
 pending_lock = threading.Lock()
+critical = threading.Lock()
+stopping = threading.Event()
 
 
 class Unreachable(Exception):
@@ -29,7 +33,10 @@ def log(*parts):
 
 
 def run(*args, text=None):
-    done = subprocess.run(args, input=text, capture_output=True, text=True)
+    try:
+        done = subprocess.run(args, input=text, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"{' '.join(args[:4])}: timed out")
     if done.returncode != 0:
         raise RuntimeError(f"{' '.join(args[:4])}: {(done.stderr or done.stdout).strip()}")
     return done.stdout
@@ -161,14 +168,51 @@ def runs(host, harness, thread):
     return t3_thread(host, thread)["thread"]["runCount"] if harness == "t3" else 0
 
 
-def start(task, host, harness, model_args):
+def lane_file(profile):
+    return LANES / f"{profile}.json"
+
+
+def save_lane(profile, task, thread, before):
+    lane_file(profile).write_text(json.dumps({"task": task, "thread": thread, "before": before}))
+
+
+def saved_lane(profile, task):
+    f = lane_file(profile)
+    if not f.exists():
+        return None
+    saved = json.loads(f.read_text())
+    return saved if saved["task"] == task else None
+
+
+def busy(host, harness, thread):
+    if harness == "t3":
+        return t3_thread(host, thread)["thread"]["activeRunId"] is not None
+    return subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1s"], capture_output=True).returncode != 0
+
+
+def start(task, host, harness, profile, model_args):
     thread = task_root(task)["labels"].get("thread")
     if thread and not archived(host, harness, thread):
         before = runs(host, harness, thread)
+        save_lane(profile, task, thread, before)
         send(host, harness, thread, again_prompt(task, harness))
         return thread, before
     prompt = again_new_prompt(task, host, harness) if thread else first_prompt(task, host, harness)
-    return spawn(task, host, harness, prompt, model_args), 0
+    thread = spawn(task, host, harness, prompt, model_args)
+    save_lane(profile, task, thread, 0)
+    return thread, 0
+
+
+def resumed(task, host, harness, profile):
+    saved = saved_lane(profile, task)
+    if saved is not None:
+        return saved["thread"], saved["before"]
+    thread = task_root(task)["labels"].get("thread")
+    if thread and busy(host, harness, thread):
+        before = runs(host, harness, thread) - 1
+        save_lane(profile, task, thread, before)
+        return thread, before
+    return None
 
 
 def wait(host, harness, thread, before):
@@ -221,7 +265,7 @@ def nudge(host, harness, thread, task):
 def retry_loop():
     while True:
         time.sleep(60)
-        with pending_lock:
+        with critical, pending_lock:
             down = set()
             for f in sorted(PENDING.glob("*.json")):
                 item = json.loads(f.read_text())
@@ -243,11 +287,12 @@ def tail(name, handle):
         with subprocess.Popen(args, stdout=subprocess.PIPE, text=True) as proc:
             for line in proc.stdout:
                 event = json.loads(line)
-                try:
-                    handle(event)
-                except Exception as e:
-                    log(f"{name}: {e}")
-                cursor_file.write_text(event["cursor"])
+                with critical:
+                    try:
+                        handle(event)
+                    except Exception as e:
+                        log(f"{name}: {e}")
+                    cursor_file.write_text(event["cursor"])
         time.sleep(10)
 
 
@@ -326,18 +371,49 @@ def outcome(text):
     return "failed", f"The worker ended its turn without DONE, BLOCKED or FAILED. Its last line: {last[:300]}"
 
 
-def work(host, harness, task):
+def work(host, harness, profile, task):
     try:
-        model_args = pick_model(task, task_root(task)["labels"], harness)
-        thread, before = start(task, host, harness, model_args)
+        found = resumed(task, host, harness, profile)
+        if found is not None:
+            thread, before = found
+            log(f"task {task} resumes in {harness} thread {thread} on {host}")
+        else:
+            model_args = pick_model(task, task_root(task)["labels"], harness)
+            with critical:
+                thread, before = start(task, host, harness, profile, model_args)
+            log(f"task {task} runs in {harness} thread {thread} on {host}")
     except (ValueError, RuntimeError, Unreachable) as e:
         return "failed", str(e)
-    log(f"task {task} runs in {harness} thread {thread} on {host}")
     return outcome(wait(host, harness, thread, before))
+
+
+def held(profile):
+    tasks = vb_json("tasks", "work/", "--state", "claimed")["tasks"]
+    return [t["message"]["id"] for t in tasks if (t["message"]["task"]["claim"] or {}).get("actor", "").endswith(f"+{profile}")]
+
+
+def run_task(host, harness, profile, task):
+    subprocess.run(["vb", "tasks", "renew", task, "--as", profile], capture_output=True)
+    stop = threading.Event()
+    threading.Thread(target=keep_claim, args=(task, profile, stop), daemon=True).start()
+    state, text = work(host, harness, profile, task)
+    stop.set()
+    with critical:
+        if state == "done":
+            vb("tasks", "complete", task, text or "done", "--as", profile)
+        elif state == "blocked":
+            vb("tasks", "block", task, text, "--as", profile)
+        else:
+            vb("tasks", "fail", task, text, "--as", profile)
+        lane_file(profile).unlink(missing_ok=True)
+    log(f"task {task} {state}")
 
 
 def lane(host, harness):
     profile = f"runner-{host}-{harness}"
+    for task in held(profile):
+        log(f"{profile} holds task {task}")
+        run_task(host, harness, profile, task)
     while True:
         if not reachable(host, harness):
             time.sleep(60)
@@ -352,28 +428,23 @@ def lane(host, harness):
             continue
         task = json.loads(claimed.stdout)["task"]["id"]
         log(f"{profile} claimed task {task}")
-        stop = threading.Event()
-        threading.Thread(target=keep_claim, args=(task, profile, stop), daemon=True).start()
-        state, text = work(host, harness, task)
-        stop.set()
-        if state == "done":
-            vb("tasks", "complete", task, text or "done", "--as", profile)
-        elif state == "blocked":
-            vb("tasks", "block", task, text, "--as", profile)
-        else:
-            vb("tasks", "fail", task, text, "--as", profile)
-        log(f"task {task} {state}")
+        run_task(host, harness, profile, task)
 
 
 def main():
     PENDING.mkdir(parents=True, exist_ok=True)
+    LANES.mkdir(parents=True, exist_ok=True)
+    signal.signal(signal.SIGTERM, lambda *_: stopping.set())
     loops = [threading.Thread(target=retry_loop), threading.Thread(target=tail, args=("notify", notify)), threading.Thread(target=tail, args=("replies", replies))]
     loops += [threading.Thread(target=lane, args=(host, harness)) for host, harnesses in HOSTS.items() for harness in harnesses]
     for loop in loops:
         loop.daemon = True
         loop.start()
     while all(loop.is_alive() for loop in loops):
-        time.sleep(5)
+        if stopping.wait(1):
+            with critical:
+                log("agent-board-server: stopping")
+                os._exit(0)
     sys.exit("agent-board-server: a loop stopped")
 
 

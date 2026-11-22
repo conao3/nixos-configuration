@@ -80,6 +80,8 @@ in
           Environment = environment;
           Restart = "always";
           RestartSec = 10;
+          KillMode = "mixed";
+          TimeoutStopSec = 300;
         };
         Install.WantedBy = [ "default.target" ];
       };
