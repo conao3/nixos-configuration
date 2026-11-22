@@ -1,7 +1,42 @@
 {
+  alsa-lib,
   appimageTools,
+  at-spi2-atk,
+  at-spi2-core,
+  autoPatchelfHook,
+  cairo,
+  cups,
+  dbus,
+  expat,
   fetchurl,
+  glib,
+  gtk3,
   lib,
+  libappindicator-gtk3,
+  libdrm,
+  libgbm,
+  libGL,
+  libnotify,
+  libpulseaudio,
+  libsecret,
+  libx11,
+  libxcb,
+  libxcomposite,
+  libxdamage,
+  libxext,
+  libxfixes,
+  libxkbcommon,
+  libxrandr,
+  libxscrnsaver,
+  libxshmfence,
+  libxtst,
+  makeWrapper,
+  nspr,
+  nss,
+  pango,
+  stdenv,
+  systemd,
+  vulkan-loader,
 }:
 let
   pname = "bb-desktop";
@@ -11,18 +46,82 @@ let
     hash = "sha256-g0mrdzcVYk/sUIJznIF9KhWAlQRpnTS0fT2d++YPx3A=";
   };
   contents = appimageTools.extract { inherit pname version src; };
+  runtimeLibs = [
+    libGL
+    libnotify
+    libappindicator-gtk3
+    libpulseaudio
+    libsecret
+    systemd
+    vulkan-loader
+  ];
 in
-appimageTools.wrapType2 {
-  inherit pname version src;
+stdenv.mkDerivation {
+  inherit pname version;
+  src = contents;
 
-  dieWithParent = false;
+  nativeBuildInputs = [
+    autoPatchelfHook
+    makeWrapper
+  ];
 
-  extraInstallCommands = ''
-    install -Dm644 ${contents}/bb.desktop $out/share/applications/bb-desktop.desktop
+  buildInputs = [
+    alsa-lib
+    at-spi2-atk
+    at-spi2-core
+    cairo
+    cups
+    dbus
+    expat
+    glib
+    gtk3
+    libdrm
+    libgbm
+    libxkbcommon
+    nspr
+    nss
+    pango
+    stdenv.cc.cc.lib
+    libx11
+    libxscrnsaver
+    libxcomposite
+    libxdamage
+    libxext
+    libxfixes
+    libxrandr
+    libxtst
+    libxcb
+    libxshmfence
+  ]
+  ++ runtimeLibs;
+
+  dontConfigure = true;
+  dontBuild = true;
+
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out/opt/bb-desktop $out/bin
+    cp -r --no-preserve=mode . $out/opt/bb-desktop
+    cd $out/opt/bb-desktop
+    rm -rf AppRun usr/lib chrome-sandbox
+    chmod +x bb chrome_crashpad_handler
+    find resources/app.asar.unpacked/node_modules -path '*/prebuilds/*' -name '*.node' \
+      ! -path '*/linux-x64/*' ! -name linux-x64.node -delete
+    rm -rf resources/app.asar.unpacked/node_modules/@parcel/watcher-linux-{arm64-glibc,arm64-musl,x64-musl}
+
+    makeWrapper $out/opt/bb-desktop/bb $out/bin/bb-desktop \
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibs} \
+      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
+
+    install -Dm644 bb.desktop $out/share/applications/bb-desktop.desktop
     substituteInPlace $out/share/applications/bb-desktop.desktop \
       --replace-fail 'Exec=AppRun' 'Exec=bb-desktop' \
       --replace-fail 'Icon=bb' 'Icon=bb-desktop'
-    install -Dm644 ${contents}/bb.png $out/share/icons/hicolor/1024x1024/apps/bb-desktop.png
+    install -Dm644 usr/share/icons/hicolor/1024x1024/apps/bb.png \
+      $out/share/icons/hicolor/1024x1024/apps/bb-desktop.png
+
+    runHook postInstall
   '';
 
   meta = {
