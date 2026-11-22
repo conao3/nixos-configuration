@@ -20,6 +20,7 @@ AGENTS_NOTE = Path.home() / ".agents/share/notes/vercel-board.md"
 OUTCOMES = ("DONE", "BLOCKED:", "FAILED:")
 VB = f"BOARD_URL={VIEW}/api/board vb"
 pending_lock = threading.Lock()
+busy_lanes = set()
 critical = threading.Lock()
 stopping = threading.Event()
 
@@ -393,6 +394,14 @@ def held(profile):
 
 
 def run_task(host, harness, profile, task):
+    busy_lanes.add((host, harness))
+    try:
+        finish_task(host, harness, profile, task)
+    finally:
+        busy_lanes.discard((host, harness))
+
+
+def finish_task(host, harness, profile, task):
     subprocess.run(["vb", "tasks", "renew", task, "--as", profile], capture_output=True)
     stop = threading.Event()
     threading.Thread(target=keep_claim, args=(task, profile, stop), daemon=True).start()
@@ -410,6 +419,40 @@ def run_task(host, harness, profile, task):
             vb("tasks", "fail", task, text, "--as", profile)
         lane_file(profile).unlink(missing_ok=True)
     log(f"task {task} {state}")
+
+
+def harness_for(labels, waiting):
+    host = labels["host"]
+    harnesses = [h for h in HOSTS[host] if "effort" not in labels or h == "bb"]
+    free = [h for h in harnesses if (host, h) not in busy_lanes and (host, h) not in waiting]
+    return free[0] if free else None
+
+
+def place():
+    while True:
+        try:
+            people = {a["id"] for a in vb_json("actors")["actors"] if a["kind"] == "person"}
+            ready = [t["message"] for t in vb_json("tasks", "work/", "--state", "ready")["tasks"]]
+            waiting = {(m["labels"]["host"], m["labels"]["harness"]) for m in ready if "harness" in m["labels"] and "host" in m["labels"]}
+            for m in ready:
+                labels = m["labels"]
+                if "harness" in labels or labels.get("host") not in HOSTS or m["by"]["principal"] not in people:
+                    continue
+                if "effort" in labels and "bb" not in HOSTS[labels["host"]]:
+                    with critical:
+                        vb("tasks", "claim", m["id"], "--as", "server-helios")
+                        vb("tasks", "fail", m["id"], f"Task #{m['id']} has effort={labels['effort']}, which only harness bb applies, and host {labels['host']} runs no bb.", "--as", "server-helios")
+                    continue
+                harness = harness_for(labels, waiting)
+                if harness is None:
+                    continue
+                with critical:
+                    vb("label", m["id"], f"harness={harness}")
+                waiting.add((labels["host"], harness))
+                log(f"task {m['id']} placed on {harness} on {labels['host']}")
+        except (RuntimeError, ValueError, KeyError) as e:
+            log(f"place: {e}")
+        time.sleep(10)
 
 
 def lane(host, harness):
@@ -438,7 +481,7 @@ def main():
     PENDING.mkdir(parents=True, exist_ok=True)
     LANES.mkdir(parents=True, exist_ok=True)
     signal.signal(signal.SIGTERM, lambda *_: stopping.set())
-    loops = [threading.Thread(target=retry_loop), threading.Thread(target=tail, args=("notify", notify)), threading.Thread(target=tail, args=("replies", replies))]
+    loops = [threading.Thread(target=retry_loop), threading.Thread(target=place), threading.Thread(target=tail, args=("notify", notify)), threading.Thread(target=tail, args=("replies", replies))]
     loops += [threading.Thread(target=lane, args=(host, harness)) for host, harnesses in HOSTS.items() for harness in harnesses]
     for loop in loops:
         loop.daemon = True

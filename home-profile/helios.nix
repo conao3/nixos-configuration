@@ -15,12 +15,12 @@
         serveOn = "conao-nixos-helios.tail6dd115.ts.net";
         hosts = {
           helios = [
-            "bb"
             "t3"
+            "bb"
           ];
           eos = [
-            "bb"
             "t3"
+            "bb"
           ];
         };
       })
