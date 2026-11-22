@@ -142,6 +142,51 @@ function AppStateBridge() {
   return null;
 }
 
+const ARCHIVE_FOLLOW_WINDOW_MS = 5000;
+
+function isOpenThread(thread: PluginSidebarThread | undefined): boolean {
+  return thread !== undefined && !thread.isArchived && !thread.isHidden;
+}
+
+function ArchiveFollower() {
+  const navigate = useBbNavigate();
+  const { threads } = experimental_useSidebarThreads();
+  const { threadId } = useBbContext();
+  const lastView = useRef<{ threadId: string; order: string[] } | null>(null);
+  const left = useRef<{
+    threadId: string;
+    order: string[];
+    at: number;
+  } | null>(null);
+  useEffect(() => {
+    if (threadId !== null) {
+      left.current = null;
+      lastView.current = { threadId, order: sidebarOrder() };
+      return;
+    }
+    if (lastView.current !== null) {
+      left.current = { ...lastView.current, at: Date.now() };
+      lastView.current = null;
+    }
+    const from = left.current;
+    if (from === null) return;
+    if (Date.now() - from.at > ARCHIVE_FOLLOW_WINDOW_MS) {
+      left.current = null;
+      return;
+    }
+    const byId = new Map(threads.map((thread) => [thread.id, thread]));
+    if (isOpenThread(byId.get(from.threadId))) return;
+    left.current = null;
+    const index = from.order.indexOf(from.threadId);
+    const next = [
+      ...from.order.slice(index + 1),
+      ...from.order.slice(0, Math.max(index, 0)).toReversed(),
+    ].find((id) => isOpenThread(byId.get(id)));
+    if (next !== undefined) navigate.toThread(next);
+  }, [threadId, threads, navigate]);
+  return null;
+}
+
 function useOwnHostId(): string | null {
   const { hostId } = useSelfHostState();
   const primaryHostId =
@@ -324,6 +369,11 @@ export default definePluginApp((app) => {
   app.slots.experimental_appOverlay({
     id: "state",
     component: AppStateBridge,
+  });
+
+  app.slots.experimental_appOverlay({
+    id: "archive-follower",
+    component: ArchiveFollower,
   });
 
   app.composer.customize({
