@@ -12,6 +12,7 @@ steps() {
   echo "1. Run: $vb read $1
 2. $2
 3. Run: $vb reply $1 \"<your result in a few lines>\" --as worker-$harness$close
+Your turn ending is what marks the task done, so do not end it before step 3: wait for long checks such as CI in the foreground (gh run watch <id> --exit-status), never in the background.
 If you need a decision from the owner, run this instead of step 3 and stop: $vb tasks block $1 \"<the question and the options>\" --as runner-$AGENT_BOARD_HOST-$harness
 Then reply with the single word DONE."
 }
