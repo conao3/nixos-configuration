@@ -9,10 +9,7 @@
 }:
 let
   t3codePackages = import ../../pkgs/t3code.nix { inherit inputs pkgs system; };
-  isEos =
-    pkgs.stdenv.hostPlatform.isLinux
-    && osConfig != null
-    && osConfig.networking.hostName == "conao-nixos-eos";
+  isNixos = pkgs.stdenv.hostPlatform.isLinux && osConfig != null;
 
   hostName = osConfig.networking.hostName;
 
@@ -225,7 +222,7 @@ let
           };
         }
       ]
-      ++ lib.optional isEos {
+      ++ lib.optional isNixos {
         op = "force";
         path = [
           "providerInstances"
@@ -270,7 +267,7 @@ in
     inputs.t3code-gpui.packages.${system}.default
   ];
 
-  sops = lib.mkIf isEos {
+  sops = lib.mkIf isNixos {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
 
@@ -300,7 +297,7 @@ in
   home.activation = {
     # The decrypted secret paths are runtime paths, so they cannot be
     # home.file sources. Link them into place after activation instead.
-    linkAgentSecrets = lib.mkIf isEos (
+    linkAgentSecrets = lib.mkIf isNixos (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         $DRY_RUN_CMD ln -sf ${
           config.sops.secrets."cgpu-modal-api-key".path

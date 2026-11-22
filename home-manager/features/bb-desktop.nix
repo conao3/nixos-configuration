@@ -9,7 +9,7 @@
 }:
 let
   hostName = if osConfig != null then osConfig.networking.hostName else null;
-  isEos = pkgs.stdenv.hostPlatform.isLinux && hostName == "conao-nixos-eos";
+  isNixos = pkgs.stdenv.hostPlatform.isLinux && osConfig != null;
   isServer = pkgs.stdenv.hostPlatform.isLinux && hostName == "conao-nixos-helios";
 
   home = config.home.homeDirectory;
@@ -58,7 +58,7 @@ let
       args = [ "acp" ];
     }
   ]
-  ++ lib.optional isEos {
+  ++ lib.optional isNixos {
     id = "cgpu-modal";
     displayName = "cgpu modal";
     command = "${inputs.llm-agents.packages.${system}.opencode}/bin/opencode";
