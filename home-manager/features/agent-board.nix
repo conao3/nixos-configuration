@@ -66,7 +66,7 @@ in
         };
         Install.WantedBy = [ "default.target" ];
       };
-      # board の管理者。全ホストのタスクの着手と完了、返信の受け渡し、知らせを 1 つのプロセスで受け持ち、
+      # board の管理者。全ホストのタスクの着手と完了、返信の受け渡し、通知を 1 つのプロセスで受け持ち、
       # ほかのホストのエージェントは T3 Code の linked environment と bb の machine で動かす
       agent-board-server = {
         Unit = {
