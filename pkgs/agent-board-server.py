@@ -168,7 +168,7 @@ def spawn(task, host, harness, prompt, model_args):
         out = run("t3", "thread", "start", *t3_env(host), "--json", "--title", f"board task {task}", *model_args, PROJECT, prompt)
         thread = json.loads(out)["threadId"]
     else:
-        out = run(BB, "thread", "spawn", "--project", bb_project(host, repo_path(task)), "--machine", machine(host), "--new-environment", "worktree", *model_args, "--title", f"board task {task}", "--prompt", prompt, "--json")
+        out = run(BB, "thread", "spawn", "--project", bb_project(host, repo_path(task)), "--machine", machine(host), "--new-environment", "worktree", "--permission-mode", "full", *model_args, "--title", f"board task {task}", "--prompt", prompt, "--json")
         thread = json.loads(out)["id"]
     vb("label", task, f"thread={thread}")
     return thread
