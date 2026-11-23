@@ -1,5 +1,6 @@
 [
   ../home-manager/features/bb-desktop.nix
+  ../home-manager/features/mpv.nix
   ../home-manager/features/onepassword.nix
   ../home-manager/features/overhear.nix
   ../home-manager/features/t3code.nix

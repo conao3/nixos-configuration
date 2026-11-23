@@ -127,7 +127,6 @@
 
       linuxPackages = with pkgs; [
         # keep-sorted start
-        (mpv.override { yt-dlp = pkgs.yt-dlp.override { javascriptSupport = false; }; })
         anki
         binutils
         brave
