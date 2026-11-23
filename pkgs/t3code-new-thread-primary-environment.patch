@@ -1,5 +1,4 @@
 diff --git a/apps/web/src/lib/chatThreadActions.ts b/apps/web/src/lib/chatThreadActions.ts
-index 2c52a3f5..c1886058 100644
 --- a/apps/web/src/lib/chatThreadActions.ts
 +++ b/apps/web/src/lib/chatThreadActions.ts
 @@ -1,4 +1,8 @@
@@ -11,21 +10,18 @@ index 2c52a3f5..c1886058 100644
  import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
  import type {
    EnvironmentId,
-@@ -7,6 +11,9 @@ import type {
-   ScopedProjectRef,
- } from "@t3tools/contracts";
- import type { ComposerThreadDraftState, DraftThreadEnvMode } from "../composerDraftStore";
-+import { getClientSettings } from "../hooks/useSettings";
-+import { readProjects } from "../state/entities";
-+import { readPrimaryEnvironmentId } from "../state/environments";
- 
- type ComposerModelSelectionState = Pick<
-   ComposerThreadDraftState,
-@@ -101,6 +108,29 @@ export function resolveThreadActionProjectRef(
+@@ -101,6 +105,36 @@
    return context.defaultProjectRef;
  }
  
-+export function preferPrimaryEnvironmentProjectRef(projectRef: ScopedProjectRef): ScopedProjectRef {
++export async function preferPrimaryEnvironmentProjectRef(
++  projectRef: ScopedProjectRef,
++): Promise<ScopedProjectRef> {
++  const [{ readPrimaryEnvironmentId }, { readProjects }, { getClientSettings }] = await Promise.all([
++    import("../state/environments"),
++    import("../state/entities"),
++    import("../hooks/useSettings"),
++  ]);
 +  const primaryEnvironmentId = readPrimaryEnvironmentId();
 +  if (primaryEnvironmentId === null || projectRef.environmentId === primaryEnvironmentId) {
 +    return projectRef;
@@ -51,12 +47,12 @@ index 2c52a3f5..c1886058 100644
  export async function startNewThreadFromContext(
    context: ChatThreadActionContext,
  ): Promise<boolean> {
-@@ -109,6 +139,6 @@ export async function startNewThreadFromContext(
+@@ -109,6 +143,6 @@
      return false;
    }
  
 -  await context.handleNewThread(projectRef);
-+  await context.handleNewThread(preferPrimaryEnvironmentProjectRef(projectRef));
++  await context.handleNewThread(await preferPrimaryEnvironmentProjectRef(projectRef));
    return true;
  }
 diff --git a/apps/web/src/sidebarProjectGrouping.ts b/apps/web/src/sidebarProjectGrouping.ts
