@@ -45,6 +45,11 @@ lint-all:
 .PHONY: update
 update:
 	nix flake update --log-format internal-json -v 2>&1 | $(NOM) --json
+	$(MAKE) check-t3code
+
+.PHONY: check-t3code
+check-t3code:
+	nix build --impure --no-link --expr 'let f = builtins.getFlake (toString ./.); system = "x86_64-linux"; in (import ./pkgs/t3code.nix { inputs = f.inputs; inherit system; pkgs = f.inputs.nixpkgs.legacyPackages.$${system}; }).t3code-desktop' --log-format internal-json -v 2>&1 | $(NOM) --json
 
 MEMORY ?= 4096
 CORES ?= 2
