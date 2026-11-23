@@ -1,8 +1,8 @@
 diff --git a/apps/web/src/components/Sidebar.logic.ts b/apps/web/src/components/Sidebar.logic.ts
-index f97a6e33..77b66c5c 100644
+index 49109eb4..394b2bcb 100644
 --- a/apps/web/src/components/Sidebar.logic.ts
 +++ b/apps/web/src/components/Sidebar.logic.ts
-@@ -880,6 +880,37 @@ export function resolveAdjacentThreadId<T>(input: {
+@@ -916,6 +916,37 @@ export function resolveAdjacentThreadId<T>(input: {
    return currentIndex < threadIds.length - 1 ? (threadIds[currentIndex + 1] ?? null) : null;
  }
  
@@ -41,7 +41,7 @@ index f97a6e33..77b66c5c 100644
    | "approval"
    | "input"
 diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
-index 86a2d04c..f7bbf2db 100644
+index f8527d0d..d5ae0db1 100644
 --- a/apps/web/src/components/Sidebar.tsx
 +++ b/apps/web/src/components/Sidebar.tsx
 @@ -97,6 +97,7 @@ import {
@@ -52,7 +52,7 @@ index 86a2d04c..f7bbf2db 100644
    resolveShortcutCommand,
    shortcutLabelForCommand,
    threadJumpCommandForIndex,
-@@ -195,7 +196,10 @@ import {
+@@ -194,7 +195,10 @@ import {
    orderItemsByPreferredIds,
    planSidebarThreadDrop,
    reduceSidebarProjectScopeMenuState,
@@ -63,7 +63,7 @@ index 86a2d04c..f7bbf2db 100644
    resolveSidebarSweepKeys,
    resolveSidebarDropTarget,
    resolveSidebarDropVerb,
-@@ -2946,6 +2950,50 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+@@ -2980,6 +2984,37 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
          );
          return;
        }
@@ -71,65 +71,38 @@ index 86a2d04c..f7bbf2db 100644
 +      if (doneTraversalDirection !== null) {
 +        const localLastVisitedAtById = useUiStateStore.getState().threadLastVisitedAtById;
 +        const composerDrafts = useComposerDraftStore.getState();
-+        const draftSessionKeys = Object.entries(composerDrafts.draftThreadsByThreadKey)
-+          .filter(
-+            ([draftKey, session]) =>
-+              session.promotedTo == null &&
-+              composerDraftHasUserContent(composerDrafts.draftsByThreadKey[draftKey]) &&
-+              (scopedProjectKeys === null ||
-+                scopedProjectKeys.has(`${session.environmentId}:${session.projectId}`)),
-+          )
-+          .sort(([, left], [, right]) => right.createdAt.localeCompare(left.createdAt))
-+          .map(([draftKey]) => draftKey);
-+        const draftSessionKeySet = new Set(draftSessionKeys);
-+        const targetKey = resolveAdjacentDoneThreadId({
-+          threadIds: [...draftSessionKeys, ...orderedThreadKeys],
-+          currentThreadId: routeDraftIdForRows ?? routeRowThreadKey,
-+          direction: doneTraversalDirection,
-+          isDone: (threadKey) => {
-+            if (draftSessionKeySet.has(threadKey)) return true;
-+            const thread = threadByKey.get(threadKey);
-+            if (!thread) return false;
-+            return (
-+              composerDraftHasUserContent(composerDrafts.draftsByThreadKey[threadKey]) ||
-+              isSidebarThreadAwaitingUser({
-+                ...thread,
-+                lastVisitedAt: resolveThreadLastVisitedAt(
-+                  thread.lastVisitedAt,
-+                  localLastVisitedAtById[threadKey],
-+                ),
-+              })
-+            );
-+          },
-+        });
-+        if (targetKey !== null && draftSessionKeySet.has(targetKey)) {
-+          event.preventDefault();
-+          event.stopPropagation();
-+          navigateToDraft(DraftId.make(targetKey));
-+          return;
-+        }
-+        navigateToThreadKey(targetKey);
++        navigateToRowKey(
++          resolveAdjacentDoneThreadId({
++            threadIds: orderedRowKeys,
++            currentThreadId: routeRowKey,
++            direction: doneTraversalDirection,
++            isDone: (rowKey) => {
++              const draftId = draftIdByRowKey.get(rowKey);
++              if (draftId !== undefined) {
++                return composerDraftHasUserContent(composerDrafts.draftsByThreadKey[draftId]);
++              }
++              const thread = threadByKey.get(rowKey);
++              if (!thread) return false;
++              return (
++                composerDraftHasUserContent(composerDrafts.draftsByThreadKey[rowKey]) ||
++                isSidebarThreadAwaitingUser({
++                  ...thread,
++                  lastVisitedAt: resolveThreadLastVisitedAt(
++                    thread.lastVisitedAt,
++                    localLastVisitedAtById[rowKey],
++                  ),
++                })
++              );
++            },
++          }),
++        );
 +        return;
 +      }
        const jumpIndex = threadJumpIndexFromCommand(command ?? "");
        if (jumpIndex === null) return;
-       navigateToThreadKey(orderedThreadKeys[jumpIndex] ?? null);
-@@ -2954,10 +3002,13 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
-     return () => window.removeEventListener("keydown", onWindowKeyDown);
-   }, [
-     keybindings,
-+    navigateToDraft,
-     navigateToThread,
-     orderedThreadKeys,
-+    routeDraftIdForRows,
-     routeRowThreadKey,
-     routeThreadRef,
-+    scopedProjectKeys,
-     threadByKey,
-   ]);
- 
+       navigateToRowKey(orderedRowKeys[jumpIndex] ?? null);
 diff --git a/apps/web/src/components/files/BrowserDocumentFrame.tsx b/apps/web/src/components/files/BrowserDocumentFrame.tsx
-index 024f8480..23988f8b 100644
+index 3270556f..b8fab7e4 100644
 --- a/apps/web/src/components/files/BrowserDocumentFrame.tsx
 +++ b/apps/web/src/components/files/BrowserDocumentFrame.tsx
 @@ -71,6 +71,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
@@ -142,10 +115,10 @@ index 024f8480..23988f8b 100644
    ...MODEL_PICKER_JUMP_KEYBINDING_COMMANDS,
  ]);
 diff --git a/apps/web/src/keybindings.ts b/apps/web/src/keybindings.ts
-index 88a30f76..c551cbaa 100644
+index f05067a2..cf07c941 100644
 --- a/apps/web/src/keybindings.ts
 +++ b/apps/web/src/keybindings.ts
-@@ -295,6 +295,14 @@ export function isThreadNavigationShortcut(
+@@ -298,6 +298,14 @@ export function isThreadNavigationShortcut(
    );
  }
  

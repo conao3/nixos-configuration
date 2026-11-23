@@ -1,16 +1,16 @@
 diff --git a/apps/web/src/components/ChatMarkdown.browser.test.tsx b/apps/web/src/components/ChatMarkdown.browser.test.tsx
-index 35356e3a..8fb0a07c 100644
+index faca71b4..a5680917 100644
 --- a/apps/web/src/components/ChatMarkdown.browser.test.tsx
 +++ b/apps/web/src/components/ChatMarkdown.browser.test.tsx
-@@ -21,6 +21,7 @@ import {
- } from "@t3tools/shared/markdownPipeline";
- import { setMarkdownTaskChecked } from "@t3tools/shared/markdownTaskList";
+@@ -17,6 +17,7 @@ import {
+ import type { MarkdownExtensions } from "../markdown/wordsHast";
+ import { setMarkdownTaskChecked } from "@t3tools/shared/markdownTaskEdits";
  import { HostImageUrlContext } from "./chat/hostImageUrl";
 +import { MarkdownTableSortableContext } from "./chat/MarkdownTable";
  import { getSyntaxHighlighterPromise } from "~/lib/syntaxHighlighting";
  
  const { workspaceSearch, filesystemMetadata } = vi.hoisted(() => ({
-@@ -1127,3 +1128,66 @@ describe("ChatMarkdown host media", () => {
+@@ -1166,3 +1167,66 @@ describe("ChatMarkdown host media", () => {
      expect(screen.container.textContent).not.toContain("Retry video");
    });
  });
@@ -78,7 +78,7 @@ index 35356e3a..8fb0a07c 100644
 +  });
 +});
 diff --git a/apps/web/src/components/chat/MarkdownTable.tsx b/apps/web/src/components/chat/MarkdownTable.tsx
-index a75876fa..d6c8ad31 100644
+index 39193279..f369d0ad 100644
 --- a/apps/web/src/components/chat/MarkdownTable.tsx
 +++ b/apps/web/src/components/chat/MarkdownTable.tsx
 @@ -1,6 +1,18 @@
@@ -101,16 +101,22 @@ index a75876fa..d6c8ad31 100644
  
  import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
  import {
-@@ -12,8 +24,127 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
+@@ -13,6 +25,12 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
  import { ScrollArea } from "../ui/scroll-area";
  import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
- import { reportMarkdownActionFailure } from "./markdownActionFailure";
+ import { reportMarkdownActionFailure, type TableCopyFormat } from "./markdownActionFailure";
 +import {
 +  markdownNodeText,
 +  nextMarkdownTableSort,
 +  sortMarkdownTableRowIndices,
 +  type MarkdownTableSort,
 +} from "./markdownTableSort";
+ 
+ const TABLE_COPY_SERIALIZERS: Record<TableCopyFormat, (table: Element) => string> = {
+   markdown: serializeTableElementToMarkdown,
+@@ -20,7 +38,120 @@ const TABLE_COPY_SERIALIZERS: Record<TableCopyFormat, (table: Element) => string
+   html: serializeTableElementToHtml,
+ };
  
 -export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
 +export const MarkdownTableSortableContext = createContext(false);
@@ -229,8 +235,8 @@ index a75876fa..d6c8ad31 100644
 +function MarkdownTableFrame({ table, controls }: { table: ReactNode; controls?: ReactNode }) {
    const gt = useGT();
    const containerRef = useRef<HTMLDivElement | null>(null);
-   const { copyToClipboard, isCopied: copied } = useCopyToClipboard<"markdown" | "csv">({
-@@ -37,10 +168,11 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+   const { copyToClipboard, isCopied: copied } = useCopyToClipboard<TableCopyFormat>({
+@@ -46,10 +177,11 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
    return (
      <div ref={containerRef} className="chat-markdown-table-container">
        <ScrollArea radius="none" chainVerticalScroll scrollFade className="w-full max-w-full">
@@ -243,7 +249,7 @@ index a75876fa..d6c8ad31 100644
          <Menu>
            <Tooltip>
              <TooltipTrigger
-@@ -74,3 +206,10 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+@@ -86,3 +218,10 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
      </div>
    );
  }

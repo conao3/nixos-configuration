@@ -5,12 +5,11 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${system};
+  llmAgentsPkgs = inputs.llm-agents.inputs.nixpkgs.legacyPackages.${system};
   t3code = llmAgents.t3code.override {
     codex = pkgs.callPackage ./codex.nix { fallbackPackage = llmAgents.codex; };
-    t3code-unwrapped = llmAgents.t3code.unwrapped.overrideAttrs (old: {
+    t3code-unwrapped = (llmAgentsPkgs.callPackage ./t3code-unwrapped.nix { flake = inputs.llm-agents; inherit (llmAgents) formatelf versionCheckHomeHook; }).overrideAttrs (old: {
       patches = (old.patches or [ ]) ++ [
-        ./t3code-sol-medium-effort.patch
-        ./t3code-html-preview-file-revision.patch
         ./t3code-opencode-console-go-usage.patch
         ./t3code-full-access-no-approval.patch
         ./t3code-new-thread-primary-environment.patch
