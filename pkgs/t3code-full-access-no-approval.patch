@@ -1,6 +1,8 @@
+diff --git a/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts b/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts
+index 3d4b3fdb..2ee52af4 100644
 --- a/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts
 +++ b/apps/server/src/orchestration-v2/Adapters/ClaudeAdapterV2.ts
-@@ -2761,10 +2761,11 @@
+@@ -3626,10 +3626,11 @@ function claudeBypassAvailability(
  }
  
  function requiresClaudeApproval(context: ActiveClaudeTurnContext): boolean {

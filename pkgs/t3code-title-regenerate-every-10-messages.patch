@@ -1,8 +1,8 @@
 diff --git a/apps/server/src/orchestration-v2/Orchestrator.ts b/apps/server/src/orchestration-v2/Orchestrator.ts
-index f20ca8bdc9..7da28adfd1 100644
+index 6bfd95ea..f135cebd 100644
 --- a/apps/server/src/orchestration-v2/Orchestrator.ts
 +++ b/apps/server/src/orchestration-v2/Orchestrator.ts
-@@ -627,6 +627,8 @@ const decodeUserInputAnswers = Schema.decodeUnknownEffect(
+@@ -721,6 +721,8 @@ const decodeUserInputAnswers = Schema.decodeUnknownEffect(
    ),
  );
  
@@ -11,7 +11,7 @@ index f20ca8bdc9..7da28adfd1 100644
  function pendingThreadTitleGenerationEffect(
    commandId: CommandId,
    threadId: ThreadId,
-@@ -5668,6 +5670,39 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
+@@ -7401,6 +7403,39 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
        ]);
        projection = applyToProjection(projection, event);
      }

@@ -1,8 +1,8 @@
 diff --git a/apps/web/src/components/chat/MessagesTimeline.tsx b/apps/web/src/components/chat/MessagesTimeline.tsx
-index cea2daa111..1233ef507d 100644
+index e94c052e..41a252e2 100644
 --- a/apps/web/src/components/chat/MessagesTimeline.tsx
 +++ b/apps/web/src/components/chat/MessagesTimeline.tsx
-@@ -100,6 +100,7 @@ import { TimelineSystemDivider } from "./TimelineSystemDivider";
+@@ -105,6 +105,7 @@ import { TimelineSystemDivider } from "./TimelineSystemDivider";
  
  import { forwardWheelToTimeline } from "./timelineMinimapWheel";
  import { TimelineMinimap } from "./TimelineMinimap";
@@ -10,9 +10,9 @@ index cea2daa111..1233ef507d 100644
  import {
    type TimelineRowSharedState,
    type TimelineRowActivityState,
-@@ -136,6 +137,9 @@ import { useThreadFindPositionReader } from "./useThreadFindPositionReader";
- import { ThreadActivityAnnouncer } from "./ThreadActivityAnnouncer";
+@@ -144,6 +145,9 @@ import { ThreadActivityAnnouncer } from "./ThreadActivityAnnouncer";
  import { useStableHandoffRuns, useIncrementalTimelineRows, useStableRows } from "./useTimelineRows";
+ import { useClientSettings } from "../../hooks/useSettings";
  
 +const USER_MESSAGE_JUMP_VIEW_OFFSET = 24;
 +const USER_MESSAGE_JUMP_TOLERANCE = 4;
@@ -20,7 +20,7 @@ index cea2daa111..1233ef507d 100644
  function timelineListStateFor(identity: string): {
    readonly identity: string;
    readonly rememberedPosition: RememberedTimelinePosition | undefined;
-@@ -879,6 +883,57 @@ const ConversationTimeline = memo(function ConversationTimeline({
+@@ -977,6 +981,57 @@ const ConversationTimeline = memo(function ConversationTimeline({
      );
    });
  
@@ -32,7 +32,7 @@ index cea2daa111..1233ef507d 100644
 +      firstBufferedIndex == null ? undefined : state.elementAtIndex(firstBufferedIndex);
 +    const firstBufferedTop =
 +      firstBufferedIndex == null ? undefined : state.positionAtIndex(firstBufferedIndex);
-+    const viewport: HTMLElement | undefined = listRef.current?.getScrollableNode();
++    const viewport: HTMLElement | undefined = listRef.current?.getScrollableNode() ?? undefined;
 +    const scroll =
 +      firstBufferedRow && viewport && firstBufferedTop !== undefined
 +        ? firstBufferedTop +
@@ -76,13 +76,13 @@ index cea2daa111..1233ef507d 100644
 +  );
 +
    const minimapRefreshFrameRef = useRef<number | null>(null);
-   const scheduleMinimapRefresh = () => {
+   const scheduleMinimapRefresh = useStableCallback(() => {
      if (minimapRefreshFrameRef.current !== null) return;
 diff --git a/apps/web/src/components/files/BrowserDocumentFrame.tsx b/apps/web/src/components/files/BrowserDocumentFrame.tsx
-index 245e7bd1a3..73ab626c9d 100644
+index 23988f8b..2a3a210c 100644
 --- a/apps/web/src/components/files/BrowserDocumentFrame.tsx
 +++ b/apps/web/src/components/files/BrowserDocumentFrame.tsx
-@@ -55,6 +55,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+@@ -61,6 +61,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
    "filePicker.toggle",
    "projectSearch.toggle",
    "chat.find",
@@ -92,10 +92,10 @@ index 245e7bd1a3..73ab626c9d 100644
    "rightPanel.toggle",
    "rightPanel.toggleMaximized",
 diff --git a/packages/contracts/src/keybindings.ts b/packages/contracts/src/keybindings.ts
-index 32616ddc42..22e72ed49b 100644
+index 1b26083d..a3544c23 100644
 --- a/packages/contracts/src/keybindings.ts
 +++ b/packages/contracts/src/keybindings.ts
-@@ -105,6 +105,8 @@ export const STATIC_KEYBINDING_COMMANDS = [
+@@ -108,6 +108,8 @@ export const STATIC_KEYBINDING_COMMANDS = [
    "chat.newLocal",
    "chat.newWithoutProject",
    "chat.find",
@@ -105,10 +105,10 @@ index 32616ddc42..22e72ed49b 100644
    "usage.cost",
    "usage.tokens",
 diff --git a/packages/shared/src/keybindings.ts b/packages/shared/src/keybindings.ts
-index d71aa98548..a2d887507c 100644
+index 56a424d5..3f57955b 100644
 --- a/packages/shared/src/keybindings.ts
 +++ b/packages/shared/src/keybindings.ts
-@@ -202,6 +202,9 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+@@ -114,6 +114,9 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
    { key: "mod+shift+n", command: "chat.newLocal", when: "!terminalFocus" },
    { key: "mod+alt+n", command: "chat.newWithoutProject", when: "!terminalFocus" },
    { key: "mod+f", command: "chat.find", when: "!terminalFocus && !previewFocus" },
@@ -118,7 +118,7 @@ index d71aa98548..a2d887507c 100644
    { key: "mod+shift+m", command: "modelPicker.toggle", when: "!terminalFocus" },
    { key: "mod+shift+h", command: "composer.host", when: "!terminalFocus" },
    { key: "mod+shift+e", command: "composer.effort", when: "!terminalFocus" },
-@@ -215,8 +218,6 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+@@ -127,8 +130,6 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
    { key: "mod+o", command: "editor.openFavorite" },
    { key: "mod+shift+[", command: "thread.previous" },
    { key: "mod+shift+]", command: "thread.next" },

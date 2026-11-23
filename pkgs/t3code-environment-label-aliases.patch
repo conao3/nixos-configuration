@@ -1,5 +1,5 @@
 diff --git a/apps/web/src/state/environments.ts b/apps/web/src/state/environments.ts
-index a35af5e094..cfb8081328 100644
+index af231d58..12d97b98 100644
 --- a/apps/web/src/state/environments.ts
 +++ b/apps/web/src/state/environments.ts
 @@ -5,6 +5,7 @@ import {
@@ -20,10 +20,10 @@ index a35af5e094..cfb8081328 100644
      relayManaged: hasRelayRoute(presentation.entry),
    };
 diff --git a/packages/client-runtime/src/state/presentation.ts b/packages/client-runtime/src/state/presentation.ts
-index f3ffb03b0b..e3989aef0f 100644
+index 7f270081..2f2b433e 100644
 --- a/packages/client-runtime/src/state/presentation.ts
 +++ b/packages/client-runtime/src/state/presentation.ts
-@@ -20,6 +20,15 @@ import {
+@@ -21,6 +21,15 @@ import {
  import { type EnvironmentCatalogState, enabledEnvironmentIds } from "./connections.ts";
  import { hasRelayRoute } from "../connection/routes.ts";
  
@@ -39,7 +39,7 @@ index f3ffb03b0b..e3989aef0f 100644
  function mapsEqual<K, V>(left: ReadonlyMap<K, V>, right: ReadonlyMap<K, V>): boolean {
    if (left.size !== right.size) {
      return false;
-@@ -207,7 +216,7 @@ export function projectEnvironmentConnectionSummary(
+@@ -220,7 +229,7 @@ export function projectEnvironmentConnectionSummary(
  ): EnvironmentConnectionSummary {
    return {
      environmentId,
@@ -48,7 +48,7 @@ index f3ffb03b0b..e3989aef0f 100644
      displayUrl: connectionCatalogDisplayUrl(environment.entry) ?? "",
      isRelayManaged: hasRelayRoute(environment.entry),
      isEnabled: environment.entry.enabled,
-@@ -235,7 +244,7 @@ export function createEnvironmentSummaryAtoms(input: {
+@@ -251,7 +260,7 @@ export function createEnvironmentSummaryAtoms(input: {
    const identitiesAtom = Atom.make((get) => {
      const next = [...get(input.catalogValueAtom).entries].map(([environmentId, entry]) => ({
        environmentId,

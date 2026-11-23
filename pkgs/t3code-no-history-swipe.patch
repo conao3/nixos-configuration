@@ -1,8 +1,8 @@
 diff --git a/apps/web/src/components/AppSidebarLayout.tsx b/apps/web/src/components/AppSidebarLayout.tsx
-index 91df5616..78c1395e 100644
+index c7515485..cb67a715 100644
 --- a/apps/web/src/components/AppSidebarLayout.tsx
 +++ b/apps/web/src/components/AppSidebarLayout.tsx
-@@ -38,7 +38,6 @@ import {
+@@ -40,7 +40,6 @@ import {
    usePanelNavigationSuppression,
  } from "../panelAnimations";
  import { BackgroundThreadAnnouncer } from "./BackgroundThreadAnnouncer";
@@ -10,7 +10,7 @@ index 91df5616..78c1395e 100644
  import ThreadSidebar from "./Sidebar";
  import { SidebarBrandWidthProbe } from "./sidebar/SidebarChrome";
  import { isAppModalPage } from "./sidebar/mainAppLocation";
-@@ -475,7 +474,6 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
+@@ -502,7 +501,6 @@ export function AppSidebarLayout({
          {children}
          <BackgroundThreadAnnouncer />
          <SidebarControl showSidebar={showSidebar} />

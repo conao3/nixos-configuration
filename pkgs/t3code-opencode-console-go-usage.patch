@@ -1,5 +1,5 @@
 diff --git a/packages/provider-opencode/src/server/usageLimits.ts b/packages/provider-opencode/src/server/usageLimits.ts
-index 0f97ea3..8cd0b6e 100644
+index 03488e51..b022572c 100644
 --- a/packages/provider-opencode/src/server/usageLimits.ts
 +++ b/packages/provider-opencode/src/server/usageLimits.ts
 @@ -40,6 +40,26 @@ const UsageWindow = Schema.Struct({
@@ -29,8 +29,8 @@ index 0f97ea3..8cd0b6e 100644
  
  // Select before decoding so an OAuth or self-hosted connection cannot fall
  // through to another stored account. NULL-active rows predate the selection flag.
-@@ -71,6 +91,40 @@ const readStoredApiKey = (databasePath: string, integrationId: "opencode" | "ope
-     }
+@@ -83,6 +103,40 @@ const readStoredApiKey = (databasePath: string, integrationId: "opencode" | "ope
+     catch: (cause) => new OpenCodeCredentialReadError({ databasePath, cause }),
    }).pipe(Effect.orElseSucceed(() => undefined));
  
 +const readConsoleSession = (databasePath: string) =>
@@ -70,7 +70,7 @@ index 0f97ea3..8cd0b6e 100644
  /** External OpenCode servers own their credentials; never read the host's account for them. */
  export const readOpenCodeGoUsageLimits = Effect.fn("readOpenCodeGoUsageLimits")(function* (input: {
    readonly enabled: boolean;
-@@ -119,9 +173,60 @@ export const readOpenCodeGoUsageLimits = Effect.fn("readOpenCodeGoUsageLimits")(
+@@ -131,9 +185,60 @@ export const readOpenCodeGoUsageLimits = Effect.fn("readOpenCodeGoUsageLimits")(
            ];
      const keys = [...new Set([...storedKeys, goKey].filter((key): key is string => Boolean(key)))];
      let apiKey = keys[0];

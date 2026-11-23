@@ -1,5 +1,5 @@
 diff --git a/apps/web/src/lib/chatThreadActions.ts b/apps/web/src/lib/chatThreadActions.ts
-index ac5412c239..c8412cfbae 100644
+index 2c52a3f5..c1886058 100644
 --- a/apps/web/src/lib/chatThreadActions.ts
 +++ b/apps/web/src/lib/chatThreadActions.ts
 @@ -1,4 +1,8 @@
@@ -8,10 +8,10 @@ index ac5412c239..c8412cfbae 100644
 +  deriveLogicalProjectKeyFromSettings,
 +  selectProjectGroupingSettings,
 +} from "@t3tools/client-runtime/state/project-grouping";
+ import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
  import type {
    EnvironmentId,
-   ModelSelection,
-@@ -6,6 +10,9 @@ import type {
+@@ -7,6 +11,9 @@ import type {
    ScopedProjectRef,
  } from "@t3tools/contracts";
  import type { ComposerThreadDraftState, DraftThreadEnvMode } from "../composerDraftStore";
@@ -21,7 +21,7 @@ index ac5412c239..c8412cfbae 100644
  
  type ComposerModelSelectionState = Pick<
    ComposerThreadDraftState,
-@@ -82,6 +89,29 @@ export function resolveThreadActionProjectRef(
+@@ -101,6 +108,29 @@ export function resolveThreadActionProjectRef(
    return context.defaultProjectRef;
  }
  
@@ -51,7 +51,7 @@ index ac5412c239..c8412cfbae 100644
  export async function startNewThreadFromContext(
    context: ChatThreadActionContext,
  ): Promise<boolean> {
-@@ -90,6 +120,6 @@ export async function startNewThreadFromContext(
+@@ -109,6 +139,6 @@ export async function startNewThreadFromContext(
      return false;
    }
  
@@ -60,18 +60,18 @@ index ac5412c239..c8412cfbae 100644
    return true;
  }
 diff --git a/apps/web/src/sidebarProjectGrouping.ts b/apps/web/src/sidebarProjectGrouping.ts
-index 5f9f7d981d..def784236f 100644
+index 9a28f408..11b85cce 100644
 --- a/apps/web/src/sidebarProjectGrouping.ts
 +++ b/apps/web/src/sidebarProjectGrouping.ts
-@@ -230,10 +230,10 @@ export function buildSidebarProjectPickerEntries(input: {
-         ))
+@@ -238,10 +238,10 @@ export function buildSidebarProjectPickerEntries(input: {
+         ) ?? members.find((project) => project.environmentId === preferredProjectRef.environmentId))
        : null;
      const targetProject =
 -      preferredProject ??
-       group.memberProjects.find(
+       members.find(
          (project) => project.environmentId === group.environmentId && project.id === group.id,
        ) ??
 +      preferredProject ??
-       group.memberProjects[0];
+       members[0];
      if (!targetProject) return [];
  

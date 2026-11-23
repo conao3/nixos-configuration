@@ -1,8 +1,8 @@
 diff --git a/apps/web/src/components/Sidebar.logic.ts b/apps/web/src/components/Sidebar.logic.ts
-index c20789e2..bc3f0129 100644
+index f97a6e33..77b66c5c 100644
 --- a/apps/web/src/components/Sidebar.logic.ts
 +++ b/apps/web/src/components/Sidebar.logic.ts
-@@ -837,6 +837,37 @@ export function resolveAdjacentThreadId<T>(input: {
+@@ -880,6 +880,37 @@ export function resolveAdjacentThreadId<T>(input: {
    return currentIndex < threadIds.length - 1 ? (threadIds[currentIndex + 1] ?? null) : null;
  }
  
@@ -41,18 +41,18 @@ index c20789e2..bc3f0129 100644
    | "approval"
    | "input"
 diff --git a/apps/web/src/components/Sidebar.tsx b/apps/web/src/components/Sidebar.tsx
-index 18aa2770..1981a9e6 100644
+index 86a2d04c..f7bbf2db 100644
 --- a/apps/web/src/components/Sidebar.tsx
 +++ b/apps/web/src/components/Sidebar.tsx
-@@ -90,6 +90,7 @@ import {
+@@ -97,6 +97,7 @@ import {
  } from "@t3tools/client-runtime/state/runtime";
  import { isElectron } from "../env";
  import {
 +  doneThreadTraversalDirectionFromCommand,
    resolveShortcutCommand,
    shortcutLabelForCommand,
-   shouldShowThreadJumpHintsForModifiers,
-@@ -194,7 +195,10 @@ import {
+   threadJumpCommandForIndex,
+@@ -195,7 +196,10 @@ import {
    orderItemsByPreferredIds,
    planSidebarThreadDrop,
    reduceSidebarProjectScopeMenuState,
@@ -63,7 +63,7 @@ index 18aa2770..1981a9e6 100644
    resolveSidebarSweepKeys,
    resolveSidebarDropTarget,
    resolveSidebarDropVerb,
-@@ -2920,6 +2924,50 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+@@ -2946,6 +2950,50 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
          );
          return;
        }
@@ -114,7 +114,7 @@ index 18aa2770..1981a9e6 100644
        const jumpIndex = threadJumpIndexFromCommand(command ?? "");
        if (jumpIndex === null) return;
        navigateToThreadKey(orderedThreadKeys[jumpIndex] ?? null);
-@@ -2928,10 +2976,13 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
+@@ -2954,10 +3002,13 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
      return () => window.removeEventListener("keydown", onWindowKeyDown);
    }, [
      keybindings,
@@ -129,10 +129,10 @@ index 18aa2770..1981a9e6 100644
    ]);
  
 diff --git a/apps/web/src/components/files/BrowserDocumentFrame.tsx b/apps/web/src/components/files/BrowserDocumentFrame.tsx
-index 7c4aa4ad..245e7bd1 100644
+index 024f8480..23988f8b 100644
 --- a/apps/web/src/components/files/BrowserDocumentFrame.tsx
 +++ b/apps/web/src/components/files/BrowserDocumentFrame.tsx
-@@ -65,6 +65,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+@@ -71,6 +71,8 @@ const HTML_RENDER_SHORTCUT_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
    "navigation.forward",
    "thread.previous",
    "thread.next",
@@ -142,11 +142,11 @@ index 7c4aa4ad..245e7bd1 100644
    ...MODEL_PICKER_JUMP_KEYBINDING_COMMANDS,
  ]);
 diff --git a/apps/web/src/keybindings.ts b/apps/web/src/keybindings.ts
-index fc96aa1f..596e0a0f 100644
+index 88a30f76..c551cbaa 100644
 --- a/apps/web/src/keybindings.ts
 +++ b/apps/web/src/keybindings.ts
-@@ -280,6 +280,14 @@ export function threadTraversalDirectionFromCommand(
-   return null;
+@@ -295,6 +295,14 @@ export function isThreadNavigationShortcut(
+   );
  }
  
 +export function doneThreadTraversalDirectionFromCommand(
@@ -161,7 +161,7 @@ index fc96aa1f..596e0a0f 100644
    modifiers: ShortcutModifierStateLike,
    keybindings: ResolvedKeybindingsConfig,
 diff --git a/packages/contracts/src/keybindings.ts b/packages/contracts/src/keybindings.ts
-index 714e0a1d..32616ddc 100644
+index eda5138b..1b26083d 100644
 --- a/packages/contracts/src/keybindings.ts
 +++ b/packages/contracts/src/keybindings.ts
 @@ -40,6 +40,8 @@ const THREAD_KEYBINDING_COMMANDS = [
@@ -174,10 +174,10 @@ index 714e0a1d..32616ddc 100644
    "thread.settle",
    "thread.pin",
 diff --git a/packages/shared/src/keybindings.ts b/packages/shared/src/keybindings.ts
-index 32292c0f..d71aa985 100644
+index 9a67264d..56a424d5 100644
 --- a/packages/shared/src/keybindings.ts
 +++ b/packages/shared/src/keybindings.ts
-@@ -215,6 +215,8 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
+@@ -127,6 +127,8 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
    { key: "mod+o", command: "editor.openFavorite" },
    { key: "mod+shift+[", command: "thread.previous" },
    { key: "mod+shift+]", command: "thread.next" },

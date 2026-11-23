@@ -1,8 +1,13 @@
 diff --git a/apps/server/src/provider/CodexProvider.ts b/apps/server/src/provider/CodexProvider.ts
+index 63154f4e..e77d8fa9 100644
 --- a/apps/server/src/provider/CodexProvider.ts
 +++ b/apps/server/src/provider/CodexProvider.ts
-@@ -166,3 +166,3 @@
+@@ -250,7 +250,7 @@ function codexAccountEmail(account: CodexSchema.V2GetAccountResponse["account"])
+ }
+ 
  export function codexDefaultReasoningEffortOverride(model: string): "medium" | undefined {
 -  return codexModelFamily(model) === "gpt-6-astra" ? "medium" : undefined;
 +  return ["gpt-6-astra", "gpt-6.1-sol"].includes(codexModelFamily(model)) ? "medium" : undefined;
  }
+ 
+ export function mapCodexModelCapabilities(

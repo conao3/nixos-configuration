@@ -203,19 +203,11 @@ index 00000000..6546b189
 +  );
 +}
 diff --git a/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx b/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
-index 49857b5d..53752c17 100644
+index 3d50db17..f0ffb3dc 100644
 --- a/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
 +++ b/apps/web/src/components/files/FilePreviewPanel.browser.test.tsx
-@@ -2,6 +2,7 @@ import { EnvironmentId, ThreadId, type ProjectReadFileResult } from "@t3tools/co
- import { AsyncResult } from "effect/reactivity";
- import { describe, expect, it, vi } from "vite-plus/test";
- import { act, fakeTimers, render } from "../../../test/render";
-+import { userEvent } from "vite-plus/test/browser";
- 
- const state = vi.hoisted(() => ({
-   file: null as ProjectReadFileResult | null,
-@@ -160,3 +161,112 @@ describe("rendered Markdown task saves", () => {
-     });
+@@ -510,3 +510,112 @@ describe("rendered Markdown select all", () => {
+     await expectFileOnlySelection();
    });
  });
 +
@@ -328,10 +320,10 @@ index 49857b5d..53752c17 100644
 +  });
 +});
 diff --git a/apps/web/src/components/files/FilePreviewPanel.tsx b/apps/web/src/components/files/FilePreviewPanel.tsx
-index efe9ed4f..92afe50e 100644
+index 775ddf57..b6539bcd 100644
 --- a/apps/web/src/components/files/FilePreviewPanel.tsx
 +++ b/apps/web/src/components/files/FilePreviewPanel.tsx
-@@ -89,6 +89,8 @@ import { FileExplorerPane } from "./FileExplorerPane";
+@@ -102,6 +102,8 @@ import { FileExplorerPane } from "./FileExplorerPane";
  import { FileBreadcrumbs } from "./FileBreadcrumbs";
  import { breadcrumbPathOf, retainedBreadcrumbTrail, trailChildOf } from "./filePath";
  import { FileMarkdownPreview } from "./FileMarkdownPreview";
@@ -340,9 +332,9 @@ index efe9ed4f..92afe50e 100644
  import {
    type FileCommentAnnotationEntry,
    type FileCommentAnnotationGroup,
-@@ -605,6 +607,10 @@ function useFileLineReveal(
-   };
- }
+@@ -784,6 +786,10 @@ function useFileLineReveal(
+ 
+ const EMPTY_REVIEW_COMMENTS: ReadonlyArray<ReviewCommentContext> = [];
  
 +function isEditorContentElement(target: EventTarget): boolean {
 +  return target instanceof HTMLElement && target.isContentEditable;
@@ -351,7 +343,7 @@ index efe9ed4f..92afe50e 100644
  const createFileEditor: EditorFactory<FileCommentAnnotationGroup, undefined> = (
    editorType,
    options,
-@@ -850,6 +856,35 @@ function EditableFileSurface({
+@@ -1043,6 +1049,35 @@ function EditableFileSurface({
        onDismiss: () => setSelectedRange(null),
      });
    }, [hasOpenCommentForm, setSelectedRange]);
@@ -387,7 +379,7 @@ index efe9ed4f..92afe50e 100644
    const handleLineSelectionEnd = (range: SelectedLineRange | null) => {
      setSelectedRange(range);
      if (range) {
-@@ -876,7 +911,7 @@ function EditableFileSurface({
+@@ -1069,7 +1104,7 @@ function EditableFileSurface({
  
    return (
      <EditProvider createEditor={createFileEditor}>
@@ -396,7 +388,7 @@ index efe9ed4f..92afe50e 100644
          <Virtualizer
            className="file-preview-virtualizer min-h-0 flex-1 overflow-auto"
            config={{
-@@ -953,29 +988,43 @@ function RenderedMarkdownSurface({
+@@ -1182,29 +1217,43 @@ function RenderedMarkdownSurface({
    const saveTarget = { environmentId, cwd, relativePath };
    useFileSaveSession(saveTarget, onPendingChange);
  
@@ -404,7 +396,7 @@ index efe9ed4f..92afe50e 100644
 +  const find = useFileFind(findSurfaceRef);
 +
    return (
--    <ScrollArea className="min-h-0 flex-1">
+-    <ScrollArea className="min-h-0 flex-1" onKeyDown={selectRenderedContentOnSelectAll}>
 -      <FileMarkdownPreview
 -        text={contents}
 -        cwd={cwd}
@@ -432,7 +424,7 @@ index efe9ed4f..92afe50e 100644
 +      className="relative flex min-h-0 flex-1 flex-col outline-none"
 +    >
 +      <FileFindBar {...find} />
-+      <ScrollArea className="min-h-0 flex-1">
++      <ScrollArea className="min-h-0 flex-1" onKeyDown={selectRenderedContentOnSelectAll}>
 +        <FileMarkdownPreview
 +          text={contents}
 +          cwd={cwd}
@@ -550,10 +542,10 @@ index 00000000..ae7cc65d
 +  );
 +}
 diff --git a/apps/web/src/index.css b/apps/web/src/index.css
-index 15dd5e14..c3a884e9 100644
+index 05541d39..f80e3b70 100644
 --- a/apps/web/src/index.css
 +++ b/apps/web/src/index.css
-@@ -404,7 +404,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+@@ -405,7 +405,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
  }
  
  /* Paint find results without changing rendered markdown or copied text. */
@@ -563,7 +555,7 @@ index 15dd5e14..c3a884e9 100644
    color: var(--app-theme-search-match-foreground, oklch(0.216164 0.028283 77.423));
    background-color: var(--app-theme-search-match-background, oklch(0.915 0.11 85));
  
-@@ -414,7 +415,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+@@ -415,7 +416,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
    }
  }
  

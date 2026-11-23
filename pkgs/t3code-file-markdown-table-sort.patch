@@ -1,17 +1,17 @@
 diff --git a/apps/web/src/components/ChatMarkdown.browser.test.tsx b/apps/web/src/components/ChatMarkdown.browser.test.tsx
-index 9a56cdf8..6cb2895a 100644
+index 35356e3a..8fb0a07c 100644
 --- a/apps/web/src/components/ChatMarkdown.browser.test.tsx
 +++ b/apps/web/src/components/ChatMarkdown.browser.test.tsx
-@@ -11,6 +11,7 @@ import { filesystemEnvironment } from "../state/filesystem";
- import { useRightPanelStore } from "../rightPanelStore";
- import { setMarkdownTaskChecked } from "./files/filePreviewMode";
+@@ -21,6 +21,7 @@ import {
+ } from "@t3tools/shared/markdownPipeline";
+ import { setMarkdownTaskChecked } from "@t3tools/shared/markdownTaskList";
  import { HostImageUrlContext } from "./chat/hostImageUrl";
 +import { MarkdownTableSortableContext } from "./chat/MarkdownTable";
+ import { getSyntaxHighlighterPromise } from "~/lib/syntaxHighlighting";
  
  const { workspaceSearch, filesystemMetadata } = vi.hoisted(() => ({
-   workspaceSearch: vi.fn(),
-@@ -458,3 +459,66 @@ describe("ChatMarkdown Windows file links", () => {
-     }
+@@ -1127,3 +1128,66 @@ describe("ChatMarkdown host media", () => {
+     expect(screen.container.textContent).not.toContain("Retry video");
    });
  });
 +
@@ -78,10 +78,11 @@ index 9a56cdf8..6cb2895a 100644
 +  });
 +});
 diff --git a/apps/web/src/components/chat/MarkdownTable.tsx b/apps/web/src/components/chat/MarkdownTable.tsx
-index ee1e1825..815d4e1b 100644
+index a75876fa..d6c8ad31 100644
 --- a/apps/web/src/components/chat/MarkdownTable.tsx
 +++ b/apps/web/src/components/chat/MarkdownTable.tsx
-@@ -1,5 +1,17 @@
+@@ -1,6 +1,18 @@
+ import { T, useGT } from "gt-react";
  import { CheckIcon, CopyIcon } from "lucide-react";
 -import { useRef, type ComponentProps } from "react";
 +import {
@@ -226,10 +227,10 @@ index ee1e1825..815d4e1b 100644
 +}
 +
 +function MarkdownTableFrame({ table, controls }: { table: ReactNode; controls?: ReactNode }) {
+   const gt = useGT();
    const containerRef = useRef<HTMLDivElement | null>(null);
    const { copyToClipboard, isCopied: copied } = useCopyToClipboard<"markdown" | "csv">({
-     timeout: 1200,
-@@ -36,10 +167,11 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+@@ -37,10 +168,11 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
    return (
      <div ref={containerRef} className="chat-markdown-table-container">
        <ScrollArea radius="none" chainVerticalScroll scrollFade className="w-full max-w-full">
@@ -242,7 +243,7 @@ index ee1e1825..815d4e1b 100644
          <Menu>
            <Tooltip>
              <TooltipTrigger
-@@ -69,3 +201,10 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
+@@ -74,3 +206,10 @@ export function MarkdownTable({ children, ...props }: ComponentProps<"table">) {
      </div>
    );
  }

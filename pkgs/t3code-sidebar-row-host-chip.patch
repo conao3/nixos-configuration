@@ -1,8 +1,8 @@
 diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
-index c6ae739fe3..f1b178ebaf 100644
+index 6f798432..b4ad9e69 100644
 --- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
 +++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
-@@ -91,7 +91,6 @@ import { resolveLocalCheckoutBranchMismatch } from "../BranchToolbar.logic";
+@@ -105,7 +105,6 @@ import { resolveLocalCheckoutBranchMismatch } from "../BranchToolbar.logic";
  import {
    ThreadPullRequestBadgeControl,
    ThreadPullRequestsMiniList,
@@ -10,7 +10,7 @@ index c6ae739fe3..f1b178ebaf 100644
    prStatusIndicator,
    resolveThreadPullRequestBadge,
    terminalStatusFromRunningIds,
-@@ -1124,30 +1123,30 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+@@ -1256,16 +1255,23 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
      )
    ) : null;
  
@@ -37,18 +37,19 @@ index c6ae739fe3..f1b178ebaf 100644
    const diff = latestRunDiff(thread);
    // Only the trailing icons would remain, so the row moves them to the title line instead.
    const metaLineEmpty =
--    !thread.branch &&
+-    !checkoutThread.branch &&
      !showsScratchMachine &&
      prBadge === null &&
-     diff === null &&
+     issueBadge === null &&
+@@ -1273,14 +1279,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
      runningTerminalIds.length === 0;
    const metaLine = metaLineEmpty ? null : (
      <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-secondary-label text-xs">
--      {thread.branch ? (
+-      {checkoutThread.branch ? (
 -        <>
--          <ThreadWorktreeIndicator thread={thread} />
+-          <ThreadWorktreeIndicator thread={checkoutThread} />
 -          <span className="flex min-w-0 flex-1">
--            <MiddleTruncate value={thread.branch} showTitle={false} />
+-            <MiddleTruncate value={checkoutThread.branch} showTitle={false} />
 -          </span>
 -        </>
 -      ) : showsScratchMachine ? (
@@ -56,7 +57,7 @@ index c6ae739fe3..f1b178ebaf 100644
          <>
            <EnvironmentMachineIcon
              aria-hidden
-@@ -1429,23 +1428,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+@@ -1572,23 +1571,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
            >
              <div className="flex h-5 min-w-0 items-center gap-1.5">
                {draftIndicator}

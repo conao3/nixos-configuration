@@ -1,8 +1,8 @@
 diff --git a/apps/server/src/assets/AssetAccess.ts b/apps/server/src/assets/AssetAccess.ts
-index 41f0d8e3a7..e5f760641a 100644
+index 06bb738c..2517981e 100644
 --- a/apps/server/src/assets/AssetAccess.ts
 +++ b/apps/server/src/assets/AssetAccess.ts
-@@ -505,11 +505,26 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
+@@ -553,11 +553,26 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
            }),
        ),
      );
@@ -34,7 +34,7 @@ index 41f0d8e3a7..e5f760641a 100644
      return {
        claims: !/\.html?$/i.test(resolved.relativePath)
          ? {
-@@ -527,8 +542,8 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
+@@ -575,8 +590,8 @@ const finalizeWorkspaceFileAsset = Effect.fn("AssetAccess.finalizeWorkspaceFileA
              expiresAt: input.expiresAt,
            },
        fileName: path.basename(resolved.relativePath),
@@ -45,7 +45,7 @@ index 41f0d8e3a7..e5f760641a 100644
      };
    },
  );
-@@ -603,6 +618,7 @@ export const issueAssetUrl = Effect.fn("AssetAccess.issueAssetUrl")(function* (i
+@@ -654,6 +669,7 @@ export const issueAssetUrl = Effect.fn("AssetAccess.issueAssetUrl")(function* (i
        claims = finalized.claims;
        fileName = finalized.fileName;
        imageDimensions = finalized.imageDimensions;
@@ -54,30 +54,24 @@ index 41f0d8e3a7..e5f760641a 100644
      }
      case "draft-workspace-file": {
 diff --git a/apps/web/src/components/files/FilePreviewPanel.tsx b/apps/web/src/components/files/FilePreviewPanel.tsx
-index 234f077da9..8f0e3ccd81 100644
+index 04ca07bd..775ddf57 100644
 --- a/apps/web/src/components/files/FilePreviewPanel.tsx
 +++ b/apps/web/src/components/files/FilePreviewPanel.tsx
-@@ -58,6 +58,7 @@ import { MorphIcon } from "~/components/MorphIcon";
+@@ -68,6 +68,7 @@ import { MediaActions, type MediaActionSource } from "~/components/media/MediaAc
  import { useRemoteOpenState } from "~/remoteOpen";
  import { useClientSettings } from "~/hooks/useSettings";
  import { useTheme } from "~/hooks/useTheme";
 +import { useDeadlinePassed } from "~/hooks/useDeadline";
+ import { useStableCallback } from "~/hooks/useStableCallback";
  import { getLocalStorageItem, setLocalStorageItem, useLocalStorage } from "~/hooks/useLocalStorage";
  import { resolveDiffThemeName } from "~/lib/diffRendering";
- import { PREFERRED_HIGHLIGHTER } from "~/lib/syntaxHighlighting";
-@@ -239,17 +240,29 @@ export function WorkspaceBrowserPreview(props: {
-     workspaceRoot: props.workspaceRoot,
-     absolutePath: props.absolutePath,
-   });
--  const assetUrl = useAssetUrlState(
--    props.environmentId,
--    resource,
--    pdf ? props.workspaceMutationId : undefined,
--  );
+@@ -266,12 +267,28 @@ export function WorkspaceBrowserPreview(props: {
+   ) {
+     setSettledMutationId(props.workspaceMutationId);
+   }
 -  const fileRevision = pdf && assetUrl._tag === "Success" ? assetUrl.fileRevision : undefined;
-+  const assetUrl = useAssetUrlState(props.environmentId, resource, props.workspaceMutationId);
 +  const fileRevision = assetUrl._tag === "Success" ? assetUrl.fileRevision : undefined;
-   const revision = fileRevision ?? props.workspaceMutationId;
+   const revision = fileRevision ?? (pdf ? props.workspaceMutationId : settledMutationId);
    const revisionSuffix =
      revision === null
        ? ""
@@ -101,7 +95,7 @@ index 234f077da9..8f0e3ccd81 100644
  
    if (assetUrl._tag === "Failure") {
      return (
-@@ -271,7 +284,7 @@ export function WorkspaceBrowserPreview(props: {
+@@ -293,7 +310,7 @@ export function WorkspaceBrowserPreview(props: {
    return (
      <BrowserDocumentFrame
        src={`${assetUrl.url}${revisionSuffix}`}
