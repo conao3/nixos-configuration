@@ -52,6 +52,7 @@ in
         SAM_CLI_TELEMETRY = "0";
         BASH_DEFAULT_TIMEOUT_MS = "300000";
         BASH_MAX_TIMEOUT_MS = "1200000";
+        CLAUDE_CODE_SHELL = "${pkgs.bashInteractive}/bin/bash";
       };
       # Remote Control (claude.ai/code とモバイルアプリからのセッション接続) の起動時 ON。
       # 明示設定が無いと GrowthBook の rollout gate (tengu_cobalt_harbor) 次第で OFF に落ちる

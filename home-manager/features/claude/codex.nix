@@ -45,6 +45,7 @@ in
         onConflict = "overwrite";
         settings = {
           approval_policy = "never";
+          developer_instructions = ''Run every exec_command call with the shell argument set to "${pkgs.bashInteractive}/bin/bash" and login set to false. Write commands in bash syntax.'';
           sandbox_mode = "danger-full-access";
           features = agentsLib.force { goals = true; };
           model_providers.sakana = agentsLib.force fuguProvider;

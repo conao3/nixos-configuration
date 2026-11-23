@@ -8,6 +8,12 @@
 let
   llmAgents = inputs.llm-agents.packages.${system};
   codexPackage = pkgs.callPackage ../../../pkgs/codex.nix { fallbackPackage = llmAgents.codex; };
+  withBashShell =
+    name: executable:
+    "${pkgs.writeShellScript "${name}-bash-shell" ''
+      export SHELL=${pkgs.bashInteractive}/bin/bash
+      exec ${executable} "$@"
+    ''}";
   opencodeWrapperArgs = [
     "--run"
     ''export OPENCODE_DB="$OPENCODE_CONFIG_DIR/opencode.db" XDG_STATE_HOME="$OPENCODE_CONFIG_DIR/state"''
@@ -68,7 +74,7 @@ in
         };
       };
       opencode = {
-        executable = "${llmAgents.opencode2}/bin/opencode2";
+        executable = withBashShell "opencode2" "${llmAgents.opencode2}/bin/opencode2";
         envVar = "OPENCODE_CONFIG_DIR";
         homeDir = ".config/opencode";
         share = {
@@ -89,7 +95,7 @@ in
         envVar = "PI_CODING_AGENT_DIR";
       };
       cursor-agent = {
-        executable = pkgs.lib.getExe llmAgents.cursor-agent;
+        executable = withBashShell "cursor-agent" (pkgs.lib.getExe llmAgents.cursor-agent);
         envVar = "CURSOR_HOME";
       };
     };
