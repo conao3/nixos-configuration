@@ -8,12 +8,14 @@ import time
 from pathlib import Path
 
 HOSTS = json.loads(Path(os.environ["AGENT_BOARD_HOSTS"]).read_text())
+SLOTS = int(os.environ["AGENT_BOARD_SLOTS"])
+HARNESSES = ("bb", "t3")
 HOST = os.environ["AGENT_BOARD_HOST"]
 VIEW = os.environ["AGENT_BOARD_VIEW"]
 BB = os.environ["AGENT_BOARD_BB"]
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "agent-board"
 PENDING = STATE / "pending"
-LANES = STATE / "lanes"
+TASKS = STATE / "tasks"
 PROJECT = str(Path.home() / "ghq/github.com/conao3/idea")
 PICKER = Path.home() / "ghq/github.com/conao3/agents-share/tools/pick-model.py"
 AGENTS_NOTE = Path.home() / ".agents/share/notes/vercel-board.md"
@@ -187,20 +189,21 @@ def runs(host, harness, thread):
     return t3_thread(host, thread)["thread"]["runCount"] if harness == "t3" else 0
 
 
-def lane_file(profile):
-    return LANES / f"{profile}.json"
+def runner(host):
+    return f"runner-{host}"
 
 
-def save_lane(profile, task, thread, before):
-    lane_file(profile).write_text(json.dumps({"task": task, "thread": thread, "before": before}))
+def task_file(task):
+    return TASKS / f"{task}.json"
 
 
-def saved_lane(profile, task):
-    f = lane_file(profile)
-    if not f.exists():
-        return None
-    saved = json.loads(f.read_text())
-    return saved if saved["task"] == task else None
+def save_task(task, thread, before):
+    task_file(task).write_text(json.dumps({"thread": thread, "before": before}))
+
+
+def saved_task(task):
+    f = task_file(task)
+    return json.loads(f.read_text()) if f.exists() else None
 
 
 def busy(host, harness, thread):
@@ -209,27 +212,27 @@ def busy(host, harness, thread):
     return subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1s"], capture_output=True).returncode != 0
 
 
-def start(task, host, harness, profile, model_args):
+def start(task, host, harness, model_args):
     thread = task_root(task)["labels"].get("thread")
     if thread and not archived(host, harness, thread):
         before = runs(host, harness, thread)
-        save_lane(profile, task, thread, before)
+        save_task(task, thread, before)
         send(host, harness, thread, again_prompt(task, harness))
         return thread, before
     prompt = again_new_prompt(task, host, harness) if thread else first_prompt(task, host, harness)
     thread = spawn(task, host, harness, prompt, model_args)
-    save_lane(profile, task, thread, 0)
+    save_task(task, thread, 0)
     return thread, 0
 
 
-def resumed(task, host, harness, profile):
-    saved = saved_lane(profile, task)
+def resumed(task, host, harness):
+    saved = saved_task(task)
     if saved is not None:
         return saved["thread"], saved["before"]
     thread = task_root(task)["labels"].get("thread")
     if thread and busy(host, harness, thread):
         before = runs(host, harness, thread) - 1
-        save_lane(profile, task, thread, before)
+        save_task(task, thread, before)
         return thread, before
     return None
 
@@ -376,9 +379,9 @@ def replies(event):
         deliver(labels["host"], labels["harness"], "nudge", labels["thread"], task)
 
 
-def keep_claim(task, profile, stop):
+def keep_claim(task, host, stop):
     while not stop.wait(300):
-        subprocess.run(["vb", "tasks", "renew", task, "--as", profile], capture_output=True)
+        subprocess.run(["vb", "tasks", "renew", task, "--as", runner(host)], capture_output=True)
 
 
 def outcome(text):
@@ -390,102 +393,119 @@ def outcome(text):
     return "failed", f"The worker ended its turn without DONE, BLOCKED or FAILED. Its last line: {last[:300]}"
 
 
-def work(host, harness, profile, task):
+def work(task, host, harness):
     try:
-        found = resumed(task, host, harness, profile)
+        found = resumed(task, host, harness)
         if found is not None:
             thread, before = found
             log(f"task {task} resumes in {harness} thread {thread} on {host}")
         else:
             model_args = pick_model(task, task_root(task)["labels"], harness)
             with critical:
-                thread, before = start(task, host, harness, profile, model_args)
+                thread, before = start(task, host, harness, model_args)
             log(f"task {task} runs in {harness} thread {thread} on {host}")
     except (ValueError, RuntimeError, Unreachable) as e:
         return "failed", str(e)
     return outcome(wait(host, harness, thread, before))
 
 
-def held(profile):
-    tasks = vb_json("tasks", "work/", "--state", "claimed")["tasks"]
-    return [t["message"]["id"] for t in tasks if (t["message"]["task"]["claim"] or {}).get("actor", "").endswith(f"+{profile}")]
-
-
-def run_task(host, harness, profile, task):
-    subprocess.run(["vb", "tasks", "renew", task, "--as", profile], capture_output=True)
+def run_task(task, host, harness):
     stop = threading.Event()
-    threading.Thread(target=keep_claim, args=(task, profile, stop), daemon=True).start()
-    state, text = work(host, harness, profile, task)
+    threading.Thread(target=keep_claim, args=(task, host, stop), daemon=True).start()
+    state, text = work(task, host, harness)
     stop.set()
     with critical:
         claim = task_root(task)["task"]["claim"] or {}
-        if not claim.get("actor", "").endswith(f"+{profile}"):
-            log(f"task {task} is no longer held by {profile}; leaving it as it is")
+        if not claim.get("actor", "").endswith(f"+{runner(host)}"):
+            log(f"task {task} is no longer held by {runner(host)}; leaving it as it is")
         elif state == "done":
-            vb("tasks", "complete", task, text or "done", "--as", profile)
+            vb("tasks", "complete", task, text or "done", "--as", runner(host))
         elif state == "blocked":
-            vb("tasks", "block", task, text, "--as", profile)
+            vb("tasks", "block", task, text, "--as", runner(host))
         else:
-            vb("tasks", "fail", task, text, "--as", profile)
-        lane_file(profile).unlink(missing_ok=True)
+            vb("tasks", "fail", task, text, "--as", runner(host))
+        task_file(task).unlink(missing_ok=True)
+        del running[task]
     log(f"task {task} {state}")
 
 
+running = {}
+
+
+def guarded(task, host, harness):
+    try:
+        run_task(task, host, harness)
+    except Exception as e:
+        log(f"task {task}: {e!r}")
+        stopping.set()
+
+
+def begin(task, host, harness):
+    running[task] = host
+    threading.Thread(target=guarded, args=(task, host, harness), daemon=True).start()
+
+
 def harness_for(labels):
-    return "bb" if "effort" in labels else HOSTS[labels["host"]][0]
+    harness = labels.get("harness", "bb")
+    if harness not in HARNESSES:
+        raise ValueError(f"harness={harness} is none of {', '.join(HARNESSES)}.")
+    if "effort" in labels and harness != "bb":
+        raise ValueError(f"effort={labels['effort']} applies only to harness bb, and the task has harness={harness}.")
+    return harness
 
 
-def place():
+def dispatch():
+    for t in vb_json("tasks", "work/", "--state", "claimed", "--limit", "500")["tasks"]:
+        m = t["message"]
+        host = m["labels"].get("host")
+        if host in HOSTS and (m["task"]["claim"] or {}).get("actor", "").endswith(f"+{runner(host)}"):
+            log(f"{runner(host)} holds task {m['id']}")
+            with critical:
+                vb("tasks", "renew", m["id"], "--as", runner(host))
+                begin(m["id"], host, m["labels"]["harness"])
     while True:
         try:
             people = {a["id"] for a in vb_json("actors")["actors"] if a["kind"] == "person"}
-            ready = [t["message"] for t in vb_json("tasks", "work/", "--state", "ready")["tasks"]]
+            ready = sorted((t["message"] for t in vb_json("tasks", "work/", "--state", "ready", "--limit", "500")["tasks"]), key=lambda m: int(m["id"]))
+            up = {}
             for m in ready:
-                labels = m["labels"]
-                if "harness" in labels or labels.get("host") not in HOSTS or m["by"]["principal"] not in people:
+                labels, host = m["labels"], m["labels"].get("host")
+                if host not in HOSTS or m["by"]["principal"] not in people:
                     continue
-                if "effort" in labels and "bb" not in HOSTS[labels["host"]]:
-                    with critical:
-                        vb("tasks", "claim", m["id"], "--as", "server-helios")
-                        vb("tasks", "fail", m["id"], f"Task #{m['id']} has effort={labels['effort']}, which only harness bb applies, and host {labels['host']} runs no bb.", "--as", "server-helios")
-                    continue
-                harness = harness_for(labels)
                 with critical:
-                    vb("label", m["id"], f"harness={harness}")
-                log(f"task {m['id']} placed on {harness} on {labels['host']}")
+                    if sum(1 for h in running.values() if h == host) >= SLOTS:
+                        continue
+                try:
+                    harness = harness_for(labels)
+                except ValueError as e:
+                    with critical:
+                        vb("tasks", "claim", m["id"], "--as", runner(host))
+                        vb("tasks", "fail", m["id"], f"Task #{m['id']} has {e}", "--as", runner(host))
+                    continue
+                if (host, harness) not in up:
+                    up[host, harness] = reachable(host, harness)
+                if not up[host, harness]:
+                    continue
+                with critical:
+                    try:
+                        vb("tasks", "claim", m["id"], "--as", runner(host))
+                    except RuntimeError as e:
+                        log(f"claim {m['id']}: {e}")
+                        continue
+                    if "harness" not in labels:
+                        vb("label", m["id"], f"harness={harness}")
+                    log(f"{runner(host)} claimed task {m['id']} for {harness}")
+                    begin(m["id"], host, harness)
         except (RuntimeError, ValueError, KeyError) as e:
-            log(f"place: {e}")
+            log(f"dispatch: {e}")
         time.sleep(10)
-
-
-def lane(host, harness):
-    profile = f"runner-{host}-{harness}"
-    for task in held(profile):
-        log(f"{profile} holds task {task}")
-        run_task(host, harness, profile, task)
-    while True:
-        if not reachable(host, harness):
-            time.sleep(60)
-            continue
-        people = [a["id"] for a in vb_json("actors")["actors"] if a["kind"] == "person"]
-        froms = [arg for person in people for arg in ("--from", person)]
-        claimed = subprocess.run(["vb", "tasks", "claim", "--ready", "work/", "--label", f"host={host}", "--label", f"harness={harness}", *froms, "--wait", "10m", "--json", "--as", profile], capture_output=True, text=True)
-        if claimed.returncode != 0:
-            if '"timeout"' not in claimed.stderr:
-                log(f"{profile}: {claimed.stdout}{claimed.stderr}")
-                time.sleep(30)
-            continue
-        task = json.loads(claimed.stdout)["task"]["id"]
-        log(f"{profile} claimed task {task}")
-        run_task(host, harness, profile, task)
 
 
 def main():
     PENDING.mkdir(parents=True, exist_ok=True)
-    LANES.mkdir(parents=True, exist_ok=True)
+    TASKS.mkdir(parents=True, exist_ok=True)
     signal.signal(signal.SIGTERM, lambda *_: stopping.set())
-    loops = [threading.Thread(target=retry_loop), threading.Thread(target=place), threading.Thread(target=tail, args=("notify", notify)), threading.Thread(target=tail, args=("replies", replies))]
-    loops += [threading.Thread(target=lane, args=(host, harness)) for host, harnesses in HOSTS.items() for harness in harnesses]
+    loops = [threading.Thread(target=retry_loop), threading.Thread(target=dispatch), threading.Thread(target=tail, args=("notify", notify)), threading.Thread(target=tail, args=("replies", replies))]
     for loop in loops:
         loop.daemon = True
         loop.start()

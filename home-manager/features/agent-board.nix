@@ -2,7 +2,8 @@
   host,
   boardUrl,
   serveOn ? null,
-  hosts ? { },
+  hosts ? [ ],
+  slots ? 5,
 }:
 {
   inputs,
@@ -34,6 +35,7 @@ let
     "BOARD_PROFILE=server-${host}"
     "AGENT_BOARD_HOST=${host}"
     "AGENT_BOARD_HOSTS=${pkgs.writeText "agent-board-hosts.json" (builtins.toJSON hosts)}"
+    "AGENT_BOARD_SLOTS=${toString slots}"
     "AGENT_BOARD_VIEW=${viewUrl}"
     "AGENT_BOARD_BB=${bb}"
   ];
@@ -43,7 +45,7 @@ in
   home.sessionVariables.BOARD_URL = boardUrl;
 
   # Vercel Board (エージェントの仕事の列)。board は 1 ホストの `vb serve` を Tailscale Serve で tailnet に出し、
-  # board のホストの agent-board-server が、host のラベルの付いた着手可のタスクに、hosts に並べたそのホストのハーネスの先頭 (effort の付いたタスクは bb) を harness のラベルとして記録し、そのハーネスのエージェントを起動する。bb のエージェントは、チャンネル work/<repo> の repo の bb のプロジェクト (無ければ作る) に、新しい worktree で立てる。
+  # board のホストの agent-board-server が、hosts のどれかを host のラベルに持つ着手可のタスクを、ホストごとに同時に slots 件まで取り、harness のラベル (無ければ bb にして記録する) のエージェントをそのホストで起動する。bb のエージェントは、チャンネル work/<repo> の repo の bb のプロジェクト (無ければ作る) に、新しい worktree で立てる。
   # tailnet への公開は board のホストで一度 `tailscale serve --bg 4100` を実行する (tailscaled が設定を保持する)
   systemd.user.services = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (
     lib.optionalAttrs (serveOn != null) {
