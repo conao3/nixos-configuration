@@ -17,6 +17,19 @@ let
 
   claudeLaunchArgs = "--append-system-prompt-file /home/conao/ghq/github.com/conao3/agents-share/src/notes/t3-code-session.md --append-system-prompt \"このセッションが動いているホストは ${lib.removePrefix "conao-nixos-" hostName} (${hostName})。\"";
 
+  boardEnvironment = lib.optional (config.home.sessionVariables ? BOARD_URL) {
+    name = "BOARD_URL";
+    value = config.home.sessionVariables.BOARD_URL;
+    sensitive = false;
+  };
+
+  agentInstances = [
+    "claude_conao3"
+    "claude_agent001"
+    "codex_agent001"
+    "codex_agent002"
+  ];
+
   cgpuProvider = endpointSecret: servedModel: {
     npm = "@ai-sdk/openai-compatible";
     name = "cgpu modal";
@@ -49,7 +62,8 @@ let
         name = "OPENCODE_ENABLE_EXA";
         value = "1";
       }
-    ];
+    ]
+    ++ boardEnvironment;
     enabled = true;
     config = {
       binaryPath = "${inputs.llm-agents.packages.${system}.opencode}/bin/opencode";
@@ -65,7 +79,8 @@ let
         value = "/home/conao/.agents/.opencode.agent001/opencode.db";
         sensitive = false;
       }
-    ];
+    ]
+    ++ boardEnvironment;
     enabled = true;
     config = {
       binaryPath = "/etc/profiles/per-user/conao/bin/opencode.agent001";
@@ -133,6 +148,7 @@ let
       claude_conao3 = {
         driver = "claudeAgent";
         displayName = "Claude conao3";
+        environment = boardEnvironment;
         config = {
           homePath = "/home/conao/.agents/.claude.conao3";
           launchArgs = claudeLaunchArgs;
@@ -141,6 +157,7 @@ let
       claude_agent001 = {
         driver = "claudeAgent";
         displayName = "Claude agent001";
+        environment = boardEnvironment;
         config = {
           homePath = "/home/conao/.agents/.claude.agent001";
           launchArgs = claudeLaunchArgs;
@@ -149,6 +166,7 @@ let
       codex_agent001 = {
         driver = "codex";
         displayName = "Codex agent001";
+        environment = boardEnvironment;
         config = {
           homePath = "/home/conao/.agents/.codex.agent001";
         };
@@ -156,6 +174,7 @@ let
       codex_agent002 = {
         driver = "codex";
         displayName = "Codex agent002";
+        environment = boardEnvironment;
         config = {
           homePath = "/home/conao/.agents/.codex.agent002";
         };
@@ -169,8 +188,8 @@ let
   t3SettingsSeedFile = pkgs.writeText "t3-settings-seed.json" (builtins.toJSON t3SettingsSeed);
 
   # A programs.agents force op (nix-agents merge.jq format): replaces
-  # the OpenCode provider instance subtrees and the Claude launch
-  # arguments, keeps every other key.
+  # the OpenCode provider instance subtrees, the Claude launch arguments
+  # and the Claude / Codex environment, keeps every other key.
   t3SettingsOps = pkgs.writeText "t3-settings-ops.json" (
     builtins.toJSON (
       [
@@ -207,6 +226,15 @@ let
             "claude_conao3"
             "claude_agent001"
           ]
+      ++ map (instance: {
+        op = "force";
+        path = [
+          "providerInstances"
+          instance
+          "environment"
+        ];
+        value = boardEnvironment;
+      }) agentInstances
       ++ [
         {
           op = "force";

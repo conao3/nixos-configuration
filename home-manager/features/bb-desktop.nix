@@ -27,6 +27,9 @@ let
   machineEnv = {
     CLAUDE_CONFIG_DIR = "${home}/.agents/.claude.conao3";
     CODEX_HOME = "${home}/.agents/.codex.agent001";
+  }
+  // lib.optionalAttrs (config.home.sessionVariables ? BOARD_URL) {
+    inherit (config.home.sessionVariables) BOARD_URL;
   };
 
   # ACP providers for the other T3 Code provider instances. The machine
