@@ -471,7 +471,7 @@ def lane(host, harness):
         froms = [arg for person in people for arg in ("--from", person)]
         claimed = subprocess.run(["vb", "tasks", "claim", "--ready", "work/", "--label", f"host={host}", "--label", f"harness={harness}", *froms, "--wait", "10m", "--json", "--as", profile], capture_output=True, text=True)
         if claimed.returncode != 0:
-            if '"timeout"' not in claimed.stdout:
+            if '"timeout"' not in claimed.stderr:
                 log(f"{profile}: {claimed.stdout}{claimed.stderr}")
                 time.sleep(30)
             continue
