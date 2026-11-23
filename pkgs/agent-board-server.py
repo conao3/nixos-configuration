@@ -180,7 +180,7 @@ def archived(host, harness, thread):
 
 def send(host, harness, thread, text):
     if harness == "t3":
-        run("t3", "thread", "send", *t3_env(host), thread, text)
+        run("t3", "thread", "send", *t3_env(host), "--mode", "auto", thread, text)
     else:
         run(BB, "thread", "tell", thread, "--mode", "auto", text)
 

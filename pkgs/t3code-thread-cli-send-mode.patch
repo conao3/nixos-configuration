@@ -1,0 +1,39 @@
+diff --git a/apps/server/src/cli/thread.ts b/apps/server/src/cli/thread.ts
+--- a/apps/server/src/cli/thread.ts
++++ b/apps/server/src/cli/thread.ts
+@@ -976,17 +976,25 @@
+   ),
+ );
+ 
++const sendModeFlag = Flag.Literals("mode", ["queue", "auto", "steer", "restart"]).pipe(
++  Flag.withDescription(
++    "How the message joins a busy thread: queue as its next turn, auto (steer the running turn when the provider can, else queue), steer, or restart the running turn with it. An idle thread starts a turn with it in every mode.",
++  ),
++  Flag.withDefault("queue"),
++);
++
+ const threadSendCommand = Command.make("send", {
+   ...projectLocationFlags,
+   environment: environmentFlag,
+   thread: threadArgument,
+   message: messageArgument,
++  mode: sendModeFlag,
+   outputSchema: outputSchemaFlag,
+   wait: waitFlag,
+   json: jsonFlag,
+ }).pipe(
+   Command.withDescription(
+-    "Send a message to a thread. A busy thread gets it as its next turn; nothing is interrupted.",
++    "Send a message to a thread. A busy thread gets it as its next turn unless --mode says otherwise.",
+   ),
+   Command.withHandler((flags) =>
+     Effect.gen(function* () {
+@@ -1000,7 +1008,7 @@
+           const followWakes = flags.wait ? yield* threadIsIdle(tools, threadId) : false;
+           const sent = yield* tools.call(
+             "t3_thread_send",
+-            { threadId, message, mode: "queue", ...output },
++            { threadId, message, mode: flags.mode, ...output },
+             OrchestratorMcpThreadSendResult,
+           );
+           if (flags.wait) {
