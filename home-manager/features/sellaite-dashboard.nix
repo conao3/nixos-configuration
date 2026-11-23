@@ -13,6 +13,14 @@ in
 {
   home.packages = [ sellaite ];
 
+  programs.agents.mcpServers.sellaite = {
+    command = "${sellaite}/bin/sellaite";
+    args = [
+      "mcp"
+      "serve-mcp"
+    ];
+  };
+
   # sellaite (conao3/rust-sellaite) のダッシュボード。127.0.0.1:8730 で待ち、tailnet へは `tailscale serve --bg --https=8731 http://127.0.0.1:8730` を
   # 各ホストで一度実行して出す (tailscaled が設定を保持する)。`Tailscale-User-Login` が --allowed-logins に無い要求は 403 になる
   systemd.user.services.sellaite-dashboard = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
