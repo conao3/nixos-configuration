@@ -17,6 +17,11 @@
           "helios"
           "eos"
         ];
+        slots = {
+          helios = 5;
+          eos = 5;
+          claudecodeweb = 10;
+        };
       })
     ];
 }
