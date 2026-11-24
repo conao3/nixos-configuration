@@ -521,8 +521,8 @@ def guarded(task, host, harness):
         stopping.set()
 
 
-def begin(task, host, harness):
-    running[task] = host
+def begin(task, host, harness, channel):
+    running[task] = (host, channel)
     threading.Thread(target=guarded, args=(task, host, harness), daemon=True).start()
 
 
@@ -547,18 +547,24 @@ def dispatch():
             log(f"{runner(host)} holds task {m['id']}")
             with critical:
                 vb("tasks", "renew", m["id"], "--as", runner(host))
-                begin(m["id"], host, m["labels"]["harness"])
+                begin(m["id"], host, m["labels"]["harness"], m["channel"])
     while True:
         try:
             people = {a["id"] for a in vb_json("actors")["actors"] if a["kind"] == "person"}
-            ready = sorted((t["message"] for t in vb_json("tasks", "work/", "--state", "ready", "--limit", "500")["tasks"]), key=lambda m: int(m["id"]))
+            ready = [t["message"] for t in vb_json("tasks", "work/", "--state", "ready", "--limit", "500")["tasks"]]
             up = {}
-            for m in ready:
+            while ready:
+                with critical:
+                    busy = {}
+                    for _, channel in running.values():
+                        busy[channel] = busy.get(channel, 0) + 1
+                m = min(ready, key=lambda m: (busy.get(m["channel"], 0), int(m["id"])))
+                ready.remove(m)
                 labels, host = m["labels"], m["labels"].get("host")
                 if (host not in HOSTS and host != CLOUD) or m["by"]["principal"] not in people:
                     continue
                 with critical:
-                    if sum(1 for h in running.values() if h == host) >= SLOTS[host]:
+                    if sum(1 for h, _ in running.values() if h == host) >= SLOTS[host]:
                         continue
                 try:
                     harness = harness_for(labels)
@@ -580,7 +586,7 @@ def dispatch():
                     if "harness" not in labels:
                         vb("label", m["id"], f"harness={harness}")
                     log(f"{runner(host)} claimed task {m['id']} for {harness}")
-                    begin(m["id"], host, harness)
+                    begin(m["id"], host, harness, m["channel"])
         except (RuntimeError, ValueError, KeyError) as e:
             log(f"dispatch: {e}")
         time.sleep(10)
