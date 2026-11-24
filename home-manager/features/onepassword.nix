@@ -61,17 +61,80 @@ let
       exit "$(cat "$dir/rc")"
     '';
   };
+  opUnlock = pkgs.writeShellApplication {
+    name = "op-unlock";
+    runtimeInputs = [
+      pkgs.xdotool
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = ''
+      export DISPLAY=''${DISPLAY:-:0}
+      secret=''${XDG_CONFIG_HOME:-$HOME/.config}/1password-agent/master.pass
+
+      systemctl --user is-active --quiet onepassword || systemctl --user start onepassword
+
+      window() {
+        xdotool search --onlyvisible --name "$1" 2>/dev/null | head -n 1
+      }
+
+      /run/current-system/sw/bin/1password >/dev/null 2>&1 &
+      waited=0
+      until [ -n "$(window 'Lock Screen — 1Password|All Items — 1Password')" ]; do
+        if [ "$waited" -ge 30 ]; then
+          echo "op-unlock: the 1Password window did not appear" >&2
+          exit 1
+        fi
+        sleep 1
+        waited=$((waited + 1))
+      done
+
+      lock=$(window 'Lock Screen — 1Password')
+      if [ -n "$lock" ]; then
+        xdotool windowactivate --sync "$lock"
+        xdotool mousemove --window "$lock" 470 400 click 1
+        sleep 1
+        xdotool type --delay 40 --file "$secret"
+        xdotool key Return
+        waited=0
+        until [ -n "$(window 'All Items — 1Password')" ]; do
+          if [ "$waited" -ge 30 ]; then
+            echo "op-unlock: the lock screen did not open" >&2
+            exit 1
+          fi
+          sleep 1
+          waited=$((waited + 1))
+        done
+      fi
+      echo "op-unlock: unlocked"
+    '';
+  };
 in
 {
-  home.packages = [ opAgent ];
+  home.packages = [
+    opAgent
+    opUnlock
+  ];
 
-  xdg.configFile."autostart/1password.desktop".text = ''
-    [Desktop Entry]
-    Type=Application
-    Name=1Password
-    Exec=1password --silent
-    X-GNOME-Autostart-enabled=true
-  '';
+  systemd.user.services.onepassword = {
+    Unit = {
+      Description = "1Password desktop app";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Environment = [
+        "DISPLAY=:0"
+        "XAUTHORITY=${config.home.homeDirectory}/.Xauthority"
+        "PATH=/run/wrappers/bin:${config.home.profileDirectory}/bin:/run/current-system/sw/bin"
+      ];
+      ExecStart = "/run/current-system/sw/bin/1password --silent";
+      KillSignal = "SIGINT";
+      Restart = "always";
+      RestartSec = 5;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   xdg.configFile."chrome-devtools/profiles/conao3/NativeMessagingHosts/com.1password.1password.json".source =
     config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/google-chrome/NativeMessagingHosts/com.1password.1password.json";
