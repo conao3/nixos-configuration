@@ -3,7 +3,7 @@
   boardUrl,
   serveOn ? null,
   hosts ? [ ],
-  slots ? 5,
+  slots ? { },
 }:
 {
   inputs,
@@ -35,7 +35,11 @@ let
     "BOARD_PROFILE=server-${host}"
     "AGENT_BOARD_HOST=${host}"
     "AGENT_BOARD_HOSTS=${pkgs.writeText "agent-board-hosts.json" (builtins.toJSON hosts)}"
-    "AGENT_BOARD_SLOTS=${toString slots}"
+    "AGENT_BOARD_SLOTS=${
+      pkgs.writeText "agent-board-slots.json" (
+        builtins.toJSON (lib.genAttrs (hosts ++ [ "claudecodeweb" ]) (h: slots.${h} or 5))
+      )
+    }"
     "AGENT_BOARD_VIEW=${viewUrl}"
     "AGENT_BOARD_BB=${bb}"
     "AGENT_BOARD_CLAUDE_CONFIG_DIR=%h/.agents/.claude.conao3"
@@ -46,7 +50,7 @@ in
   home.sessionVariables.BOARD_URL = boardUrl;
 
   # Vercel Board (エージェントの仕事の列)。board は 1 ホストの `vb serve` を Tailscale Serve で tailnet に出し、
-  # board のホストの agent-board-server が、hosts のどれかを host のラベルに持つ着手可のタスクを、ホストごとに同時に slots 件まで取り、harness のラベル (無ければ bb にして記録する) のエージェントをそのホストで起動する。bb のエージェントは、チャンネル work/<repo> の repo の bb のプロジェクト (無ければ作る) に、新しい worktree で立てる。host=claudecodeweb のタスクは、board のホストの tmux から repo の作業ツリーで claude --cloud を実行して Claude Code web のセッションに渡し、ワーカーの board の返信の最後の行で完了・確認待ち・失敗にする。
+  # board のホストの agent-board-server が、hosts のどれかを host のラベルに持つ着手可のタスクを、ホストごとに同時に slots のそのホストの件数 (slots に無いホストは 5 件) まで取り、harness のラベル (無ければ bb にして記録する) のエージェントをそのホストで起動する。bb のエージェントは、チャンネル work/<repo> の repo の bb のプロジェクト (無ければ作る) に、新しい worktree で立てる。host=claudecodeweb のタスクは、board のホストの tmux から repo の作業ツリーで claude --cloud を実行して Claude Code web のセッションに渡し、ワーカーの board の返信の最後の行で完了・確認待ち・失敗にする。
   # tailnet への公開は board のホストで一度 `tailscale serve --bg 4100` を実行する (tailscaled が設定を保持する)
   systemd.user.services = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (
     lib.optionalAttrs (serveOn != null) {

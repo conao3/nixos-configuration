@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 HOSTS = json.loads(Path(os.environ["AGENT_BOARD_HOSTS"]).read_text())
-SLOTS = int(os.environ["AGENT_BOARD_SLOTS"])
+SLOTS = json.loads(Path(os.environ["AGENT_BOARD_SLOTS"]).read_text())
 HARNESSES = ("bb", "t3", "claudecodeweb")
 CLOUD = "claudecodeweb"
 HOST = os.environ["AGENT_BOARD_HOST"]
@@ -558,7 +558,7 @@ def dispatch():
                 if (host not in HOSTS and host != CLOUD) or m["by"]["principal"] not in people:
                     continue
                 with critical:
-                    if sum(1 for h in running.values() if h == host) >= SLOTS:
+                    if sum(1 for h in running.values() if h == host) >= SLOTS[host]:
                         continue
                 try:
                     harness = harness_for(labels)
