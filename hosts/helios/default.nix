@@ -14,6 +14,7 @@ in
 {
   imports = [
     ./hardware-configuration.nix
+    ./board-history.nix
     ./coding-agent.nix
     ./kill-orphan.nix
     ./llm-usage.nix
