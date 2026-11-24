@@ -10,13 +10,14 @@ in
     description = "Publish Board task counts history to the widget Gist";
     serviceConfig = {
       Type = "oneshot";
+      Environment = "PATH=%h/.nix-profile/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
       ExecStart = "${pkgs.writeShellScript "board-history-update" ''
         set -u
-        # vb runs without BOARD_URL here: with no BOARD_URL it talks to
-        # the local vb serve instance (127.0.0.1:4100) with its local
-        # token. Setting BOARD_URL switches it to the remote board,
-        # which rejects this host's credential.
-        unset BOARD_URL
+        # The board is the local vb serve instance: BOARD_URL points
+        # at 127.0.0.1:4100 (the same value the user session carries)
+        # and vb authenticates with its local token. The tailnet URL
+        # instead takes the remote path, which rejects this host.
+        export BOARD_URL="http://127.0.0.1:4100/api/board"
         vb=/etc/profiles/per-user/conao/bin/vb
 
         count() {
