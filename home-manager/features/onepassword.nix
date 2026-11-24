@@ -130,7 +130,7 @@ in
       ];
       ExecStart = "/run/current-system/sw/bin/1password --silent";
       KillSignal = "SIGINT";
-      Restart = "always";
+      Restart = "on-failure";
       RestartSec = 5;
     };
     Install.WantedBy = [ "graphical-session.target" ];
