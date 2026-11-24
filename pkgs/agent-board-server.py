@@ -177,7 +177,9 @@ def pick_model(task, labels, harness):
     if harness == CLOUD:
         return ["--model", pick["model"]]
     model_args = ["--provider", pick["provider"], "--model", pick["model"]]
-    if "effort" in pick:
+    if harness == "t3" and "option" in pick:
+        model_args += ["--option", pick["option"]]
+    elif harness == "bb" and "effort" in pick:
         model_args += ["--reasoning-level", pick["effort"]]
     return model_args
 
@@ -529,13 +531,11 @@ def harness_for(labels):
         if labels.get("harness", CLOUD) != CLOUD:
             raise ValueError(f"host={CLOUD} runs only harness={CLOUD}, and the task has harness={labels['harness']}.")
         if "effort" in labels:
-            raise ValueError(f"effort={labels['effort']} applies only to harness bb, and the task has host={CLOUD}.")
+            raise ValueError(f"effort={labels['effort']} applies to harness bb and t3, and the task has host={CLOUD}.")
         return CLOUD
     harness = labels.get("harness", "bb")
     if harness not in HARNESSES or harness == CLOUD:
         raise ValueError(f"harness={harness} is none of bb, t3 (harness={CLOUD} goes with host={CLOUD}).")
-    if "effort" in labels and harness != "bb":
-        raise ValueError(f"effort={labels['effort']} applies only to harness bb, and the task has harness={harness}.")
     return harness
 
 
