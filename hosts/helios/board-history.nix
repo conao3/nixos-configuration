@@ -46,7 +46,7 @@ in
           '.points = ((.points + [{at: $at, o: $o, b: $b, r: $r}]) | .[-1344:])' "$state") || exit 1
         echo "$history" > "$state"
 
-        ${pkgs.jq}/bin/jq -cj --arg now "$now" --argjson o "$open" --argjson b "$blocked" --argjson r "$running" --slurpfile state "$state" \
+        ${pkgs.jq}/bin/jq -cnj --arg now "$now" --argjson o "$open" --argjson b "$blocked" --argjson r "$running" --slurpfile state "$state" \
           '{updated_at: $now, open: $o, blocked: $b, running: $r, history: $state[0].points}' \
           | ${pkgs.jq}/bin/jq -Rs '{files: {"board-history.json": {content: .}}}' \
           | ${pkgs.gh}/bin/gh api -X PATCH "/gists/${boardGistId}" --input - >/dev/null
