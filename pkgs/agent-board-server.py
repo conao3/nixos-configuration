@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -9,7 +10,8 @@ from pathlib import Path
 
 HOSTS = json.loads(Path(os.environ["AGENT_BOARD_HOSTS"]).read_text())
 SLOTS = int(os.environ["AGENT_BOARD_SLOTS"])
-HARNESSES = ("bb", "t3")
+HARNESSES = ("bb", "t3", "claudecodeweb")
+CLOUD = "claudecodeweb"
 HOST = os.environ["AGENT_BOARD_HOST"]
 VIEW = os.environ["AGENT_BOARD_VIEW"]
 BB = os.environ["AGENT_BOARD_BB"]
@@ -21,6 +23,9 @@ PICKER = Path.home() / "ghq/github.com/conao3/agents-share/tools/pick-model.py"
 AGENTS_NOTE = Path.home() / ".agents/share/notes/vercel-board.md"
 OUTCOMES = ("DONE", "BLOCKED:", "FAILED:")
 VB = f"BOARD_URL={VIEW}/api/board vb"
+CLOUD_ENV = {**os.environ, "CLAUDE_CONFIG_DIR": os.environ["AGENT_BOARD_CLAUDE_CONFIG_DIR"]}
+CLOUD_TMUX = ["tmux", "-L", "agent-board"]
+CLOUD_TIMEOUT = 6 * 3600
 pending_lock = threading.Lock()
 critical = threading.Lock()
 stopping = threading.Event()
@@ -34,9 +39,9 @@ def log(*parts):
     print(*parts, flush=True)
 
 
-def run(*args, text=None):
+def run(*args, text=None, env=None):
     try:
-        done = subprocess.run(args, input=text, capture_output=True, text=True, timeout=120)
+        done = subprocess.run(args, input=text, capture_output=True, text=True, timeout=120, env=env)
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"{' '.join(args[:4])}: timed out")
     if done.returncode != 0:
@@ -73,6 +78,8 @@ def t3_env(host):
 
 
 def reachable(host, harness):
+    if harness == CLOUD:
+        return True
     try:
         if harness == "t3":
             t3_env(host)
@@ -111,6 +118,14 @@ def bb_project(host, path):
 
 
 def steps(task, harness, action):
+    if harness == CLOUD:
+        return f"""1. Run: {VB} read {task}
+2. {action}
+3. Run: {VB} reply {task} "<your result in a few lines, then a last line that is one of the three below>" --as worker-{harness}
+The board server reads only the last line of that reply, so write the reply once, when you are done, blocked or failed, and wait for long checks such as CI in the foreground (gh run watch <id> --exit-status) before it. Its last line is one of these:
+DONE
+BLOCKED: <the question for the owner and the options, with the one you recommend>
+FAILED: <what you tried and why you could not go on>"""
     close = "\n4. Settle this thread: call the T3 Code tool t3_thread_organize with action settle and no threadId." if harness == "t3" else ""
     return f"""1. Run: {VB} read {task}
 2. {action}
@@ -124,6 +139,8 @@ Use BLOCKED instead of step 3 when you need a decision from the owner, and FAILE
 
 
 def intro(task, host, harness):
+    if harness == CLOUD:
+        return f"You are a worker for board task #{task} in a Claude Code on the web session, a fresh clone of the repository of the task's channel. The board's notes and ~/.agents/share are not here: the thread is your whole request. Work on a new branch and push it with git push -u origin HEAD; when the task says to push to a branch, rebase onto it and push with git push origin HEAD:<branch>. The first vb call joins the tailnet and takes about 15 seconds."
     where = f" This thread runs in its own git worktree of {repo_path(task)}, on a new branch from the default branch. Work and commit there; when the task says to push to a branch, rebase onto it and push with git push origin HEAD:<branch>." if harness == "bb" else ""
     return f"You are a worker for board task #{task} on host {host}.{where} Before anything else, read {AGENTS_NOTE} and follow its section on workers."
 
@@ -157,14 +174,43 @@ def pick_model(task, labels, harness):
         effort = f" effort={labels['effort']}" if "effort" in labels else ""
         raise ValueError(f"Task #{task} has model={labels['model']}{effort}, which picks no model: {(picked.stderr or picked.stdout).strip()}")
     pick = json.loads(picked.stdout)
+    if harness == CLOUD:
+        return ["--model", pick["model"]]
     model_args = ["--provider", pick["provider"], "--model", pick["model"]]
     if "effort" in pick:
         model_args += ["--reasoning-level", pick["effort"]]
     return model_args
 
 
+def cloud_session(task, prompt, model_args):
+    name = f"board-task-{task}"
+    prompt_file = TASKS / f"{task}.prompt"
+    prompt_file.write_text(prompt)
+    subprocess.run([*CLOUD_TMUX, "kill-session", "-t", name], capture_output=True)
+    run(*CLOUD_TMUX, "new-session", "-d", "-s", name, "-x", "200", "-y", "50", "-c", repo_path(task), "-e", f"CLAUDE_CONFIG_DIR={CLOUD_ENV['CLAUDE_CONFIG_DIR']}",
+        "sh", "-c", 'claude "$@" --cloud "$(cat "$0")"; echo "EXIT=$?"; sleep 600', str(prompt_file), *model_args)
+    try:
+        for _ in range(60):
+            time.sleep(3)
+            screen = run(*CLOUD_TMUX, "capture-pane", "-t", name, "-p")
+            if "Yes, I trust this folder" in screen:
+                run(*CLOUD_TMUX, "send-keys", "-t", name, "Down", "Enter")
+                continue
+            found = re.search(r"session_[A-Za-z0-9]+", screen)
+            if found:
+                return found.group(0)
+            if "EXIT=" in screen:
+                raise RuntimeError(f"claude --cloud started no session: {' '.join(screen.split())[-300:]}")
+        raise RuntimeError("claude --cloud printed no session in 3 minutes")
+    finally:
+        subprocess.run([*CLOUD_TMUX, "kill-session", "-t", name], capture_output=True)
+        prompt_file.unlink(missing_ok=True)
+
+
 def spawn(task, host, harness, prompt, model_args):
-    if harness == "t3":
+    if harness == CLOUD:
+        thread = cloud_session(task, prompt, model_args)
+    elif harness == "t3":
         out = run("t3", "thread", "start", *t3_env(host), "--json", "--title", f"board task {task}", *model_args, PROJECT, prompt)
         thread = json.loads(out)["threadId"]
     else:
@@ -179,10 +225,16 @@ def archived(host, harness, thread):
 
 
 def send(host, harness, thread, text):
-    if harness == "t3":
+    if harness == CLOUD:
+        run("claude", "-p", text, "--cloud", thread, "--output-format", "json", env=CLOUD_ENV)
+    elif harness == "t3":
         run("t3", "thread", "send", *t3_env(host), "--mode", "auto", thread, text)
     else:
         run(BB, "thread", "tell", thread, "--mode", "auto", text)
+
+
+def last_reply(task):
+    return max((int(r["id"]) for r in vb_json("read", str(task))["replies"]), default=0)
 
 
 def runs(host, harness, thread):
@@ -207,6 +259,8 @@ def saved_task(task):
 
 
 def busy(host, harness, thread):
+    if harness == CLOUD:
+        return False
     if harness == "t3":
         return t3_thread(host, thread)["thread"]["activeRunId"] is not None
     return subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1s"], capture_output=True).returncode != 0
@@ -215,14 +269,15 @@ def busy(host, harness, thread):
 def start(task, host, harness, model_args):
     thread = task_root(task)["labels"].get("thread")
     if thread and not archived(host, harness, thread):
-        before = runs(host, harness, thread)
+        before = last_reply(task) if harness == CLOUD else runs(host, harness, thread)
         save_task(task, thread, before)
         send(host, harness, thread, again_prompt(task, harness))
         return thread, before
     prompt = again_new_prompt(task, host, harness) if thread else first_prompt(task, host, harness)
+    before = last_reply(task) if harness == CLOUD else 0
     thread = spawn(task, host, harness, prompt, model_args)
-    save_task(task, thread, 0)
-    return thread, 0
+    save_task(task, thread, before)
+    return thread, before
 
 
 def resumed(task, host, harness):
@@ -237,9 +292,25 @@ def resumed(task, host, harness):
     return None
 
 
-def wait(host, harness, thread, before):
+def cloud_reply(task, before):
+    for reply in sorted(vb_json("read", str(task))["replies"], key=lambda r: int(r["id"])):
+        if int(reply["id"]) > before and reply["by"].get("profile") == f"worker-{CLOUD}" and ended(reply["text"]):
+            return reply["text"]
+    return None
+
+
+def wait(task, host, harness, thread, before):
+    started = time.time()
     while True:
         try:
+            if harness == CLOUD:
+                text = cloud_reply(task, before)
+                if text is not None:
+                    return text
+                if time.time() - started > CLOUD_TIMEOUT:
+                    return f"FAILED: Claude Code web session {thread} wrote no reply ending with DONE, BLOCKED or FAILED in {CLOUD_TIMEOUT // 3600} hours."
+                time.sleep(20)
+                continue
             if harness == "t3":
                 shown = t3_thread(host, thread)
                 if shown["thread"]["runCount"] > before and shown["thread"]["activeRunId"] is None:
@@ -384,9 +455,17 @@ def keep_claim(task, host, stop):
         subprocess.run(["vb", "tasks", "renew", task, "--as", runner(host)], capture_output=True)
 
 
-def outcome(text):
+def last_line(text):
     lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
-    last = lines[-1] if lines else ""
+    return lines[-1] if lines else ""
+
+
+def ended(text):
+    return last_line(text).startswith(OUTCOMES)
+
+
+def outcome(text):
+    last = last_line(text)
     for word in OUTCOMES:
         if last.startswith(word):
             return word.rstrip(":").lower(), last[len(word):].strip()
@@ -406,7 +485,7 @@ def work(task, host, harness):
             log(f"task {task} runs in {harness} thread {thread} on {host}")
     except (ValueError, RuntimeError, Unreachable) as e:
         return "failed", str(e)
-    return outcome(wait(host, harness, thread, before))
+    return outcome(wait(task, host, harness, thread, before))
 
 
 def run_task(task, host, harness):
@@ -446,9 +525,15 @@ def begin(task, host, harness):
 
 
 def harness_for(labels):
+    if labels.get("host") == CLOUD:
+        if labels.get("harness", CLOUD) != CLOUD:
+            raise ValueError(f"host={CLOUD} runs only harness={CLOUD}, and the task has harness={labels['harness']}.")
+        if "effort" in labels:
+            raise ValueError(f"effort={labels['effort']} applies only to harness bb, and the task has host={CLOUD}.")
+        return CLOUD
     harness = labels.get("harness", "bb")
-    if harness not in HARNESSES:
-        raise ValueError(f"harness={harness} is none of {', '.join(HARNESSES)}.")
+    if harness not in HARNESSES or harness == CLOUD:
+        raise ValueError(f"harness={harness} is none of bb, t3 (harness={CLOUD} goes with host={CLOUD}).")
     if "effort" in labels and harness != "bb":
         raise ValueError(f"effort={labels['effort']} applies only to harness bb, and the task has harness={harness}.")
     return harness
@@ -458,7 +543,7 @@ def dispatch():
     for t in vb_json("tasks", "work/", "--state", "claimed", "--limit", "500")["tasks"]:
         m = t["message"]
         host = m["labels"].get("host")
-        if host in HOSTS and (m["task"]["claim"] or {}).get("actor", "").endswith(f"+{runner(host)}"):
+        if (host in HOSTS or host == CLOUD) and (m["task"]["claim"] or {}).get("actor", "").endswith(f"+{runner(host)}"):
             log(f"{runner(host)} holds task {m['id']}")
             with critical:
                 vb("tasks", "renew", m["id"], "--as", runner(host))
@@ -470,7 +555,7 @@ def dispatch():
             up = {}
             for m in ready:
                 labels, host = m["labels"], m["labels"].get("host")
-                if host not in HOSTS or m["by"]["principal"] not in people:
+                if (host not in HOSTS and host != CLOUD) or m["by"]["principal"] not in people:
                     continue
                 with critical:
                     if sum(1 for h in running.values() if h == host) >= SLOTS:
