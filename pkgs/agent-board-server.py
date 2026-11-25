@@ -94,6 +94,18 @@ def t3_thread(host, thread):
     return json.loads(run("t3", "thread", "show", *t3_env(host), thread, "--json", "--messages", "5"))
 
 
+def bb_thread(thread):
+    return json.loads(run(BB, "thread", "show", thread, "--json"))
+
+
+def bb_error(thread):
+    lines = run(BB, "thread", "log", thread).splitlines()
+    starts = [i for i, line in enumerate(lines) if line.startswith("── Error")]
+    if not starts:
+        return "no error message in its log"
+    return " ".join(line.strip() for line in lines[starts[-1] + 1:] if line.strip())[:500]
+
+
 def repo_path(task):
     channel = task_root(task)["channel"]
     name = channel.removeprefix("work/")
@@ -157,8 +169,13 @@ def again_prompt(task, harness):
     return f"Board task #{task} has a new reply from its creator or the board owner. Do these steps in order.\n{steps(task, harness, REPLY)}"
 
 
-def again_new_prompt(task, host, harness):
-    return f"{intro(task, host, harness)} The task's earlier thread is archived, and the task has a new reply from its creator or the board owner. Do these steps in order.\n{steps(task, harness, REPLY)}"
+def again_new_prompt(task, host, harness, earlier):
+    left = ""
+    if harness == "bb":
+        env = bb_thread(earlier)["environment"] or {}
+        if env.get("path"):
+            left = f" Its worktree {env['path']} on the branch {env.get('branchName')} may hold its work that was not pushed: read that first and continue from it with git instead of redoing it."
+    return f"{intro(task, host, harness)} The task's earlier thread {earlier} is archived, and the task has a new reply from its creator or the board owner.{left} Do these steps in order.\n{steps(task, harness, REPLY)}"
 
 
 def pick_model(task, labels, harness):
@@ -223,6 +240,8 @@ def spawn(task, host, harness, prompt, model_args):
 
 
 def archived(host, harness, thread):
+    if harness == "bb":
+        return bb_thread(thread)["thread"]["archivedAt"] is not None
     return harness == "t3" and t3_thread(host, thread)["thread"]["archived"]
 
 
@@ -275,7 +294,7 @@ def start(task, host, harness, model_args):
         save_task(task, thread, before)
         send(host, harness, thread, again_prompt(task, harness))
         return thread, before
-    prompt = again_new_prompt(task, host, harness) if thread else first_prompt(task, host, harness)
+    prompt = again_new_prompt(task, host, harness, thread) if thread else first_prompt(task, host, harness)
     before = last_reply(task) if harness == CLOUD else 0
     thread = spawn(task, host, harness, prompt, model_args)
     save_task(task, thread, before)
@@ -320,8 +339,12 @@ def wait(task, host, harness, thread, before):
                     return replies[-1] if replies else ""
             else:
                 time.sleep(5)
-                if subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "10m"], capture_output=True).returncode == 0:
+                if subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1m"], capture_output=True).returncode == 0:
                     return run(BB, "thread", "output", thread)
+                if bb_thread(thread)["thread"]["status"] == "error":
+                    error = bb_error(thread)
+                    run(BB, "thread", "archive", thread)
+                    return f"FAILED: bb thread {thread} stopped with an error and is archived, so reopening the task starts a new thread that picks the model again: {error}"
         except (Unreachable, RuntimeError) as e:
             log(f"waiting on {harness} thread {thread} on {host}: {e}")
         time.sleep(10)
@@ -583,6 +606,7 @@ def dispatch():
                     except RuntimeError as e:
                         log(f"claim {m['id']}: {e}")
                         continue
+                    task_file(m["id"]).unlink(missing_ok=True)
                     if "harness" not in labels:
                         vb("label", m["id"], f"harness={harness}")
                     log(f"{runner(host)} claimed task {m['id']} for {harness}")
