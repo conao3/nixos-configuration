@@ -31,6 +31,7 @@ let
             ./t3code-sidebar-launched-threads.patch
             ./t3code-thread-cli-environment.patch
             ./t3code-thread-cli-send-mode.patch
+            ./t3code-thread-cli-configure.patch
           ];
         });
   };

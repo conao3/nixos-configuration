@@ -22,6 +22,7 @@ PROJECT = str(Path.home() / "ghq/github.com/conao3/idea")
 PICKER = Path.home() / "ghq/github.com/conao3/agents-share/tools/pick-model.py"
 AGENTS_NOTE = Path.home() / ".agents/share/notes/vercel-board.md"
 OUTCOMES = ("DONE", "BLOCKED:", "FAILED:")
+LIMITED = re.compile(r"usage limit|rate limit|limit reached|hit your limit|insufficient balance|purchase more credits|quota", re.IGNORECASE)
 VB = f"BOARD_URL={VIEW}/api/board vb"
 CLOUD_ENV = {**os.environ, "CLAUDE_CONFIG_DIR": os.environ["AGENT_BOARD_CLAUDE_CONFIG_DIR"]}
 CLOUD_TMUX = ["tmux", "-L", "agent-board"]
@@ -32,6 +33,10 @@ stopping = threading.Event()
 
 
 class Unreachable(Exception):
+    pass
+
+
+class Stopped(Exception):
     pass
 
 
@@ -165,6 +170,11 @@ def first_prompt(task, host, harness):
     return f"{intro(task, host, harness)} Then do these steps in order.\n{steps(task, harness, FIRST)}"
 
 
+def switched_prompt(task, harness, error, model):
+    action = f"Your earlier turn in this thread stopped on its provider's limit ({error}), so this thread now runs on {model}. Carry on with the request of that thread from where the earlier turn stopped: check git status, the commits on your branch and your replies on the task for what is already done, and do only the rest."
+    return f"Board task #{task}. Do these steps in order.\n{steps(task, harness, action)}"
+
+
 def again_prompt(task, harness):
     return f"Board task #{task} has a new reply from its creator or the board owner. Do these steps in order.\n{steps(task, harness, REPLY)}"
 
@@ -180,10 +190,12 @@ def again_new_prompt(task, host, harness, earlier):
     return f"{intro(task, host, harness)} The task's earlier thread {earlier} is archived or stopped with an error, and the task has a new reply from its creator or the board owner.{left} Do these steps in order.\n{steps(task, harness, REPLY)}"
 
 
-def pick_model(task, labels, harness):
+def pick_model(task, labels, harness, skip=()):
     if "model" not in labels:
         raise ValueError(f"Task #{task} has no model label. Add one with: vb label {task} model=<fable|opus|sonnet|haiku>")
     args = [sys.executable, str(PICKER), "board", labels["model"], "--harness", harness]
+    for provider in skip:
+        args += ["--skip-provider", provider]
     if harness == "bb":
         args += ["--bb", BB]
     if "effort" in labels:
@@ -338,17 +350,40 @@ def wait(task, host, harness, thread, before):
             if harness == "t3":
                 shown = t3_thread(host, thread)
                 if shown["thread"]["runCount"] > before and shown["thread"]["activeRunId"] is None:
-                    replies = [m["text"] for m in shown["messages"] if m["role"] == "assistant"]
-                    return replies[-1] if replies else ""
+                    error = shown.get("error")
+                    if error and LIMITED.search(error):
+                        before = switch_model(task, host, thread, shown, error)
+                        continue
+                    replies = [m["text"] for m in shown["messages"] if m["role"] == "assistant" and m["runId"] == shown["thread"].get("latestRunId", m["runId"])]
+                    if replies:
+                        return replies[-1]
+                    return f"FAILED: T3 Code thread {thread} ended its run with no reply: {error}" if error else ""
             else:
                 time.sleep(5)
                 if subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1m"], capture_output=True).returncode == 0:
                     return run(BB, "thread", "output", thread)
                 if bb_thread(thread)["thread"]["status"] == "error":
                     return f"FAILED: bb thread {thread} stopped with an error, so reopening the task starts a new thread that picks the model again and continues from this thread's worktree: {bb_error(thread)}"
+        except Stopped as e:
+            return str(e)
         except (Unreachable, RuntimeError) as e:
             log(f"waiting on {harness} thread {thread} on {host}: {e}")
         time.sleep(10)
+
+
+def switch_model(task, host, thread, shown, error):
+    skip = [shown["thread"]["providerInstanceId"]]
+    try:
+        model_args = pick_model(task, task_root(task)["labels"], "t3", skip)
+    except ValueError as e:
+        raise Stopped(f"FAILED: T3 Code thread {thread} stopped on its provider's limit ({error}), and no other route is left: {e}")
+    provider, model = model_args[1], model_args[3]
+    run("t3", "thread", "configure", *t3_env(host), thread, *model_args)
+    before = shown["thread"]["runCount"]
+    save_task(task, thread, before)
+    send(host, "t3", thread, switched_prompt(task, "t3", error, f"{provider}/{model}"))
+    log(f"task {task}: t3 thread {thread} hit a limit on {shown['thread']['providerInstanceId']}, switched to {provider}/{model}")
+    return before
 
 
 def deliver(host, harness, action, *args):

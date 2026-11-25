@@ -1,0 +1,50 @@
+diff --git a/apps/server/src/cli/thread.ts b/apps/server/src/cli/thread.ts
+--- a/apps/server/src/cli/thread.ts
++++ b/apps/server/src/cli/thread.ts
+@@ -1092,12 +1092,46 @@
+   ),
+ );
+ 
++const threadConfigureCommand = Command.make("configure", {
++  ...projectLocationFlags,
++  environment: environmentFlag,
++  thread: threadArgument,
++  provider: Flag.String("provider").pipe(Flag.withDescription("Provider instance id.")),
++  model: Flag.String("model").pipe(Flag.withDescription("Model slug.")),
++  option: Flag.String("option").pipe(
++    Flag.withDescription("Model option as id=value, such as effort=high. Repeat for more."),
++    Flag.atLeast(0),
++  ),
++}).pipe(
++  Command.withDescription(
++    "Set a thread's provider, model, and options. Its next turn runs with them.",
++  ),
++  Command.withHandler((flags) =>
++    Effect.gen(function* () {
++      const threadId = yield* decodeThreadId(flags.thread);
++      const modelSelection = yield* launchModelSelection({
++        provider: Option.some(flags.provider),
++        model: Option.some(flags.model),
++        option: flags.option,
++      });
++      yield* withThreadTools(
++        flags,
++        Effect.fn("cli.thread.configure")(function* (tools) {
++          yield* tools.call("t3_thread_configure", { threadId, modelSelection }, Schema.Unknown);
++          yield* Console.log(`Configured ${flags.provider}/${flags.model}.`);
++        }),
++      );
++    }).pipe(reportThreadErrors),
++  ),
++);
++
+ export const threadCommand = Command.make("thread").pipe(
+   Command.withDescription("Start, message, and read threads on the running server."),
+   Command.withSubcommands([
+     threadListCommand,
+     threadStartCommand,
+     threadSendCommand,
++    threadConfigureCommand,
+     threadShowCommand,
+   ]),
+ );
