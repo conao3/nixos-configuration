@@ -57,7 +57,7 @@ index 1c25e687..717d263b 100644
 -                  className={cn("min-w-0 flex-1 truncate font-normal text-secondary-label text-xs")}
 -                >
 -                  {props.environmentLabel
--                    ? `${props.projectDisplayName} · ${props.environmentLabel}`
+-                    ? `${props.projectDisplayName} / ${props.environmentLabel}`
 -                    : props.projectDisplayName}
 -                </span>
 -              ) : (

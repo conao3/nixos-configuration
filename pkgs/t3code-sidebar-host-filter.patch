@@ -156,7 +156,7 @@ index 0f9de918..6f798432 100644
                  >
 -                  {props.projectDisplayName}
 +                  {props.environmentLabel
-+                    ? `${props.projectDisplayName} · ${props.environmentLabel}`
++                    ? `${props.projectDisplayName} / ${props.environmentLabel}`
 +                    : props.projectDisplayName}
                  </span>
                ) : (

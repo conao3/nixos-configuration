@@ -99,7 +99,7 @@ index 03488e51..b022572c 100644
 +        {
 +          id: "go_rolling",
 +          kind: "session",
-+          label: "Go · Session",
++          label: "Go / Session",
 +          windowDurationMins: 5 * 60,
 +          usedPercent: consoleMeterPercent(meters.fiveHour),
 +          ...consoleMeterReset(meters.fiveHour),
@@ -107,7 +107,7 @@ index 03488e51..b022572c 100644
 +        {
 +          id: "go_weekly",
 +          kind: "weekly",
-+          label: "Go · Weekly",
++          label: "Go / Weekly",
 +          windowDurationMins: 7 * 24 * 60,
 +          usedPercent: consoleMeterPercent(meters.week),
 +          ...consoleMeterReset(meters.week),
@@ -115,7 +115,7 @@ index 03488e51..b022572c 100644
 +        {
 +          id: "go_monthly",
 +          kind: "monthly",
-+          label: "Go · Monthly",
++          label: "Go / Monthly",
 +          usedPercent: consoleMeterPercent(meters.month),
 +          ...consoleMeterReset(meters.month),
 +        },
