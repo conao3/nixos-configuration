@@ -174,8 +174,10 @@ def again_new_prompt(task, host, harness, earlier):
     if harness == "bb":
         env = bb_thread(earlier)["environment"] or {}
         if env.get("path"):
-            left = f" Its worktree {env['path']} on the branch {env.get('branchName')} may hold its work that was not pushed: read that first and continue from it with git instead of redoing it."
-    return f"{intro(task, host, harness)} The task's earlier thread {earlier} is archived, and the task has a new reply from its creator or the board owner.{left} Do these steps in order.\n{steps(task, harness, REPLY)}"
+            left = f" Its worktree {env['path']} on the branch {env.get('branchName')} may hold its work that was not pushed, committed or not: read that first and continue from it with git instead of redoing it."
+        elif env.get("branchName"):
+            left = f" Its local branch {env['branchName']} may hold its commits that were not pushed: read that first and continue from it with git instead of redoing it."
+    return f"{intro(task, host, harness)} The task's earlier thread {earlier} is archived or stopped with an error, and the task has a new reply from its creator or the board owner.{left} Do these steps in order.\n{steps(task, harness, REPLY)}"
 
 
 def pick_model(task, labels, harness):
@@ -239,9 +241,10 @@ def spawn(task, host, harness, prompt, model_args):
     return thread
 
 
-def archived(host, harness, thread):
+def retired(host, harness, thread):
     if harness == "bb":
-        return bb_thread(thread)["thread"]["archivedAt"] is not None
+        shown = bb_thread(thread)["thread"]
+        return shown["archivedAt"] is not None or shown["status"] == "error"
     return harness == "t3" and t3_thread(host, thread)["thread"]["archived"]
 
 
@@ -289,7 +292,7 @@ def busy(host, harness, thread):
 
 def start(task, host, harness, model_args):
     thread = task_root(task)["labels"].get("thread")
-    if thread and not archived(host, harness, thread):
+    if thread and not retired(host, harness, thread):
         before = last_reply(task) if harness == CLOUD else runs(host, harness, thread)
         save_task(task, thread, before)
         send(host, harness, thread, again_prompt(task, harness))
@@ -342,9 +345,7 @@ def wait(task, host, harness, thread, before):
                 if subprocess.run([BB, "thread", "wait", thread, "--status", "idle", "--timeout", "1m"], capture_output=True).returncode == 0:
                     return run(BB, "thread", "output", thread)
                 if bb_thread(thread)["thread"]["status"] == "error":
-                    error = bb_error(thread)
-                    run(BB, "thread", "archive", thread)
-                    return f"FAILED: bb thread {thread} stopped with an error and is archived, so reopening the task starts a new thread that picks the model again: {error}"
+                    return f"FAILED: bb thread {thread} stopped with an error, so reopening the task starts a new thread that picks the model again and continues from this thread's worktree: {bb_error(thread)}"
         except (Unreachable, RuntimeError) as e:
             log(f"waiting on {harness} thread {thread} on {host}: {e}")
         time.sleep(10)
@@ -374,8 +375,8 @@ def attempt(item):
 
 
 def nudge(host, harness, thread, task):
-    if archived(host, harness, thread):
-        spawn(task, host, harness, again_new_prompt(task, host, harness), pick_model(task, task_root(task)["labels"], harness))
+    if retired(host, harness, thread):
+        spawn(task, host, harness, again_new_prompt(task, host, harness, thread), pick_model(task, task_root(task)["labels"], harness))
     else:
         send(host, harness, thread, again_prompt(task, harness))
 
