@@ -41,10 +41,8 @@
       portless = pkgs.callPackage ../pkgs/portless.nix { };
       rec-audio = pkgs.callPackage ../pkgs/rec-audio.nix { };
       speak = pkgs.callPackage ../pkgs/speak.nix { };
-      symphony = pkgs.callPackage ../pkgs/symphony.nix { beamPackages = pkgs.beam.packages.erlang_28; };
       texassolver = pkgs.callPackage ../pkgs/texassolver.nix { };
       voice-type = pkgs.callPackage ../pkgs/voice-type.nix { };
-      claude-app-server = pkgs.callPackage ../pkgs/claude-app-server.nix { };
       devo = pkgs.rustPlatform.buildRustPackage {
         pname = "devo";
         version = "0.1.0";
@@ -64,7 +62,6 @@
         bottom
         cgpu
         chrome-devtools
-        claude-app-server
         cli-proxy-api-management-center
         clj-kondo
         clojure-mcp-light
@@ -113,7 +110,6 @@
         sqldef
         sqlite
         ssm-session-manager-plugin
-        symphony
         tig
         tokei
         tree
