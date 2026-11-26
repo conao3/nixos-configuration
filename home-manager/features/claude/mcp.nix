@@ -13,7 +13,6 @@
         }/bin/drawio-mcp-server --transport http --http-port 3733 --host 127.0.0.1";
       };
     };
-    linear.url = "https://mcp.linear.app/mcp";
     penpot.url = "https://design.penpot.app/mcp/stream?userToken=\${PENPOT_MCP_KEY}";
     devin = {
       url = "https://mcp.devin.ai/mcp";
