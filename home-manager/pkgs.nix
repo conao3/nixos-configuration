@@ -33,7 +33,6 @@
       document-packet = inputs.document-packet.packages.${system}.default;
       ghq-sync = pkgs.callPackage ../pkgs/ghq-sync.nix { };
       idea-routine = inputs.idea-routine.packages.${system}.default;
-      linear-cli = pkgs.callPackage ../pkgs/linear-cli.nix { };
       lightpanda = pkgs.callPackage ../pkgs/lightpanda.nix { };
       mo = pkgs.callPackage ../pkgs/mo.nix { };
       musewire = inputs.musewire.packages.${system}.default;
@@ -90,7 +89,6 @@
         imagemagick
         inetutils
         libgccjit
-        linear-cli
         mo
         modal
         musewire

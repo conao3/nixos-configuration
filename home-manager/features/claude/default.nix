@@ -108,17 +108,9 @@ in
       "claude.agent002" = { };
       "claude.agent003" = { };
       "claude.yui" = { };
-      "claude.worker" = {
-        share = false;
-        instructions = ./AGENTS-worker.md;
-      };
       "codex.conao3" = { };
       "codex.agent001" = { };
       "codex.agent002" = { };
-      "codex.worker" = {
-        share = false;
-        instructions = ./AGENTS-worker.md;
-      };
       "opencode.agent001".wrapper.makeWrapperArgs = opencodeWrapperArgs;
       "pi.agent001" = { };
       "pi.agent002" = { };

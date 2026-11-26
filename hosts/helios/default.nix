@@ -61,7 +61,6 @@ in
     templates."helios-env" = {
       owner = "conao";
       content = ''
-        export LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         export DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
         export N8N_API_KEY=${config.sops.placeholder."n8n-api-key"}
         export ANTHROPIC_WORKER_URL=https://cli-proxy-api.sancode.dev
@@ -71,7 +70,6 @@ in
       '';
     };
     secrets.matterbridge-telegram-token = { };
-    secrets.linear-api-key = { };
     secrets.devin-api-key = {
       owner = "conao";
       path = "/home/conao/.config/devin-mcp/key";

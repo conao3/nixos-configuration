@@ -225,7 +225,6 @@ in
       ]
       ++ [
         inputs.rust-fetch-usage-limit.packages.${system}.default
-        (pkgs.callPackage ../../pkgs/linear-cli.nix { })
       ];
   };
 
@@ -235,7 +234,6 @@ in
     templates."agent-vm-env" = {
       content = ''
         SILICONFLOW_API_KEY=${config.sops.placeholder."siliconflow-api-key"}
-        LINEAR_API_KEY=${config.sops.placeholder."linear-api-key"}
         DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
         N8N_API_KEY=${config.sops.placeholder."n8n-api-key"}
         SLACK_BOT_TOKEN=${config.sops.placeholder."slack-bot-token"}
@@ -246,7 +244,6 @@ in
     };
     secrets = {
       siliconflow-api-key = { };
-      linear-api-key = { };
       devin-api-key = {
         path = "${homeDir}/.config/devin-mcp/key";
       };
