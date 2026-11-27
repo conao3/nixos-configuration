@@ -45,6 +45,10 @@
 
   home.shellAliases = {
     e = "$EDITOR";
+    en = "emacsclient --create-frame --no-wait";
+    et = "emacsclient --tty";
+    ee = "emacsclient --eval";
+    erestart = "systemctl --user restart emacs";
   };
 
   programs.git.ignores = [
