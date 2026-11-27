@@ -6,7 +6,7 @@
   sops = {
     defaultSopsFile = ../secrets/secrets.yaml;
     age.keyFile = "/home/conao/.config/sops/age/keys.txt";
-    templates."host-env" = {
+    templates."helios-env" = {
       owner = "conao";
       content = ''
         export DEVIN_API_KEY=${config.sops.placeholder."devin-api-key"}
@@ -32,7 +32,7 @@
   };
 
   programs.zsh.interactiveShellInit = ''
-    [ -f ${config.sops.templates."host-env".path} ] && source ${config.sops.templates."host-env".path}
+    [ -f ${config.sops.templates."helios-env".path} ] && source ${config.sops.templates."helios-env".path}
   '';
 
   security.pki.certificateFiles = [
