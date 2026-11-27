@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   programs.zsh = {
     enable = true;
@@ -6,20 +6,25 @@
       which /opt/homebrew/bin/brew >/dev/null 2>&1 && eval "$(/opt/homebrew/bin/brew shellenv)"
       which anyenv >/dev/null 2>&1 && eval "$(anyenv init -)"
     '';
-    initContent = ''
-      bindkey -e
-      function ghq() {
-        if [ "$1" = "cd" ]; then
-          shift
-          local repo=$(command ghq list | fzf --query "conao3/$*")
-          if [ -n "$repo" ]; then
-            cd "$(command ghq root)/$repo"
+    initContent = lib.mkMerge [
+      (lib.mkBefore ''
+        [[ $TERM == "dumb" && -n $SSH_CONNECTION ]] && unsetopt zle && PS1='$ ' && return
+      '')
+      ''
+        bindkey -e
+        function ghq() {
+          if [ "$1" = "cd" ]; then
+            shift
+            local repo=$(command ghq list | fzf --query "conao3/$*")
+            if [ -n "$repo" ]; then
+              cd "$(command ghq root)/$repo"
+            fi
+          else
+            command ghq "$@"
           fi
-        else
-          command ghq "$@"
-        fi
-      }
-    '';
+        }
+      ''
+    ];
     envExtra = ''
       [[ -s "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
       [[ -r "$HOME/.config/flovia/key" ]] && export FLOVIA_KEY="$(<"$HOME/.config/flovia/key")"
