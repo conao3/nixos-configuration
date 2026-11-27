@@ -10,8 +10,6 @@
   imports = [
     ./hardware-configuration.nix
     ./battery.nix
-    ../../nixos/memory.nix
-    (inputs.nix-flakes + "/nixos/substituters.nix")
   ];
 
   networking.hostName = "conao-nixos-eos";
@@ -19,15 +17,6 @@
   systemd.slices."user".sliceConfig.MemoryHigh = "50G";
 
   time.timeZone = lib.mkForce "America/Toronto";
-
-  sops = {
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    age.keyFile = "/home/conao/.config/sops/age/keys.txt";
-    secrets.devin-api-key = {
-      owner = "conao";
-      path = "/home/conao/.config/devin-mcp/key";
-    };
-  };
 
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
 
@@ -44,36 +33,6 @@
   };
 
   virtualisation.libvirtd.enable = lib.mkForce false;
-
-  services.xserver.xkb.options = "ctrl:nocaps";
-  console.useXkbConfig = true;
-
-  services.xserver = {
-    autoRepeatDelay = 300;
-    autoRepeatInterval = 30;
-  };
-
-  services.k3s = {
-    enable = true;
-    role = "server";
-    disable = [ "traefik" ];
-    extraFlags = [ "--write-kubeconfig-mode=0644" ];
-  };
-
-  systemd.services.k3s.serviceConfig.ExecStartPost = [
-    "-${pkgs.writeShellScript "k3s-containerd-sock-access" ''
-      sock=/run/k3s/containerd/containerd.sock
-      for _ in $(seq 1 120); do
-        if [ -S "$sock" ]; then
-          chgrp docker "$sock"
-          chmod 0660 "$sock"
-          exit 0
-        fi
-        sleep 1
-      done
-      exit 1
-    ''}"
-  ];
 
   programs.steam = {
     remotePlay.openFirewall = lib.mkForce false;
@@ -108,10 +67,6 @@
   };
 
   networking.firewall = {
-    trustedInterfaces = [
-      "cni0"
-      "flannel.1"
-    ];
     extraCommands = ''
       iptables -t mangle -N eos-lan-dnat 2>/dev/null || true
       iptables -t mangle -F eos-lan-dnat

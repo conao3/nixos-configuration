@@ -1,5 +1,8 @@
 [
   ../home-manager/features/bb-desktop.nix
+  ../home-manager/features/cherry-studio.nix
+  ../home-manager/features/codex-desktop.nix
+  ../home-manager/features/dev-ca.nix
   ../home-manager/features/mpv.nix
   ../home-manager/features/onepassword.nix
   ../home-manager/features/overhear.nix

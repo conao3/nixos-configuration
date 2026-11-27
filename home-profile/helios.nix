@@ -4,9 +4,6 @@
     import ./full.nix
     ++ import ./full-gui.nix
     ++ [
-      ../home-manager/features/cherry-studio.nix
-      ../home-manager/features/codex-desktop.nix
-      ../home-manager/features/dev-ca.nix
       (import ../home-manager/features/sellaite-dashboard.nix { host = "helios"; })
       ../home-manager/features/t3code-server.nix
       (import ../home-manager/features/agent-board.nix {

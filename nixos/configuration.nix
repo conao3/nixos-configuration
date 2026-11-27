@@ -7,8 +7,16 @@
 
 {
   imports = [
+    ./coding-agent.nix
     ./dashboard.nix
+    ./k3s.nix
+    ./kill-orphan.nix
+    ./memory.nix
     ./portless.nix
+    ./secrets.nix
+    ./tmux-server.nix
+    ./workstation.nix
+    (inputs.nix-flakes + "/nixos/substituters.nix")
   ];
 
   system.stateVersion = "24.11";
@@ -56,8 +64,18 @@
     config.allowUnfree = true;
   };
 
+  console.useXkbConfig = true;
+
   networking = {
-    firewall.enable = true;
+    firewall = {
+      enable = true;
+      trustedInterfaces = [
+        "br-+"
+        "cni0"
+        "docker0"
+        "flannel.1"
+      ];
+    };
     networkmanager = {
       enable = true;
       wifi.powersave = false;
@@ -128,9 +146,7 @@
     };
     xserver = {
       enable = true;
-      xkb = {
-        # options = "ctrl:nocaps,altwin:swap_alt_win";
-      };
+      xkb.options = "ctrl:nocaps";
       displayManager = {
         # default: 173 100
         # 250 25
