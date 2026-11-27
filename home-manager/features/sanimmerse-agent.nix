@@ -1,4 +1,5 @@
-{ config, ... }:
+{ anki }:
+{ config, lib, ... }:
 let
   home = config.home.homeDirectory;
 in
@@ -17,11 +18,13 @@ in
       Environment = [
         "DISPLAY=:0"
         "XAUTHORITY=${home}/.Xauthority"
-        "SANIMMERSE_ANKIWEB_USER=conao3@gmail.com"
-        "SANIMMERSE_ANKIWEB_PASSWORD_FILE=${home}/.config/anki-sync/ankiweb.pass"
         "SANIMMERSE_TOKEN_FILE=${home}/.config/sanimmerse/token"
         "SANIMMERSE_CLOUD_URL=https://sanimmerse.sancode.dev"
         "SANIMMERSE_CLOUD_TOKEN_FILE=${home}/.config/sanimmerse/cloud-token"
+      ]
+      ++ lib.optionals anki [
+        "SANIMMERSE_ANKIWEB_USER=conao3@gmail.com"
+        "SANIMMERSE_ANKIWEB_PASSWORD_FILE=${home}/.config/anki-sync/ankiweb.pass"
       ];
       ExecStart = "/run/current-system/sw/bin/nix run .";
       Restart = "always";

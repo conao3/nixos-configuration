@@ -4,6 +4,7 @@
     import ./full.nix
     ++ import ./full-gui.nix
     ++ [
+      (import ../home-manager/features/sanimmerse-agent.nix { anki = false; })
       (import ../home-manager/features/sellaite-dashboard.nix { host = "helios"; })
       ../home-manager/features/t3code-server.nix
       (import ../home-manager/features/agent-board.nix {

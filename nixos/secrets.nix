@@ -32,7 +32,9 @@
   };
 
   programs.zsh.interactiveShellInit = ''
-    [ -f ${config.sops.templates."helios-env".path} ] && source ${config.sops.templates."helios-env".path}
+    [ -f ${config.sops.templates."helios-env".path} ] && source ${
+      config.sops.templates."helios-env".path
+    }
   '';
 
   security.pki.certificateFiles = [

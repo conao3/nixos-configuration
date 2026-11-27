@@ -7,7 +7,7 @@
       ../home-manager/features/battery-warning.nix
       ../home-manager/features/internal-panel-120hz.nix
       ../home-manager/features/demo-mode.nix
-      ../home-manager/features/sanimmerse-agent.nix
+      (import ../home-manager/features/sanimmerse-agent.nix { anki = true; })
       (import ../home-manager/features/sellaite-dashboard.nix { host = "eos"; })
       (import ../home-manager/features/agent-board.nix {
         host = "eos";
