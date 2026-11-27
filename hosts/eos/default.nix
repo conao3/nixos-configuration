@@ -10,10 +10,13 @@
   imports = [
     ./hardware-configuration.nix
     ./battery.nix
+    ../../nixos/memory.nix
     (inputs.nix-flakes + "/nixos/substituters.nix")
   ];
 
   networking.hostName = "conao-nixos-eos";
+
+  systemd.slices."user".sliceConfig.MemoryHigh = "50G";
 
   time.timeZone = lib.mkForce "America/Toronto";
 

@@ -18,11 +18,13 @@ in
     ./coding-agent.nix
     ./kill-orphan.nix
     ./llm-usage.nix
-    ./memory.nix
     ./sunshine.nix
     ./sysmon.nix
     ./tmux-server.nix
+    ../../nixos/memory.nix
   ];
+
+  systemd.slices."user".sliceConfig.MemoryHigh = "38G";
 
   networking.hostName = "conao-nixos-helios";
   networking.firewall.trustedInterfaces = [
