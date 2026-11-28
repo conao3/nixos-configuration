@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   ...
 }:
@@ -9,6 +10,8 @@
     disable = [ "traefik" ];
     extraFlags = [ "--write-kubeconfig-mode=0644" ];
   };
+
+  systemd.services.k3s.wantedBy = lib.mkForce [ ];
 
   systemd.services.k3s.serviceConfig.ExecStartPost = [
     "-${pkgs.writeShellScript "k3s-containerd-sock-access" ''
