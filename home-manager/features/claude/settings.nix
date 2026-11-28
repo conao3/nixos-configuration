@@ -14,6 +14,14 @@ let
     fi
     printf '%s | %s | %s' "$email" "$model_info" "$(${pkgs.coreutils}/bin/basename "$dir")"
   '';
+  ciWaitHook = pkgs.writeShellScript "claude-ci-wait-hook" ''
+    set -euo pipefail
+    command="$(${pkgs.jq}/bin/jq -r '.tool_input.command // empty')"
+    if printf '%s\n' "$command" | ${pkgs.gnugrep}/bin/grep -Eq '(^|[;&|(`]|\$\(|(^|[[:space:]])(do|then|else|time|timeout[[:space:]]+[0-9]+[a-z]?))[[:space:]]*gh[[:space:]]+(run[[:space:]]+watch|pr[[:space:]]+checks[^;&|]*--watch)([[:space:]]|$)'; then
+      echo 'CI の完了は `gh lookout wait <owner>/<repo> <sha>` で待つ (MEMORY.md「git 運用」)。この `gh run watch` / `gh pr checks --watch` の呼び出しは止めた。' >&2
+      exit 2
+    fi
+  '';
 in
 {
   programs.agents.types.claude = {
@@ -80,6 +88,15 @@ in
               {
                 type = "command";
                 command = "clj-paren-repair-claude-hook --cljfmt";
+              }
+            ];
+          }
+          {
+            matcher = "Bash";
+            hooks = [
+              {
+                type = "command";
+                command = "${ciWaitHook}";
               }
             ];
           }

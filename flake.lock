@@ -1050,11 +1050,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795365270,
-        "narHash": "sha256-VndVAkvIhT5iluPHoSck00zzVzAT/q5sphqakjk7nPk=",
+        "lastModified": 1795860140,
+        "narHash": "sha256-E/fpz90MFUgxC+HtpUJvShQHIX2Nx8Mh57c4wJhmSjo=",
         "owner": "conao3",
         "repo": "nix-agents",
-        "rev": "2dae6f0ff275b23e21c2c4b4826de489e6888d24",
+        "rev": "5b9326cd9ac7a45a5aec9bb887a8ed0ef8b7f92c",
         "type": "github"
       },
       "original": {

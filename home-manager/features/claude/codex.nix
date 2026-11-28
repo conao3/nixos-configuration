@@ -62,6 +62,10 @@ in
         strategy = "overwrite";
         source = ./fugu/fugu.json;
       };
+      "rules/ci.rules" = {
+        strategy = "overwrite";
+        source = ./codex-rules/ci.rules;
+      };
       "fugu.config.toml" = {
         strategy = "overwrite";
         settings =
