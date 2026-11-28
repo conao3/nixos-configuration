@@ -140,11 +140,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795836951,
-        "narHash": "sha256-AsLIUbOZRxPNH7RdAJzZkfzhp5+aTkKS0526HE6b/TQ=",
+        "lastModified": 1795843468,
+        "narHash": "sha256-a05ikBpQe7hA1lFjwHtlzoXknem2CAZMKas96mqf8r8=",
         "owner": "conao3",
         "repo": "ts-bb-events",
-        "rev": "5b772607680b505cdecccdb9a25b068ed7869a54",
+        "rev": "b68ba8d50281d4da829742b11152a58e80eaebe9",
         "type": "github"
       },
       "original": {
