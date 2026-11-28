@@ -1,4 +1,12 @@
-# nixos-configuration
+<p align="center"><img src="docs/assets/banner.png" alt="nixos-configuration: Declarative NixOS and macOS setup with Nix flakes and home-manager" width="880"></p>
+
+<p align="center"><strong>Declarative NixOS and macOS setup with Nix flakes and home-manager</strong></p>
+
+<p align="center"><a href="https://github.com/conao3/nixos-configuration/actions/workflows/ci.yml"><img src="https://github.com/conao3/nixos-configuration/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a> <a href="https://github.com/conao3/nixos-configuration/stargazers"><img src="https://img.shields.io/github/stars/conao3/nixos-configuration?style=flat" alt="GitHub stars"></a></p>
+
+<p align="center"><a href="#usage">Usage</a> | <a href="#maintenance">Maintenance</a> | <a href="#license">License</a></p>
+
+<h1>nixos-configuration</h1>
 
 Personal Nix configuration for NixOS and macOS systems using Nix flakes, nix-darwin, and home-manager.
 
