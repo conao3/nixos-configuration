@@ -1771,11 +1771,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795842526,
-        "narHash": "sha256-t/8omK7pYJHKL/jdRVld1CTh5gpI8Rl7HqCzLhnMc9w=",
+        "lastModified": 1795842855,
+        "narHash": "sha256-CScohO6JvlI+P2+7lWJboHqOxPtUQu/RjSXjCWpmWCQ=",
         "owner": "conao3",
         "repo": "rust-sellaite",
-        "rev": "f486e05c9b8ffc0bbc38814e72332eb843d4c3e4",
+        "rev": "ce9a4995ebcbf3c5681d32c2b590568bfb39456a",
         "type": "github"
       },
       "original": {
