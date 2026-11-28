@@ -127,6 +127,32 @@
         "type": "github"
       }
     },
+    "bb-events": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1795836951,
+        "narHash": "sha256-AsLIUbOZRxPNH7RdAJzZkfzhp5+aTkKS0526HE6b/TQ=",
+        "owner": "conao3",
+        "repo": "ts-bb-events",
+        "rev": "5b772607680b505cdecccdb9a25b068ed7869a54",
+        "type": "github"
+      },
+      "original": {
+        "owner": "conao3",
+        "repo": "ts-bb-events",
+        "type": "github"
+      }
+    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -1585,6 +1611,7 @@
         "agent-friction": "agent-friction",
         "agmsg": "agmsg",
         "awsr": "awsr",
+        "bb-events": "bb-events",
         "chrome-devtools": "chrome-devtools",
         "claude-desktop": "claude-desktop",
         "codex-desktop-linux": "codex-desktop-linux",

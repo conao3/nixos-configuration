@@ -212,6 +212,7 @@
         })
         (lib.lowPrio inputs.llm-agents.packages.${system}.bb-app)
         inputs.awsr.packages.${system}.default
+        inputs.bb-events.packages.${system}.default
         inputs.gitm.packages.${system}.default
         inputs.keg.packages.${system}.default
         inputs.pype.packages.${system}.default

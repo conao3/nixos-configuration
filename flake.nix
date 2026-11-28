@@ -102,6 +102,12 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
+    bb-events = {
+      url = "github:conao3/ts-bb-events";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
     idea-routine = {
       url = "git+ssh://git@github.com/conao3/rust-idea-routine.git";
       inputs.nixpkgs.follows = "nixpkgs";
