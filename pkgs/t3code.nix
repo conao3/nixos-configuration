@@ -32,6 +32,7 @@ let
             ./t3code-thread-cli-environment.patch
             ./t3code-thread-cli-send-mode.patch
             ./t3code-thread-cli-configure.patch
+            ./t3code-no-sidebar-settle-button.patch
           ];
         });
   };

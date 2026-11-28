@@ -1,0 +1,124 @@
+diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+index d5864417f0..ec2402b2a0 100644
+--- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
++++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+@@ -42,7 +42,6 @@ import {
+   AlarmClockIcon,
+   AlarmClockOffIcon,
+   ArrowRightLeftIcon,
+-  CheckIcon,
+   CircleAlertIcon,
+   CircleCheckIcon,
+   CircleDashedIcon,
+@@ -697,7 +696,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+     onAcknowledgeWoke,
+     onFileDropThreads,
+     onRenameTitleChange,
+-    onSettle,
+     onActionSweepStart,
+     onSnooze,
+     onStartRename,
+@@ -945,11 +943,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+         addFolders: () => {},
+       })
+     : null;
+-  const handleSettleClick = (event: ReactMouseEvent) => {
+-    event.preventDefault();
+-    event.stopPropagation();
+-    onSettle(threadRef);
+-  };
+   const handleActionPointerDown = (event: ReactPointerEvent) => {
+     if (!event.isPrimary || event.button !== 0) return;
+     event.stopPropagation();
+@@ -1436,7 +1429,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                   <span
+                     className={cn(
+                       "inline-flex justify-end tabular-nums text-secondary-label transition-opacity",
+-                      !isWoke && "group-any-hover/sidebar-row:opacity-0",
++                      !isWoke &&
++                        (variantAction === "unsnooze"
++                          ? props.snoozeSupported
++                          : variantAction === "unsettle" && props.settlementSupported) &&
++                        "group-any-hover/sidebar-row:opacity-0",
+                     )}
+                   >
+                     {variantAction === "unsnooze" && props.snoozeWakeLabelText !== null ? (
+@@ -1526,29 +1523,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                         <T>Un-settle thread</T>
+                       </TooltipPopup>
+                     </Tooltip>
+-                  ) : (
+-                    <Tooltip>
+-                      <TooltipTrigger
+-                        render={
+-                          <button
+-                            type="button"
+-                            aria-label={gt("Settle thread")}
+-                            onClick={handleSettleClick}
+-                            onPointerDown={handleActionPointerDown}
+-                            className={cn(
+-                              "pointer-events-none absolute inset-y-0 right-0 -mr-2 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
+-                              isWoke && "group-any-hover/sidebar-row:static",
+-                            )}
+-                          />
+-                        }
+-                      >
+-                        <CheckIcon className="size-3" />
+-                      </TooltipTrigger>
+-                      <TooltipPopup side="top">
+-                        <T>Settle thread</T>
+-                      </TooltipPopup>
+-                    </Tooltip>
+-                  )}
++                  ) : null}
+                   {jumpHintLabel ? <JumpHintBadge label={jumpHintLabel} /> : null}
+                 </span>
+               )}
+@@ -1624,7 +1599,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                     className={cn(
+                       isWokeStatus
+                         ? "pointer-events-auto"
+-                        : "pointer-events-none group-has-[:focus-visible]/sidebar-status-slot:absolute group-has-[:focus-visible]/sidebar-status-slot:right-0 group-has-[:focus-visible]/sidebar-status-slot:opacity-0 group-any-hover/sidebar-row:absolute group-any-hover/sidebar-row:right-0 group-any-hover/sidebar-row:opacity-0",
++                        : !(showSnoozeButton || hasUnsentDraft)
++                          ? "pointer-events-none"
++                          : "pointer-events-none group-has-[:focus-visible]/sidebar-status-slot:absolute group-has-[:focus-visible]/sidebar-status-slot:right-0 group-has-[:focus-visible]/sidebar-status-slot:opacity-0 group-any-hover/sidebar-row:absolute group-any-hover/sidebar-row:right-0 group-any-hover/sidebar-row:opacity-0",
+                       "flex items-center self-center justify-self-end tabular-nums text-secondary-label",
+                       snoozeMenuOpen && "pointer-events-none absolute right-0 opacity-0",
+                     )}
+@@ -1685,7 +1662,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                       <RelativeTimeLabel timestamp={resolveThreadActivityTimestamp(thread)} />
+                     )}
+                   </span>
+-                  {props.settlementSupported || showSnoozeButton || hasUnsentDraft ? (
++                  {showSnoozeButton || hasUnsentDraft ? (
+                     <span
+                       className={cn(
+                         // Mouse clicks leave Settle focused; focus-within would pin controls over
+@@ -1722,27 +1699,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                           environmentId={thread.environmentId}
+                         />
+                       ) : null}
+-                      {props.settlementSupported ? (
+-                        <Tooltip>
+-                          <TooltipTrigger
+-                            render={
+-                              <button
+-                                type="button"
+-                                aria-label={gt("Settle thread")}
+-                                onClick={handleSettleClick}
+-                                onPointerDown={handleActionPointerDown}
+-                                className="-mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+-                              />
+-                            }
+-                          >
+-                            <CheckIcon className="size-3.5" />
+-                            <T>Settle</T>
+-                          </TooltipTrigger>
+-                          <TooltipPopup>
+-                            <T>Settle thread</T>
+-                          </TooltipPopup>
+-                        </Tooltip>
+-                      ) : null}
+                     </span>
+                   ) : null}
+                   {jumpHintLabel ? <JumpHintBadge label={jumpHintLabel} /> : null}
