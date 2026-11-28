@@ -157,7 +157,7 @@ Use BLOCKED instead of step 3 when you need a decision from the owner, and FAILE
 
 def intro(task, host, harness):
     if harness == CLOUD:
-        return f"You are a worker for board task #{task} in a Claude Code on the web session, a fresh clone of the repository of the task's channel. The board's notes and ~/.agents/share are not here: the thread is your whole request. Work on a new branch and push it with git push -u origin HEAD; when the task says to push to a branch, rebase onto it and push with git push origin HEAD:<branch>. The first vb call joins the tailnet and takes about 15 seconds."
+        return f"You are a worker for board task #{task} in a Claude Code on the web session, a copy of the repository of the task's channel that has no write access to GitHub. The board's notes and ~/.agents/share are not here: the thread is your whole request. Do not commit, push or add a repository: attach each file you change to the reply of step 3 with --attach <file> (one --attach per file), and the task's creator commits them. The first vb call joins the tailnet and takes about 15 seconds."
     where = f" This thread runs in its own git worktree of {repo_path(task)}, on a new branch from the default branch. Work and commit there: when your turn ends with DONE, the board server archives this thread and bb discards the worktree, keeping only the branch. When the task says to push to a branch, rebase onto it and push with git push origin HEAD:<branch>." if harness == "bb" else ""
     return f"You are a worker for board task #{task} on host {host}.{where} Before anything else, read {AGENTS_NOTE} and follow its section on workers."
 
