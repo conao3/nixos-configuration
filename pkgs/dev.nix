@@ -61,13 +61,21 @@ let
       has_nix_app=1
     fi
 
+    if [ "$has_nix_app" = "0" ] && [ -f devo.yaml ]; then
+      devo_session="$(${devo}/bin/devo --output text session describe-session 2>/dev/null | ${gawk}/bin/awk -F '\t' 'NR == 1 { print $1 }' || true)"
+      if [ -n "$devo_session" ]; then
+        SESSION_NAME="$devo_session"
+        export SESSION_NAME
+      fi
+    fi
+
     if [ "$app" = "dev-stop" ]; then
       if [ "$has_nix_app" = "1" ]; then
         ${nix}/bin/nix run "$registry_name#$app" "$@" || true
       fi
-      ${tmux}/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
+      ${tmux}/bin/tmux kill-session -t "=$SESSION_NAME" 2>/dev/null || true
     else
-      if ${tmux}/bin/tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+      if ${tmux}/bin/tmux has-session -t "=$SESSION_NAME" 2>/dev/null; then
         echo "dev: tmux session '$SESSION_NAME' already exists. Run 'dev stop' first." >&2
         exit 1
       fi
