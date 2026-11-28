@@ -51,7 +51,18 @@
       wrangler = pkgs.writeShellScriptBin "wrangler" ''
         exec ${pkgs.nodejs_24}/bin/npx --yes wrangler@4.62.0 "$@"
       '';
-      inherit (pkgs.callPackage ../pkgs/dev.nix { inherit devo; }) dev dev-stop;
+      inherit
+        (pkgs.callPackage ../pkgs/dev.nix {
+          inherit devo;
+          tmux =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ../pkgs/tmux-with-server.nix { }
+            else
+              pkgs.tmux;
+        })
+        dev
+        dev-stop
+        ;
 
       # https://search.nixos.org/packages
       commonPackages = with pkgs; [

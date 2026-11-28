@@ -23,6 +23,11 @@
     ripgrep.enable = true;
     tmux = {
       enable = true;
+      package =
+        if pkgs.stdenv.hostPlatform.isLinux then
+          pkgs.callPackage ../../pkgs/tmux-with-server.nix { }
+        else
+          pkgs.tmux;
       prefix = "C-q";
       keyMode = "emacs";
       extraConfig = ''
