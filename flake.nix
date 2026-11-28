@@ -78,6 +78,12 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
+    gh-lookout = {
+      url = "github:conao3/gh-lookout";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+    };
     overhear = {
       url = "github:conao3/rust-overhear";
       inputs.nixpkgs.follows = "nixpkgs";

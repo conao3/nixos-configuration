@@ -7,6 +7,7 @@
       (import ../home-manager/features/sanimmerse-agent.nix { anki = false; })
       (import ../home-manager/features/sellaite-dashboard.nix { host = "helios"; })
       ../home-manager/features/t3code-server.nix
+      ../home-manager/features/gh-lookout.nix
       (import ../home-manager/features/agent-board.nix {
         host = "helios";
         boardUrl = "http://127.0.0.1:4100/api/board";
