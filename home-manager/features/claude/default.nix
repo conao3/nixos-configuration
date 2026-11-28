@@ -60,6 +60,7 @@ in
             ".claude.json.tmp"
             ".claude.json.*"
             ".credentials.json"
+            "seed-admin"
           ];
           discard = [ "settings.json" ];
         };
