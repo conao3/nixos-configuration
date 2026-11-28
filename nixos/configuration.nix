@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   inputs,
@@ -136,7 +137,7 @@
     displayManager.defaultSession = "xfce";
     # displayManager.defaultSession = "none+i3";
     spice-vdagentd.enable = true;
-    blueman.enable = true;
+    blueman.enable = config.hardware.bluetooth.enable;
     gnome.gnome-keyring.enable = true;
     displayManager = {
       autoLogin = {
