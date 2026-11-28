@@ -763,11 +763,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795843300,
-        "narHash": "sha256-RYVNAIScJM69zyhd4i7L2YN/8SrB1JVXZGXSamXgVWc=",
+        "lastModified": 1795848457,
+        "narHash": "sha256-WIzXsJnS15XBMl9Qpfgr8r87i9BXO0P6sqqGV89jIh4=",
         "owner": "conao3",
         "repo": "gh-lookout",
-        "rev": "fe0142aea5fbcce4d83450d0ceca443f7cd37aa3",
+        "rev": "fcea204d86fb7849b968b1f42010d0a88cd1cecf",
         "type": "github"
       },
       "original": {
