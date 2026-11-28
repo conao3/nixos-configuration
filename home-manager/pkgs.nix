@@ -48,6 +48,14 @@
         src = inputs.devo;
         cargoLock.lockFile = inputs.devo + "/Cargo.lock";
       };
+      gogcli = pkgs.symlinkJoin {
+        name = "gogcli";
+        paths = [ pkgs.gogcli ];
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        postBuild = ''
+          wrapProgram $out/bin/gog --set-default GOG_KEYRING_SERVICE_NAME login
+        '';
+      };
       wrangler = pkgs.writeShellScriptBin "wrangler" ''
         exec ${pkgs.nodejs_24}/bin/npx --yes wrangler@4.62.0 "$@"
       '';
