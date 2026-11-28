@@ -1,0 +1,11 @@
+prefix_rule(
+    pattern = ["gh", "run", "watch"],
+    decision = "forbidden",
+    justification = "Wait for CI with `gh lookout wait <owner>/<repo> <sha>` (MEMORY.md, git).",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "checks", "--watch"],
+    decision = "forbidden",
+    justification = "Wait for CI with `gh lookout wait <owner>/<repo> <sha>` (MEMORY.md, git).",
+)

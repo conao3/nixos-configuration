@@ -23,6 +23,7 @@ in
   imports = [
     inputs.nix-agents.homeManagerModules.default
     ./agmsg.nix
+    ./ci-wait.nix
     ./codex.nix
     ./cursor.nix
     ./files.nix
