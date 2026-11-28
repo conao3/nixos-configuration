@@ -16,6 +16,8 @@
 
   systemd.slices."user".sliceConfig.MemoryHigh = "50G";
 
+  systemd.services.k3s.wantedBy = lib.mkForce [ ];
+
   time.timeZone = lib.mkForce "America/Toronto";
 
   hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
