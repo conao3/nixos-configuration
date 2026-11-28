@@ -29,11 +29,7 @@ in
       After = [ "network-online.target" ];
     };
     Service = {
-      ExecStart = ''${sellaite}/bin/sellaite dashboard start-dashboard --token-file "%S/sellaite/dashboard-token" --public-origins ${publicOrigin} --allowed-logins conao3@gmail.com'';
-      StateDirectory = "sellaite";
-      StateDirectoryMode = "0700";
-      # The startup URL contains the reusable credential.
-      StandardOutput = "null";
+      ExecStart = "${sellaite}/bin/sellaite dashboard start-dashboard --no-token --public-origins ${publicOrigin} --allowed-logins conao3@gmail.com";
       Restart = "on-failure";
       RestartSec = 5;
     };

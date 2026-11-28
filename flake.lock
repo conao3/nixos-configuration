@@ -936,17 +936,17 @@
         "treefmt-nix": "treefmt-nix_7"
       },
       "locked": {
-        "lastModified": 1794559862,
-        "narHash": "sha256-FrjDZzupZ9lbvYFSnxWlDb8ZHxcHdqE6cJv+fYS0FWk=",
+        "lastModified": 1795832452,
+        "narHash": "sha256-/aAqFeUnmIrzK4cPORx5aTOki+88V3BZjyY1WfuBZl8=",
         "owner": "conao3",
         "repo": "lean-leanfran",
-        "rev": "1bb464c6d419da8037698053f52dd23476a042d9",
+        "rev": "420a7dce66dda3cbfd03b884d453cb8de63a0fc6",
         "type": "github"
       },
       "original": {
         "owner": "conao3",
         "repo": "lean-leanfran",
-        "rev": "1bb464c6d419da8037698053f52dd23476a042d9",
+        "rev": "420a7dce66dda3cbfd03b884d453cb8de63a0fc6",
         "type": "github"
       }
     },
@@ -1771,11 +1771,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795717549,
-        "narHash": "sha256-QmQbMOxaXFKv1+/JVkZn9M8aoM0gK0QFp6jBfqCXk0c=",
+        "lastModified": 1795842526,
+        "narHash": "sha256-t/8omK7pYJHKL/jdRVld1CTh5gpI8Rl7HqCzLhnMc9w=",
         "owner": "conao3",
         "repo": "rust-sellaite",
-        "rev": "b5b00f905fa903a8ec8adf09c5c958102406ae2c",
+        "rev": "f486e05c9b8ffc0bbc38814e72332eb843d4c3e4",
         "type": "github"
       },
       "original": {
@@ -2051,11 +2051,11 @@
         "nixpkgs": "nixpkgs_14"
       },
       "locked": {
-        "lastModified": 1791885023,
-        "narHash": "sha256-C3alQ2MEt0zVrUSho5NUDo3jmhbff72++bfwoqT9Omo=",
+        "lastModified": 1795173499,
+        "narHash": "sha256-J8IYl3oEdctyvBgWr+/L01MY5Xm0TU4WXwZDccN5jjk=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "0d6d739a833ba9a9c93034862e4a7b061a062a1c",
+        "rev": "a0a97e31a897a3537eea5c49df4f8adaa83b3b37",
         "type": "github"
       },
       "original": {
